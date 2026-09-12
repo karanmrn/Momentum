@@ -5,6 +5,7 @@ import type {
   EvidenceGraph,
   HelpCard,
   HistoricalCoverage,
+  DatasetCoverageRecord,
   Notice,
   Notification,
   Persona,
@@ -66,6 +67,10 @@ export const api = {
     request<EvidenceGraph>(`/api/notices/${encodeURIComponent(id)}/evidence`),
   help: (area: string) =>
     request<HelpCard[]>(`/api/help?area=${encodeURIComponent(area)}`),
+  datasets: (area: string) =>
+    request<DatasetCoverageRecord[]>(
+      `/api/datasets?area=${encodeURIComponent(area)}`,
+    ),
   sources: (area: string) =>
     request<SourceCard[]>(`/api/sources?area=${encodeURIComponent(area)}`),
   history: (area: string) =>

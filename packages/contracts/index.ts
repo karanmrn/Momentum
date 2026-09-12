@@ -172,6 +172,27 @@ export interface HelpCard {
   services?: string[];
   kind?: "venue" | "service" | "reporting";
 }
+export interface DatasetCoverageRecord {
+  id: string;
+  title: string;
+  pilotId: PilotId;
+  sourceKind:
+    | "historical_police"
+    | "transport"
+    | "official_statistics"
+    | "civic"
+    | "community";
+  status: "acquired" | "partial" | "blocked" | "not_collected";
+  acquiredMonths: string[];
+  latestMonth: string | null;
+  fetchedAt: string | null;
+  sourceUrl: string;
+  geographyDescription: string;
+  limitations: string[];
+  recordCount: null;
+  acquiredUnits: number | null;
+  unitLabel: string | null;
+}
 export interface HistoricalCoverage {
   status: string;
   estimate: null;
