@@ -1,3 +1,6 @@
+import { getCamdenHelp, getCamdenDirectorySource } from './data/camden-help';
+import { getLocalSources, getLocalHelp } from './data/local-services';
+import { getCamdenLighting } from './ingestion/camden-lighting';
 import { z } from 'zod';
 import { pilotSchema, type PilotId, type SourceCard, type HelpCard } from '../packages/contracts/index';
 
@@ -32,6 +35,7 @@ export async function getSources(pilotId: PilotId): Promise<SourceCard[]> {
     status: 'unavailable', sourceKind: 'official_dataset', fetchedAt: null,
     publishedAt: null, synthetic: false,
     scope: 'England, Wales and Northern Ireland metadata. Pilot boundaries remain under review.',
+    coverage: 'metadata', attribution: 'Police.uk',
   };
   try {
     const metadata = metadataSchema.parse(await readPublicJson(policeUrl));
@@ -39,7 +43,9 @@ export async function getSources(pilotId: PilotId): Promise<SourceCard[]> {
     police.fetchedAt = new Date().toISOString();
     police.summary = `Latest reporting month: ${metadata.date.slice(0, 7)}. Historical records are not live warnings. Pilot counts are not calculated.`;
   } catch { /* An outage cannot become a zero count or an all-clear state. */ }
-  return [police, {
+  const local = getLocalSources(pilotId);
+  if (pilotId === 'camden_town') local.push(getCamdenDirectorySource(), await getCamdenLighting());
+  return [...local, police, {
     id: 'T01', title: 'TfL travel information',
     summary: 'Open TfL for travel information. Live station data is not connected.',
     url: 'https://tfl.gov.uk/status-updates/', status: 'link_only',
@@ -50,20 +56,5 @@ export async function getSources(pilotId: PilotId): Promise<SourceCard[]> {
 
 export async function getHelp(pilotId: PilotId): Promise<HelpCard[]> {
   pilotSchema.parse(pilotId);
-  if (pilotId === 'camden_town') return [{
-    id: 'C01', pilotId, name: 'Camden Safety Bus',
-    summary: 'Council listing outside Camden Town station. Deployment tonight is unconfirmed. Check the source before travelling.',
-    url: 'https://www.camden.gov.uk/staying-safe-at-night', availability: 'unconfirmed',
-    schedule: 'Council listing: Friday and Saturday 21:30 to 02:30 the next day, Europe/London.',
-  }, {
-    id: 'C02', pilotId, name: 'Camden Safe Havens',
-    summary: 'Open the council directory. Venue coverage and current availability need checking.',
-    url: 'https://www.camden.gov.uk/safe-havens', availability: 'unconfirmed', schedule: null,
-  }];
-  return [{
-    id: 'R01', pilotId, name: 'Official reporting routes',
-    summary: 'StreetSafe accepts public-place concerns. It is not a crime or emergency reporting service.',
-    url: 'https://www.met.police.uk/notices/street-safe/street-safe/',
-    availability: 'unconfirmed', schedule: null,
-  }];
+  return pilotId === 'camden_town' ? getCamdenHelp() : getLocalHelp(pilotId);
 }

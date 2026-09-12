@@ -5,18 +5,18 @@ afterEach(() => vi.unstubAllGlobals());
 describe('source boundaries', () => {
  it('labels reporting month without inventing publication time or pilot counts', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{"date":"2026-07-01"}')));
-  const [source] = await getSources('camden_town');
+  const source = (await getSources('hounslow_town_centre')).find(card => card.id === 'P03');
   expect(source?.status).toBe('available');
   expect(source?.summary).toContain('2026-07');
   expect(source?.publishedAt).toBeNull();
  });
  it.each(['{}','{"date":"2026-19-01"}', 'x'.repeat(17000)])('keeps invalid sources unavailable', async body => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(body)));
-  expect((await getSources('west_croydon'))[0]?.status).toBe('unavailable');
+  expect((await getSources('west_croydon')).find(card => card.id === 'P03')?.status).toBe('unavailable');
  });
  it('preserves unknown status on upstream failures', async () => {
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
-  const [source] = await getSources('hounslow_town_centre');
+  const source = (await getSources('hounslow_town_centre')).find(card => card.id === 'P03');
   expect(source?.status).toBe('unavailable'); expect(source?.fetchedAt).toBeNull();
  });
  it('keeps overnight schedules separate from confirmed deployment', async () => {

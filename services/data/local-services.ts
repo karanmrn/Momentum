@@ -105,9 +105,12 @@ export function getLocalSources(pilotId: PilotId): SourceCard[] {
     fetchedAt: retrievedAt,
     publishedAt: null,
     synthetic: false,
+    checkedAt: retrievedAt,
+    coverage: "directory",
+    attribution: pilotId === "hounslow_town_centre" ? "Hounslow Council / Hounslow Highways" : "Croydon Council",
   }));
 }
 
 export function getLocalHelp(pilotId: PilotId): HelpCard[] {
-  return help[pilotSchema.parse(pilotId)].map((card) => ({ ...card }));
+  return help[pilotSchema.parse(pilotId)].map((card) => ({ ...card, kind: "service", checkedAt: retrievedAt, sourceLabel: pilotId === "hounslow_town_centre" ? "Hounslow Council" : "Croydon Council" }));
 }

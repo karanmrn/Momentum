@@ -1,3 +1,4 @@
+import { getHistoricalCoverage } from '../packages/history/src/coverage';
 import express from "express";
 import {
   createHash,
@@ -55,10 +56,10 @@ export function createApp(db: DemoDatabase) {
     });
   }
   app.use("/api", express.json({ limit: "8kb" }));
-  let sourceCache:
-    { until: number; data: Awaited<ReturnType<typeof getSources>> } | undefined;
-  let sourceRefresh:
-    Promise<Awaited<ReturnType<typeof getSources>>> | undefined;
+  const sourceCaches = new Map<string, { until: number; data: Awaited<ReturnType<typeof getSources>> }>();
+  const sourceRefreshes = new Map<string, Promise<Awaited<ReturnType<typeof getSources>>>>();
+  const historyCaches = new Map<string, {until: number; data: Awaited<ReturnType<typeof getHistoricalCoverage>>}>();
+  const historyRefreshes = new Map<string, Promise<Awaited<ReturnType<typeof getHistoricalCoverage>>>>();
   const limits = new Map<string, { count: number; until: number }>();
   app.use("/api", (req, res, next) => {
     res.set("Cache-Control", "no-store");
@@ -164,23 +165,23 @@ export function createApp(db: DemoDatabase) {
       fail(res, 400, "invalid_input", "Choose a pilot area.");
       return;
     }
-    if (!sourceCache || sourceCache.until < Date.now()) {
-      sourceRefresh ??= getSources(area.data)
-        .then((data) => {
-          sourceCache = {
-            data,
-            until:
-              Date.now() +
-              (data.some((s) => s.status === "unavailable") ? 60000 : 300000),
-          };
-          return data;
-        })
-        .finally(() => {
-          sourceRefresh = undefined;
-        });
-      await sourceRefresh;
+    const cached = sourceCaches.get(area.data);
+    if (cached && cached.until > Date.now()) {
+      ok(res, cached.data, false);
+      return;
     }
-    ok(res, sourceCache!.data, false);
+    let refresh = sourceRefreshes.get(area.data);
+    if (!refresh) {
+      refresh = getSources(area.data).then((data) => {
+        sourceCaches.set(area.data, {
+          data,
+          until: Date.now() + (data.some((source) => source.status === 'unavailable') ? 60000 : 300000),
+        });
+        return data;
+      }).finally(() => sourceRefreshes.delete(area.data));
+      sourceRefreshes.set(area.data, refresh);
+    }
+    ok(res, await refresh, false);
   });
   app.get("/api/help", async (req, res) => {
     const area = pilotSchema.safeParse(req.query.area);
@@ -190,21 +191,26 @@ export function createApp(db: DemoDatabase) {
     }
     ok(res, await getHelp(area.data), false);
   });
-  app.get("/api/history", (req, res) => {
-    if (!pilotSchema.safeParse(req.query.area).success) {
+  app.get("/api/history", async (req, res) => {
+    const area = pilotSchema.safeParse(req.query.area);
+    if (!area.success) {
       fail(res, 400, "invalid_input", "Choose a pilot area.");
       return;
     }
-    ok(
-      res,
-      {
-        status: "insufficient_comparable_data",
-        estimate: null,
-        explanation:
-          "Pilot boundaries are not approved. No comparable community history exists. Monthly police records cannot confirm individual reports.",
-      },
-      false,
-    );
+    const cached = historyCaches.get(area.data);
+    if (cached && cached.until > Date.now()) {
+      ok(res, cached.data, false);
+      return;
+    }
+    let refresh = historyRefreshes.get(area.data);
+    if (!refresh) {
+      refresh = getHistoricalCoverage(area.data).then((data) => {
+        historyCaches.set(area.data, {data, until: Date.now() + (data.status === 'source_unavailable' ? 60000 : 300000)});
+        return data;
+      }).finally(() => historyRefreshes.delete(area.data));
+      historyRefreshes.set(area.data, refresh);
+    }
+    ok(res, await refresh, false);
   });
   app.use("/api", createRoutes(db));
   app.use("/api", (_req, res) =>
