@@ -1,3 +1,7 @@
+import { projectSemanticGraph } from "../../packages/semantic-graph";
+import { createDemoState } from "../../packages/domain";
+import { getDatasetCoverage } from "../../packages/datasets/src/coverage";
+import { updateCamdenStudy } from "../../packages/camden-evidence/session";
 import { test, expect, type Page } from "@playwright/test";
 
 function state() {
@@ -328,4 +332,91 @@ test("pending report save keeps its receipt open and freezes background controls
   ).toBeVisible();
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(page.locator("main.main")).not.toHaveAttribute("inert");
+});
+
+test("full Camden graph keeps selected details inside the viewport and preserves evidence qualification", async ({
+  page,
+}) => {
+  const domain = createDemoState();
+  updateCamdenStudy(domain, "CAM-01", {
+    expectedRevision: 1,
+    state: "corrected",
+  });
+  const graph = projectSemanticGraph(
+    domain,
+    "camden_town",
+    getDatasetCoverage("camden_town"),
+  );
+  expect(graph.nodes.length).toBeGreaterThanOrEqual(49);
+  await page.route("**/api/graph?area=camden_town", (route) =>
+    route.fulfill({ json: { schemaVersion: "1.0", data: graph } }),
+  );
+  await page.goto("/?demo=1&area=camden_town");
+  await page
+    .getByRole("tab", { name: "Historical context", exact: true })
+    .click();
+  const network = page.getByRole("region", {
+    name: "Connected evidence",
+    exact: true,
+  });
+  const detail = network.getByRole("region", {
+    name: "Selected evidence details",
+    exact: true,
+  });
+  for (const width of [390, 1440, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    await network.locator(".en-node").first().click();
+    await expect
+      .poll(async () => {
+        const box = await detail.boundingBox();
+        return !!box && box.y >= 0 && box.y + box.height <= 900;
+      })
+      .toBe(true);
+  }
+  const corrected = graph.nodes.find((node) => node.id === "fictional:CAM-01")!;
+  await network
+    .getByRole("button", { name: `Inspect ${corrected.label}`, exact: true })
+    .click();
+  await expect(detail).toContainText("Reported time");
+  await expect(detail).toContainText("Observed time");
+  await expect(detail).toContainText(corrected.metadata.correctionNote!);
+  await expect(detail).toContainText("self reported unverified");
+  const help = graph.nodes.find(
+    (node) => node.type === "HelpLocation" && node.metadata.schedule,
+  )!;
+  await network
+    .getByRole("button", { name: `Inspect ${help.label}`, exact: true })
+    .click();
+  await expect(detail).toContainText(help.metadata.schedule!);
+  await expect(detail).toContainText(help.metadata.availability!);
+  if (help.metadata.address)
+    await expect(detail).toContainText(help.metadata.address);
+  const snapshot = graph.nodes.find((node) => node.type === "SourceSnapshot")!;
+  await network
+    .getByRole("button", { name: `Inspect ${snapshot.label}`, exact: true })
+    .click();
+  await expect(detail).toContainText(snapshot.provenance!.snapshotSha256!);
+  await expect(detail).toContainText(snapshot.provenance!.fetchedAt!);
+  const qualified = graph.assertions.find((edge) => edge.metadata?.validFrom)!;
+  await network.getByLabel("Inspect a relationship").selectOption(qualified.id);
+  for (const label of [
+    "Source family",
+    "Original claim lineage",
+    "Valid from",
+    "Valid to",
+    "Time precision",
+    "Spatial precision",
+    "Revision",
+    "Source independence",
+    "Reason codes",
+  ])
+    await expect(detail).toContainText(label);
+  await expect(detail).toContainText(qualified.metadata!.validFrom!);
+  await expect(detail).toContainText(qualified.metadata!.sourceFamilyId);
+  await expect
+    .poll(async () => {
+      const box = await detail.boundingBox();
+      return !!box && box.y >= 0 && box.y + box.height <= 900;
+    })
+    .toBe(true);
 });

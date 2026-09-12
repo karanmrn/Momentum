@@ -28,6 +28,7 @@ export function EvidenceNetwork({
   title?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
   const prefix = useId().replaceAll(":", "");
   const [width, setWidth] = useState(700);
   const [selection, setSelection] = useState<{
@@ -45,6 +46,11 @@ export function EvidenceNetwork({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+  useEffect(() => {
+    if (!selection || !detailRef.current) return;
+    detailRef.current.focus({ preventScroll: true });
+    detailRef.current.scrollIntoView({ block: "center", behavior: "instant" });
+  }, [selection]);
   const selectedNode =
     selection?.kind === "node"
       ? nodes.find((node) => node.id === selection.id)
@@ -248,6 +254,8 @@ export function EvidenceNetwork({
       </label>
       {describe ? (
         <div
+          ref={detailRef}
+          tabIndex={-1}
           className="en-detail"
           aria-label="Selected evidence details"
           role="region"
