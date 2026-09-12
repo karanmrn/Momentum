@@ -8,6 +8,7 @@ export const qualificationSchema = z
   .object({
     reportId: id,
     contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+    sourceKind: z.enum(["community_firsthand", "community_other_source"]),
     sourceFamilyId: z.literal("streetwise-fictional-relations"),
     originGroupId: short.nullable(),
     spatialPrecision: z.literal("fictional_asset_reference"),
@@ -33,7 +34,13 @@ export const participantSchema = z
     assetId: short.nullable(),
     observedFrom: time,
     observedTo: time,
-    timePrecision: z.enum(["reported_point", "fictional_reported_interval"]),
+    timePrecision: z.enum([
+      "reported_point",
+      "fictional_reported_interval",
+      "approximate_time",
+      "time_window",
+      "day",
+    ]),
   })
   .strict();
 export const candidateSchema = z

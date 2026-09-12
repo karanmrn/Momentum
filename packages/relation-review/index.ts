@@ -1,4 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
+import { relationReportContentHash as contentHash } from "./publication.js";
+import { currentCommunityInterval } from "./community-interval.js";
 import type {
   DemoState,
   Persona,
@@ -46,14 +48,6 @@ export function readRelationReview(state: State): RelationReviewState {
 function hash(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
-const contentHash = (report: Report) =>
-  hash([
-    report.category,
-    report.title,
-    report.description,
-    report.place,
-    report.observedAt,
-  ]);
 function moderator(actor: Persona) {
   if (actor !== "moderator")
     throw new DomainError(
@@ -203,6 +197,7 @@ function participant(
     (row) =>
       row.reportId === report.id && row.contentHash === contentHash(report),
   );
+  const intakeInterval = currentCommunityInterval(state, report);
   return {
     reportId: report.id,
     reportRevision: report.revision,
@@ -211,9 +206,18 @@ function participant(
     originGroupId: qualification?.originGroupId ?? null,
     spatialPrecision: qualification?.spatialPrecision ?? "approximate_place",
     assetId: qualification?.assetId ?? null,
-    observedFrom: qualification?.observedFrom ?? report.observedAt,
-    observedTo: qualification?.observedTo ?? report.observedAt,
-    timePrecision: qualification?.timePrecision ?? "reported_point",
+    observedFrom:
+      qualification?.observedFrom ??
+      intakeInterval?.observedFrom ??
+      report.observedAt,
+    observedTo:
+      qualification?.observedTo ??
+      intakeInterval?.observedTo ??
+      report.observedAt,
+    timePrecision:
+      qualification?.timePrecision ??
+      intakeInterval?.timePrecision ??
+      "reported_point",
   };
 }
 const normalizePlace = (value: string) =>
@@ -237,8 +241,8 @@ function pair(
   const from = Math.max(Date.parse(a.observedFrom), Date.parse(b.observedFrom)),
     to = Math.min(Date.parse(a.observedTo), Date.parse(b.observedTo));
   const intervals =
-    a.timePrecision === "fictional_reported_interval" &&
-    b.timePrecision === "fictional_reported_interval";
+    a.timePrecision !== "reported_point" &&
+    b.timePrecision !== "reported_point";
   const overlaps = from <= to;
   if (
     intervals
@@ -346,6 +350,7 @@ export function loadRelationExamples(
           description:
             "Fictional firsthand account of reduced lighting at the demonstration lamp.",
           origin: "original-a",
+          sourceKind: "community_firsthand" as const,
           asset: "lamp-one",
         },
         {
@@ -353,6 +358,7 @@ export function loadRelationExamples(
           description:
             "Fictional copied account repeating lamp report A. This is not another independent source.",
           origin: "original-a",
+          sourceKind: "community_other_source" as const,
           asset: "lamp-one",
         },
         {
@@ -360,6 +366,7 @@ export function loadRelationExamples(
           description:
             "Fictional separate account of flickering at the demonstration lamp. Independence remains unknown.",
           origin: "original-b",
+          sourceKind: "community_firsthand" as const,
           asset: "lamp-one",
         },
         {
@@ -367,6 +374,7 @@ export function loadRelationExamples(
           description:
             "Fictional account at another lamp. Matching a broad area cannot establish the same asset.",
           origin: "original-c",
+          sourceKind: "community_firsthand" as const,
           asset: "lamp-two",
         },
       ];
@@ -383,6 +391,7 @@ export function loadRelationExamples(
         review.qualifications.push({
           reportId: report.id,
           contentHash: contentHash(report),
+          sourceKind: entry.sourceKind,
           sourceFamilyId: "streetwise-fictional-relations",
           originGroupId: `${action.area}:${entry.origin}`,
           spatialPrecision: "fictional_asset_reference",
