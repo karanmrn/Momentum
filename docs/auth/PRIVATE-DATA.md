@@ -58,3 +58,17 @@ Apply the migration only to the explicitly selected database.
 Verify hosted RLS, grants, TLS, and pooler transaction behavior before activation.
 Verify real provider confirmation and logout through the selected project.
 Keep public intake and external push closed until their separate reviews pass.
+
+## Executed verification
+
+On 12 September 2026, the branch included main `207f9d0`.
+
+- `npm test`: 526 tests passed across 52 files.
+- `npm run build`: TypeScript and production build passed.
+- `npm run test:server`: Native startup and three public dataset routes passed.
+- `npx playwright test --config .data/final.config.ts --output .data/account-final-results`: 42 browser tests passed.
+
+The temporary browser configuration changes only paths and local ports to 4361 and 4362.
+Independent review found a restricted function-owner deletion failure. The fix passed review and a non-bypass owner regression.
+Actual database timestamps now pass the same strict ISO validation used by the UI.
+Provider responses are mocked in account browser tests. Live provider and hosted storage remain unverified.
