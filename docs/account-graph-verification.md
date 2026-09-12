@@ -30,6 +30,11 @@ The SQL tests use a restricted database role to check session isolation, expiry,
 Independent review found a restored-session outage that appeared as logout. The fix preserves the error and offers retry.
 Another review separated the browser graph schema from server-only imports.
 
+Production smoke testing found graph requests rejected by the strict query parser after hosted routing.
+The fix validates the original URL parameters instead of framework query metadata.
+The regression reproduces host-injected parameters while still rejecting duplicate areas and caller-supplied extras.
+After this fix, the three graph HTTP tests, two graph browser journeys, production build, and native startup passed again.
+
 ## Unverified live operations
 
 The connected Supabase account lists two projects. Neither is named Streetwise.

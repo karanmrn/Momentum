@@ -35,7 +35,12 @@ export function createSemanticRoutes(
     next();
   });
   router.get("/", async (request, response) => {
-    const query = querySchema.safeParse(request.query);
+    // Validate caller parameters, excluding routing metadata added by the host.
+    const parameters = new URL(request.originalUrl, "http://localhost")
+      .searchParams;
+    const query = querySchema.safeParse(
+      parameters.size === 1 ? Object.fromEntries(parameters) : null,
+    );
     if (!query.success) {
       response.status(400).json({
         schemaVersion: "1.0",
@@ -76,18 +81,16 @@ export function createSemanticRoutes(
     } catch (error) {
       const notFound =
         error instanceof Error && "code" in error && error.code === "not_found";
-      response
-        .status(notFound ? 404 : 503)
-        .json({
-          schemaVersion: "1.0",
-          error: {
-            code: notFound ? "not_found" : "source_unavailable",
-            message: notFound
-              ? "This evidence is not available."
-              : "Evidence relations are unavailable. Try again.",
-          },
-          requestId: randomUUID(),
-        });
+      response.status(notFound ? 404 : 503).json({
+        schemaVersion: "1.0",
+        error: {
+          code: notFound ? "not_found" : "source_unavailable",
+          message: notFound
+            ? "This evidence is not available."
+            : "Evidence relations are unavailable. Try again.",
+        },
+        requestId: randomUUID(),
+      });
     }
   });
   return router;
