@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { checksumRecords } from './integrity';
-import { scopeKey, toPolicePolygon, validateArea } from './geometry';
-import { monthSchema, recordSchema, snapshotSchema, type PoliceClient } from './types';
+import { checksumRecords } from './integrity.js';
+import { scopeKey, toPolicePolygon, validateArea } from './geometry.js';
+import { monthSchema, recordSchema, snapshotSchema, type PoliceClient } from './types.js';
 
 const ROOT = 'https://data.police.uk/api/';
 const DEADLINE_MS = 8000;

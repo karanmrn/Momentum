@@ -1,9 +1,9 @@
-import { getCroydonProgrammeSource } from './data/recent-programme';
-import { getCamdenHelp, getCamdenDirectorySource } from './data/camden-help';
-import { getLocalSources, getLocalHelp } from './data/local-services';
-import { getCamdenLighting } from './ingestion/camden-lighting';
+import { getCroydonProgrammeSource } from './data/recent-programme.js';
+import { getCamdenHelp, getCamdenDirectorySource } from './data/camden-help.js';
+import { getLocalSources, getLocalHelp } from './data/local-services.js';
+import { getCamdenLighting } from './ingestion/camden-lighting.js';
 import { z } from 'zod';
-import { pilotSchema, type PilotId, type SourceCard, type HelpCard } from '../packages/contracts/index';
+import { pilotSchema, type PilotId, type SourceCard, type HelpCard } from '../packages/contracts/index.js';
 
 const policeUrl = 'https://data.police.uk/api/crime-last-updated';
 const metadataSchema = z.object({ date: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-01$/) });

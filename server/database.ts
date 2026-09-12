@@ -2,7 +2,7 @@ import { readFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import pg from "pg";
-import type { DemoState, Persona, Store } from "../packages/contracts/index";
+import type { DemoState, Persona, Store } from "../packages/contracts/index.js";
 interface Result<T> {
   rows: T[];
 }

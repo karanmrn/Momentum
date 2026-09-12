@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { pilotSchema, type PilotId } from '../../contracts/index';
-import { createPoliceClient } from '../../../services/ingestion/src/police/client';
-import { monthSchema, type PoliceClient } from '../../../services/ingestion/src/police/types';
+import { pilotSchema, type PilotId } from '../../contracts/index.js';
+import { createPoliceClient } from '../../../services/ingestion/src/police/client.js';
+import { monthSchema, type PoliceClient } from '../../../services/ingestion/src/police/types.js';
 
 const sourceUrl = 'https://data.police.uk/api/crimes-street-dates';
 const availabilitySchema = z.object({
