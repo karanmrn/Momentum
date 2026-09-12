@@ -1,11 +1,11 @@
 # Remaining acceptance gaps
 
-Scope: current main `26d212e` plus the owner-edit backend.
+Scope: current main `26d212e` plus owner editing and the fictional scenario picker.
 This list separates missing implementation from setup and review decisions.
 
 | Item | Evidence | Remaining work |
 | --- | --- | --- |
-| Owner correction controls | `server/routes.ts` previously accepted withdrawal only. This change adds edit. | The UI task must connect the editor and verify save, conflict, and terminal states. |
+| Owner correction controls | `src/ReportEditor.tsx` and `server/routes.ts` implement private edits for unreviewed reports. | Implemented and browser-tested. Conflicts preserve the draft and prevent overwriting newer revisions. |
 | Corrections after publication | `Report.status` and `decisionSchema` in `packages/contracts/index.ts`; owner edits require submitted status. | A reviewed owner correction request and appeal workflow need a defined review process. Existing withdrawal remains available. |
 | Real account activation | `server/account.ts` validates project configuration; `docs/auth/CONTRACT.md` records setup limits. | Select the Supabase project and verify confirmation, login, logout, and deployment settings. No project is selected by this work. |
 | Real owner-private intake | `Report.owner` uses `Persona`; `server/app.ts` creates demo sessions; `reportInputSchema` requires synthetic data. | Add authenticated UUID ownership and tested RLS before real report intake. Authentication alone does not enable it. |

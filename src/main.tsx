@@ -969,6 +969,14 @@ function Dashboard({
               view does not estimate a person's risk.
             </p>
             <DatasetCoverage pilotId={area.id} />
+            {area.id === "camden_town" && (
+              <a
+                className="button secondary"
+                href={`/?evidence=camden&area=camden_town${isPublic ? "&public=1" : "&demo=1"}`}
+              >
+                Explore Camden evidence example
+              </a>
+            )}
             <SemanticGraph area={area.id} isPublic={isPublic} />
           </section>
         )}
@@ -2024,9 +2032,32 @@ function App() {
 const Presentation = lazy(() =>
   import("./Presentation").then((module) => ({ default: module.Presentation })),
 );
+const CamdenEvidence = lazy(() =>
+  import("./CamdenEvidence").then((module) => ({
+    default: module.CamdenEvidence,
+  })),
+);
 function Entry() {
   const query = new URLSearchParams(window.location.search);
   const entry = entryArea(window.location.search);
+  if (query.get("evidence") === "camden") {
+    return (
+      <Suspense
+        fallback={
+          <main className="map-fallback">Loading Camden evidence...</main>
+        }
+      >
+        <CamdenEvidence
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("evidence");
+            url.searchParams.set("area", "camden_town");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
+  }
   if (query.get("presentation") === "1" && !entry.invalid) {
     return (
       <Suspense
