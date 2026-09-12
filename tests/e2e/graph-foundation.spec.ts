@@ -54,14 +54,12 @@ test("Camden shows visible connected nodes, keyboard details, and equivalent rec
         ),
       )
       .toBe(true);
-    const sizes = await network
-      .locator(".en-node")
-      .evaluateAll((nodes) =>
-        nodes.map((node) => ({
-          width: node.getBoundingClientRect().width,
-          height: node.getBoundingClientRect().height,
-        })),
-      );
+    const sizes = await network.locator(".en-node").evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        width: node.getBoundingClientRect().width,
+        height: node.getBoundingClientRect().height,
+      })),
+    );
     expect(sizes.every((size) => size.width >= 48 && size.height >= 48)).toBe(
       true,
     );
@@ -277,4 +275,57 @@ test("ordinary report receipt remains successful when the report list refresh fa
   await expect(
     dialog.getByRole("button", { name: "Save for review", exact: true }),
   ).toHaveCount(0);
+});
+
+test("pending report save keeps its receipt open and freezes background controls", async ({
+  page,
+}) => {
+  await page.goto("/?demo=1&area=camden_town");
+  await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
+  await page
+    .getByRole("button", { name: "Share observation", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Short title").fill("Fictional pending receipt");
+  await dialog
+    .getByLabel("What you observed")
+    .fill("Fictional report used to verify delayed acknowledgement.");
+  let release!: () => void;
+  const waiting = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/reports", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    await waiting;
+    await route.fulfill({
+      json: {
+        schemaVersion: "1.0",
+        data: {
+          id: "10000000-0000-4000-8000-000000000097",
+          status: "submitted",
+          revision: 1,
+          createdAt: "2026-09-12T12:00:00Z",
+          synthetic: true,
+        },
+      },
+    });
+  });
+  try {
+    await dialog
+      .getByRole("button", { name: "Save for review", exact: true })
+      .click();
+    await expect(
+      dialog.getByRole("button", { name: "Close dialog", exact: true }),
+    ).toBeDisabled();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeVisible();
+    await expect(page.locator("main.main")).toHaveAttribute("inert", "");
+  } finally {
+    release();
+  }
+  await expect(
+    dialog.getByText("Saved for private review", { exact: true }),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(page.locator("main.main")).not.toHaveAttribute("inert");
 });

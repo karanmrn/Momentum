@@ -154,15 +154,36 @@ function Modal({
   title,
   onClose,
   children,
+  closeDisabled = false,
+  inertBackground = false,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  closeDisabled?: boolean;
+  inertBackground?: boolean;
 }) {
   const dialogRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  onCloseRef.current = () => {
+    if (!closeDisabled) onClose();
+  };
+  useEffect(() => {
+    if (!inertBackground) return;
+    const backdrop = dialogRef.current?.parentElement;
+    const siblings = [...(backdrop?.parentElement?.children ?? [])].filter(
+      (element): element is HTMLElement =>
+        element instanceof HTMLElement && element !== backdrop,
+    );
+    const previous = siblings.map(
+      (element) => [element, element.inert] as const,
+    );
+    for (const [element] of previous) element.inert = true;
+    return () => {
+      for (const [element, inert] of previous) element.inert = inert;
+    };
+  }, [inertBackground]);
   useEffect(() => {
     const opener =
       document.activeElement instanceof HTMLElement
@@ -205,7 +226,9 @@ function Modal({
     <div
       className="modal-backdrop"
       role="presentation"
-      onMouseDown={(event) => event.currentTarget === event.target && onClose()}
+      onMouseDown={(event) =>
+        event.currentTarget === event.target && onCloseRef.current()
+      }
     >
       <section
         ref={dialogRef}
@@ -217,7 +240,8 @@ function Modal({
         <button
           ref={closeRef}
           className="close"
-          onClick={onClose}
+          onClick={() => onCloseRef.current()}
+          disabled={closeDisabled}
           aria-label="Close dialog"
         >
           <X size={22} />
@@ -420,7 +444,7 @@ function Inspector({
 }
 
 function ReportForm({
-  area,
+  area: initialArea,
   onClose,
   onCreated,
 }: {
@@ -428,6 +452,7 @@ function ReportForm({
   onClose: () => void;
   onCreated: () => Promise<void>;
 }) {
+  const [area] = useState(initialArea);
   const formRef = useRef<HTMLFormElement>(null);
   function useScenario(draft: ScenarioDraft) {
     const form = formRef.current;
@@ -491,7 +516,12 @@ function ReportForm({
     }
   }
   return (
-    <Modal title="Share a local observation" onClose={onClose}>
+    <Modal
+      title="Share a local observation"
+      onClose={onClose}
+      closeDisabled={saving}
+      inertBackground
+    >
       {receipt ? (
         <div className="history">
           <strong>Saved for private review</strong>
