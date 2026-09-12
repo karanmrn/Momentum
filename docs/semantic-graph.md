@@ -12,7 +12,7 @@ Source family and original claim lineage remain separate.
 
 `GET /api/public/graph?area=camden_town` returns public acquisition metadata without a session.
 `GET /api/graph?area=camden_town` adds current fictional notices from the caller's isolated demo session.
-Requests accept only one configured area. Arbitrary traversals and writes are rejected.
+Requests require one configured area. Extra parameters cannot change the fixed projection. Writes are rejected.
 Each result contains at most 100 nodes and 200 assertions. Truncation is explicit.
 
 Police nodes describe acquired monthly source files. Unreviewed research boundaries prevent publication of pilot crime counts.

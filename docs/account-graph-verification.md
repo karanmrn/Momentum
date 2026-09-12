@@ -31,8 +31,9 @@ Independent review found a restored-session outage that appeared as logout. The 
 Another review separated the browser graph schema from server-only imports.
 
 Production smoke testing found graph requests rejected by the strict query parser after hosted routing.
-The fix validates the original URL parameters instead of framework query metadata.
-The regression reproduces host-injected parameters while still rejecting duplicate areas and caller-supplied extras.
+The endpoint validates only the area parameter, as the other public routes do.
+Extra parameters cannot alter the fixed projection. Duplicate or invalid areas are rejected.
+The regression verifies host metadata and unsupported parameters cannot change the returned graph.
 After this fix, the three graph HTTP tests, two graph browser journeys, production build, and native startup passed again.
 
 ## Unverified live operations
