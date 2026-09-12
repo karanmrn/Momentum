@@ -239,6 +239,7 @@ h3 {
   overflow: hidden;
 }
 .map-panel {
+  isolation: isolate;
   min-height: 500px;
   position: relative;
 }
@@ -594,6 +595,9 @@ textarea {
 }
 
 @media (max-width: 380px) {
+  .mobile-nav button {
+    font-size: 9px;
+  }
   .topbar {
     flex-wrap: wrap;
   }
