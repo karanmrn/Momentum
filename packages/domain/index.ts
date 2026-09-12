@@ -453,10 +453,9 @@ function withdrawNotice(state: DemoState, noticeId: string): void {
 
 function reviseNotice(state: DemoState, noticeId: string, action: 'resolve' | 'retract', summary: string): void {
   const notice = requireNotice(state, noticeId);
-  prepareNoticeChange(state, noticeId);
   notice.revision += 1;
   notice.status = action === 'resolve' ? 'resolved' : 'retracted';
-  notice.summary = action === 'retract' ? summary : summary;
+  notice.summary = summary;
   notice.updatedAt = new Date().toISOString();
   notice.timeline.push({ revision: notice.revision, status: notice.status, at: notice.updatedAt, summary: notice.summary });
   correctNotice(state, notice);

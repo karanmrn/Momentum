@@ -5,6 +5,7 @@ import {
   runScenario,
   createShareReference,
   resolveShareReference,
+  type ScenarioPack,
 } from "../../packages/community-demo/index.js";
 import {
   createDemoState,
@@ -47,50 +48,61 @@ describe("Original fictional community exercises", () => {
   });
 
   it("rejects malformed packs and unsafe publication settings", () => {
-    const changes = [
-      (pack: any) => {
-        pack.synthetic = false;
-      },
-      (pack: any) => {
-        pack.origin = "nextdoor";
-      },
-      (pack: any) => {
-        pack.authors[0].email = "test@example.com";
-      },
-      (pack: any) => {
+    const changes: Array<(pack: ScenarioPack) => unknown> = [
+      (pack) => ({ ...pack, synthetic: false }),
+      (pack) => ({ ...pack, origin: "nextdoor" }),
+      (pack) => ({
+        ...pack,
+        authors: [
+          { ...pack.authors[0], email: "test@example.com" },
+          ...pack.authors.slice(1),
+        ],
+      }),
+      (pack) => {
         pack.authors[0].displayName = "Unlabelled person";
+        return pack;
       },
-      (pack: any) => {
+      (pack) => {
         pack.scenarios[1].topic = pack.scenarios[0].topic;
+        return pack;
       },
-      (pack: any) => {
+      (pack) => {
         pack.authors[1].id = pack.authors[0].id;
+        return pack;
       },
-      (pack: any) => {
+      (pack) => {
         pack.scenarios[1].id = pack.scenarios[0].id;
+        return pack;
       },
-      (pack: any) => {
+      (pack) => {
         pack.scenarios[0].authorId = "missing-author";
+        return pack;
       },
-      (pack: any) => {
-        pack.scenarios[0].pilotId = "outside-pilot";
-      },
-      (pack: any) => {
+      (pack) => ({
+        ...pack,
+        scenarios: [
+          { ...pack.scenarios[0], pilotId: "outside-pilot" },
+          ...pack.scenarios.slice(1),
+        ],
+      }),
+      (pack) => {
         pack.scenarios[0].description = "x".repeat(601);
+        return pack;
       },
-      (pack: any) => {
+      (pack) => {
         pack.scenarios.find(
-          (scenario: any) => scenario.topic === "sexual_violence",
-        ).publication = "reviewable";
+          (scenario) => scenario.topic === "sexual_violence",
+        )!.publication = "reviewable";
+        return pack;
       },
-      (pack: any) => {
+      (pack) => {
         pack.scenarios.pop();
+        return pack;
       },
     ];
     for (const change of changes) {
-      const copy = structuredClone(scenarioPack);
-      change(copy);
-      expect(scenarioPackSchema.safeParse(copy).success).toBe(false);
+      const malformed = change(structuredClone(scenarioPack));
+      expect(scenarioPackSchema.safeParse(malformed).success).toBe(false);
     }
     const mismatch = structuredClone(scenarioPack);
     mismatch.scenarios[0].authorId = mismatch.authors.find(
