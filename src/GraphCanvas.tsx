@@ -178,11 +178,64 @@ export function GraphCanvas({
     width < 540
       ? 480
       : Math.max(520, Math.min(860, Math.round(viewportHeight * 0.68)));
-  const points = useMemo(
+  const [offsets, setOffsets] = useState<Record<string, Point>>({});
+  const nodeDrag = useRef<{
+    id: string;
+    pointerId: number;
+    x: number;
+    y: number;
+    start: Point;
+    scale: number;
+    moved: boolean;
+  } | null>(null);
+  const suppressClick = useRef<string | null>(null);
+  const basePoints = useMemo(
     () => layout(nodes, edges, width, height),
     [nodes, edges, width, height],
   );
-  const nodeIds = nodes.map((node) => node.id).join("|");
+  const nodeIds = JSON.stringify(nodes.map((node) => node.id).sort());
+  const datasetKey = JSON.stringify([
+    nodeIds,
+    edges.map((edge) => [edge.id, edge.from, edge.to]).sort(),
+  ]);
+  const points = new Map(
+    [...basePoints].map(([key, point]) => {
+      const offset = offsets[key] ?? { x: 0, y: 0 };
+      return [key, { x: point.x + offset.x, y: point.y + offset.y }];
+    }),
+  );
+  useEffect(() => {
+    setOffsets({});
+    nodeDrag.current = null;
+    suppressClick.current = null;
+  }, [datasetKey]);
+  const selectedNode =
+    selection?.kind === "node"
+      ? nodes.find((node) => node.id === selection.id)
+      : undefined;
+  const selectedPoint = selectedNode ? points.get(selectedNode.id) : undefined;
+  useEffect(() => {
+    if (selection?.kind !== "node") return;
+    const base = basePoints.get(selection.id);
+    if (!base) return;
+    const offset = offsets[selection.id] ?? { x: 0, y: 0 };
+    setView((previous) => ({
+      scale: previous.scale,
+      x:
+        width * (width < 540 ? 0.5 : 0.38) -
+        (base.x + offset.x) * previous.scale,
+      y: height * 0.38 - (base.y + offset.y) * previous.scale,
+    }));
+    // Focus only on selection changes. Dragging must not recenter the camera.
+  }, [selection?.kind, selection?.id]);
+  const cardDetails =
+    selectedNode?.details
+      ?.filter(([label]) =>
+        /^(Source|Source family|Source retrieved|Source basis|Source status|Status|Coverage|Published|Published time|Observed time|Reported time|Period|Source months|Precision|Location precision)$/.test(
+          label,
+        ),
+      )
+      .slice(0, 4) ?? [];
   useEffect(() => {
     const element = container.current;
     if (!element) return;
@@ -280,6 +333,10 @@ export function GraphCanvas({
   }
 
   const presentFamilies = [...new Set(nodes.map(family))];
+  function resetGraph() {
+    setOffsets({});
+    setView({ x: 0, y: 0, scale: 1 });
+  }
   function zoom(factor: number) {
     setView((previous) => {
       const scale = Math.max(0.65, Math.min(3.5, previous.scale * factor));
@@ -381,7 +438,7 @@ export function GraphCanvas({
                 }
                 if (event.key === "0") {
                   event.preventDefault();
-                  setView({ x: 0, y: 0, scale: 1 });
+                  resetGraph();
                 }
               }}
               onPointerDown={startDrag}
@@ -505,8 +562,78 @@ export function GraphCanvas({
                       tabIndex={0}
                       aria-label={`Inspect ${node.label}, ${node.type}${node.synthetic ? ", fictional" : ""}`}
                       aria-pressed={selected}
-                      onPointerDown={(event) => event.stopPropagation()}
-                      onClick={() => onSelect({ kind: "node", id: node.id })}
+                      onPointerDown={(event) => {
+                        event.stopPropagation();
+                        if (event.button !== 0 || nodeDrag.current) return;
+                        suppressClick.current = null;
+                        nodeDrag.current = {
+                          id: node.id,
+                          pointerId: event.pointerId,
+                          x: event.clientX,
+                          y: event.clientY,
+                          start: offsets[node.id] ?? { x: 0, y: 0 },
+                          scale: view.scale,
+                          moved: false,
+                        };
+                        event.currentTarget.setPointerCapture(event.pointerId);
+                      }}
+                      onPointerMove={(event) => {
+                        event.stopPropagation();
+                        const current = nodeDrag.current;
+                        if (!current || current.pointerId !== event.pointerId)
+                          return;
+                        const dx = event.clientX - current.x,
+                          dy = event.clientY - current.y;
+                        if (!current.moved && Math.hypot(dx, dy) < 5) return;
+                        current.moved = true;
+                        setOffsets((previous) => ({
+                          ...previous,
+                          [current.id]: {
+                            x: Math.max(
+                              -width * 2,
+                              Math.min(
+                                width * 2,
+                                current.start.x + dx / current.scale,
+                              ),
+                            ),
+                            y: Math.max(
+                              -height * 2,
+                              Math.min(
+                                height * 2,
+                                current.start.y + dy / current.scale,
+                              ),
+                            ),
+                          },
+                        }));
+                      }}
+                      onPointerUp={(event) => {
+                        event.stopPropagation();
+                        const current = nodeDrag.current;
+                        if (!current || current.pointerId !== event.pointerId)
+                          return;
+                        if (current.moved) suppressClick.current = node.id;
+                        nodeDrag.current = null;
+                        if (
+                          event.currentTarget.hasPointerCapture(event.pointerId)
+                        )
+                          event.currentTarget.releasePointerCapture(
+                            event.pointerId,
+                          );
+                      }}
+                      onPointerCancel={() => {
+                        nodeDrag.current = null;
+                        suppressClick.current = node.id;
+                      }}
+                      onLostPointerCapture={() => {
+                        nodeDrag.current = null;
+                      }}
+                      onClick={() => {
+                        if (suppressClick.current === node.id) {
+                          suppressClick.current = null;
+                          return;
+                        }
+                        onSelect({ kind: "node", id: node.id });
+                      }}
                       onKeyDown={(event) =>
                         activate(event, { kind: "node", id: node.id })
                       }
@@ -550,6 +677,45 @@ export function GraphCanvas({
                 })}
               </g>
             </svg>
+            {selectedNode && selectedPoint && (
+              <aside
+                className="gc-source-card"
+                tabIndex={0}
+                aria-label="Selected source summary"
+                aria-live="polite"
+                style={{
+                  left: Math.max(
+                    8,
+                    Math.min(
+                      width - (width < 540 ? 230 : 270) - 8,
+                      selectedPoint.x * view.scale + view.x + 28,
+                    ),
+                  ),
+                  top: Math.max(
+                    8,
+                    Math.min(
+                      height - 250,
+                      selectedPoint.y * view.scale + view.y + 28,
+                    ),
+                  ),
+                }}
+              >
+                <span>
+                  {selectedNode.synthetic
+                    ? "Fictional record"
+                    : selectedNode.type.replace(/([a-z])([A-Z])/g, "$1 $2")}
+                </span>
+                <strong>{selectedNode.label}</strong>
+                <dl>
+                  {cardDetails.map(([label, value]) => (
+                    <div key={label}>
+                      <dt>{label}</dt>
+                      <dd>{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </aside>
+            )}
             <div className="gc-controls" aria-label="Graph zoom controls">
               <button
                 type="button"
@@ -567,16 +733,12 @@ export function GraphCanvas({
               >
                 <Minus size={19} />
               </button>
-              <button
-                type="button"
-                aria-label="Fit graph"
-                onClick={() => setView({ x: 0, y: 0, scale: 1 })}
-              >
+              <button type="button" aria-label="Fit graph" onClick={resetGraph}>
                 <Maximize2 size={18} />
               </button>
             </div>
             <div className="gc-caption">
-              <span>Drag to explore · Select a node or edge</span>
+              <span>Drag nodes to arrange · Drag background to explore</span>
               <output aria-label="Graph zoom">
                 {Math.round(view.scale * 100)}%
               </output>
@@ -594,6 +756,7 @@ export function GraphCanvas({
           Context only
         </span>
         <span>Size: connection count</span>
+        <span>Position is a layout, not geography</span>
         <span>
           {nodes.length} nodes · {edges.length} edges
         </span>

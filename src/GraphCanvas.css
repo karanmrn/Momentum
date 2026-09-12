@@ -340,3 +340,55 @@
   outline: 2px solid #f2be7d;
   outline-offset: -3px;
 }
+
+.gc-source-card {
+  position: absolute;
+  z-index: 2;
+  width: 270px;
+  max-height: 220px;
+  overflow: auto;
+  padding: 12px 14px;
+  color: #e3eee6;
+  background: #293b32;
+  border: 1px solid #799589;
+  border-radius: 10px;
+  pointer-events: auto;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.gc-source-card > span {
+  color: #b9d1c5;
+  display: block;
+  margin-bottom: 6px;
+}
+.gc-source-card strong {
+  display: block;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.gc-source-card dl {
+  margin: 8px 0 0;
+}
+.gc-source-card dl > div {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.gc-source-card dt {
+  color: #b9d1c5;
+  flex: 0 0 78px;
+}
+.gc-source-card dd {
+  margin: 0;
+  min-width: 0;
+}
+@media (max-width: 540px) {
+  .gc-source-card {
+    width: 230px;
+  }
+}
+
+.gc-source-card:focus-visible {
+  outline: 3px solid #f2be7d;
+  outline-offset: -3px;
+}

@@ -644,6 +644,10 @@ export function CommunityWorkspace({
   const [tab, setTab] = useState("reports");
   const [selected, setSelected] = useState<string | null>(null);
   const [correcting, setCorrecting] = useState(false);
+  const [receiptView, setReceiptView] = useState<
+    "report" | "evidence" | "changes"
+  >("report");
+  useEffect(() => setReceiptView("report"), [selected, pilotId, persona]);
   const [busy, setBusy] = useState(false);
   const [share, setShare] = useState<{ id: string; path: string } | null>(null);
   const keys = useRef(new Map<string, string>());
@@ -976,59 +980,119 @@ export function CommunityWorkspace({
               <p className="cw-state">
                 {labels(record.status)} · revision {record.revision}
               </p>
-              <dl>
-                <dt>Receipt reference</dt>
-                <dd>{record.id}</dd>
-                <dt>Report reference</dt>
-                <dd>{record.report.id}</dd>
-                <dt>Saved</dt>
-                <dd>{time(record.createdAt)}</dd>
-                <dt>Publication preference</dt>
-                <dd>{labels(record.intake.publication)}</dd>
-                <dt>Approximate place</dt>
-                <dd>{record.intake.place}</dd>
-                <dt>Observed interval</dt>
-                <dd>
-                  {time(record.intake.observedFrom)} to{" "}
-                  {time(record.intake.observedTo)} ·{" "}
-                  {labels(record.intake.timePrecision)}
-                </dd>
-                <dt>Source basis</dt>
-                <dd>{labels(record.intake.basis)}</dd>
-                {record.intake.sourceDescription && (
-                  <>
-                    <dt>Private source description</dt>
-                    <dd>{record.intake.sourceDescription}</dd>
-                  </>
-                )}
-                <dt>Optional narrative</dt>
-                <dd>{record.intake.narrative || "Not supplied"}</dd>
-              </dl>
-              {record.notice && (
-                <a
-                  href={`/?demo=1&workspace=community&area=${pilotId}&notice=${record.notice.id}`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setTab("published");
-                  }}
-                >
-                  Open reviewed public summary
-                </a>
-              )}
-              <h3>Private status history</h3>
-              <ol className="cw-history">
-                {[...record.history].reverse().map((item) => (
-                  <li key={item.revision}>
-                    <strong>
-                      {labels(item.action)} · revision {item.revision}
-                    </strong>
-                    <span>
-                      {item.actor} · {time(item.at)}
-                    </span>
-                    <p>{item.message}</p>
-                  </li>
+              <nav className="cw-journey" aria-label="Report journey">
+                {(["report", "evidence", "changes"] as const).map((step) => (
+                  <button
+                    key={step}
+                    type="button"
+                    aria-pressed={receiptView === step}
+                    aria-controls={`receipt-${step}`}
+                    onClick={() => setReceiptView(step)}
+                  >
+                    {step === "report"
+                      ? "Report"
+                      : step === "evidence"
+                        ? "Evidence"
+                        : "Changes"}
+                  </button>
                 ))}
-              </ol>
+              </nav>
+              <div id="receipt-report" hidden={receiptView !== "report"}>
+                <dl>
+                  <dt>Receipt reference</dt>
+                  <dd>{record.id}</dd>
+                  <dt>Report reference</dt>
+                  <dd>{record.report.id}</dd>
+                  <dt>Saved</dt>
+                  <dd>{time(record.createdAt)}</dd>
+                  <dt>Publication preference</dt>
+                  <dd>{labels(record.intake.publication)}</dd>
+                  <dt>Approximate place</dt>
+                  <dd>{record.intake.place}</dd>
+                  <dt>Observed interval</dt>
+                  <dd>
+                    {time(record.intake.observedFrom)} to{" "}
+                    {time(record.intake.observedTo)} ·{" "}
+                    {labels(record.intake.timePrecision)}
+                  </dd>
+                  <dt>Source basis</dt>
+                  <dd>{labels(record.intake.basis)}</dd>
+                  {record.intake.sourceDescription && (
+                    <>
+                      <dt>Private source description</dt>
+                      <dd>{record.intake.sourceDescription}</dd>
+                    </>
+                  )}
+                  <dt>Optional narrative</dt>
+                  <dd>{record.intake.narrative || "Not supplied"}</dd>
+                </dl>
+                {record.notice && (
+                  <a
+                    href={`/?demo=1&workspace=community&area=${pilotId}&notice=${record.notice.id}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setTab("published");
+                    }}
+                  >
+                    Open reviewed public summary
+                  </a>
+                )}
+              </div>
+              <section
+                id="receipt-evidence"
+                hidden={receiptView !== "evidence"}
+                aria-label="Area evidence"
+              >
+                <h3>Area evidence</h3>
+                <p>
+                  Explore published sources for this area. These sources do not
+                  confirm your observation or describe the same event.
+                </p>
+                <a
+                  className="cw-journey-link"
+                  href={`/?public=1&workspace=graph&area=${pilotId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open area graph (new tab)
+                </a>
+                <p>
+                  Your private report stays here. No report details are included
+                  in the link.
+                </p>
+              </section>
+              <section
+                id="receipt-changes"
+                hidden={receiptView !== "changes"}
+                aria-label="Report changes"
+              >
+                <h3>Private status history</h3>
+                <ol className="cw-history">
+                  {[...record.history].reverse().map((item) => (
+                    <li key={item.revision}>
+                      <strong>
+                        {labels(item.action)} · revision {item.revision}
+                      </strong>
+                      <span>
+                        {item.actor} · {time(item.at)}
+                      </span>
+                      <p>{item.message}</p>
+                    </li>
+                  ))}
+                </ol>
+                <p>
+                  This history records review activity. It does not confirm
+                  action by police or the council.
+                </p>
+              </section>
+              <a
+                className="cw-journey-link"
+                href={`/?public=1&tab=help&area=${pilotId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Get help (new tab)
+              </a>
               {moderator ? (
                 <ReviewForm
                   key={record.id}
