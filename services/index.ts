@@ -1,3 +1,4 @@
+import { getCroydonProgrammeSource } from './data/recent-programme';
 import { getCamdenHelp, getCamdenDirectorySource } from './data/camden-help';
 import { getLocalSources, getLocalHelp } from './data/local-services';
 import { getCamdenLighting } from './ingestion/camden-lighting';
@@ -44,6 +45,7 @@ export async function getSources(pilotId: PilotId): Promise<SourceCard[]> {
     police.summary = `Latest reporting month: ${metadata.date.slice(0, 7)}. Historical records are not live warnings. Pilot counts are not calculated.`;
   } catch { /* An outage cannot become a zero count or an all-clear state. */ }
   const local = getLocalSources(pilotId);
+  if (pilotId === 'west_croydon') local.unshift(getCroydonProgrammeSource());
   if (pilotId === 'camden_town') local.push(getCamdenDirectorySource(), await getCamdenLighting());
   return [...local, police, {
     id: 'T01', title: 'TfL travel information',
