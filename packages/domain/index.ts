@@ -220,7 +220,7 @@ export function withdrawReport(state: DemoState, actor: Persona, reportId: strin
   requireMember(actor);
   const report = requireOwnedReport(state, actor, reportId);
   requireRevision(report.revision, expectedRevision);
-  if (report.noticeId) prepareNoticeChange(state, report.noticeId);
+  if (report.status === 'withdrawn') return copy(report);
   report.revision += 1;
   report.status = 'withdrawn';
   report.title = 'Withdrawn report';
@@ -344,9 +344,13 @@ export function replayOrRecord<T>(
   const result = operation();
   state.idempotency[key] = { fingerprint, result: copy(result) };
   const keys = Object.keys(state.idempotency);
-  while (keys.length > MAX_IDEMPOTENCY_RECORDS) {
-    const oldest = keys.shift();
-    if (oldest) delete state.idempotency[oldest];
+  let excess = keys.length - MAX_IDEMPOTENCY_RECORDS;
+  for (const oldest of keys) {
+    if (excess <= 0) break;
+    // The report limit bounds creation keys. Keep them until the session expires.
+    if (oldest.startsWith('report:')) continue;
+    delete state.idempotency[oldest];
+    excess -= 1;
   }
   return result;
 }
@@ -435,7 +439,7 @@ function pendingNotificationRecipientCount(state: DemoState, pilotId: Notice['pi
 
 function withdrawNotice(state: DemoState, noticeId: string): void {
   const notice = requireNotice(state, noticeId);
-  prepareNoticeChange(state, noticeId);
+  // Final redaction must remain possible after ordinary revision limits are reached.
   notice.revision += 1;
   notice.status = 'retracted';
   notice.summary = PUBLIC_WITHDRAWN_SUMMARY;
@@ -444,7 +448,7 @@ function withdrawNotice(state: DemoState, noticeId: string): void {
   notice.updatedAt = new Date().toISOString();
   notice.timeline = notice.timeline.map((entry) => ({ ...entry, summary: PUBLIC_WITHDRAWN_SUMMARY }));
   notice.timeline.push({ revision: notice.revision, status: 'retracted', at: notice.updatedAt, summary: PUBLIC_WITHDRAWN_SUMMARY });
-  correctNotice(state, notice);
+  correctNotice(state, notice, true);
 }
 
 function reviseNotice(state: DemoState, noticeId: string, action: 'resolve' | 'retract', summary: string): void {
@@ -458,18 +462,25 @@ function reviseNotice(state: DemoState, noticeId: string, action: 'resolve' | 'r
   correctNotice(state, notice);
 }
 
-function correctNotice(state: DemoState, notice: Notice): void {
-  const deliveredRecipients = new Set<Persona>();
-  for (const item of state.notifications) {
+function correctNotice(state: DemoState, notice: Notice, terminalWithdrawal = false): void {
+  const deliveredRecipients = new Map<Persona, number>();
+  for (const [index, item] of state.notifications.entries()) {
     if (item.noticeId !== notice.id) continue;
-    if (item.kind === 'notice' && item.state === 'delivered') deliveredRecipients.add(item.recipient);
-    if (item.kind === 'notice' && item.state === 'queued') item.state = 'suppressed';
+    if (item.kind === 'notice' && item.state === 'delivered') deliveredRecipients.set(item.recipient, index);
+    if (item.state === 'queued') item.state = 'suppressed';
   }
-  for (const recipient of deliveredRecipients) {
+  for (const [recipient, deliveredIndex] of deliveredRecipients) {
     const exists = state.notifications.some((item) =>
       item.noticeId === notice.id && item.revision === notice.revision && item.recipient === recipient && item.kind === 'correction',
     );
-    if (!exists) state.notifications.push(notification(randomUUID(), notice.id, notice.revision, recipient, 'correction', 'queued'));
+    if (exists) continue;
+    const correction = notification(randomUUID(), notice.id, notice.revision, recipient, 'correction', 'queued');
+    if (terminalWithdrawal && state.notifications.length >= MAX_NOTIFICATIONS) {
+      // Replace this recipient's obsolete item so final corrections need no extra capacity.
+      state.notifications[deliveredIndex] = correction;
+    } else {
+      state.notifications.push(correction);
+    }
   }
 }
 
