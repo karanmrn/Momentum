@@ -228,6 +228,15 @@ export const reportInputSchema = z
   })
   .strict();
 export type ReportInput = z.infer<typeof reportInputSchema>;
+export const reportEditChangesSchema = reportInputSchema.omit({ pilotId: true });
+export type ReportEditChanges = z.infer<typeof reportEditChangesSchema>;
+export const reportEditSchema = z.object({
+  action: z.literal("edit"),
+  expectedRevision: z.number().int().positive().max(Number.MAX_SAFE_INTEGER - 1),
+  changes: reportEditChangesSchema,
+}).strict();
+export type ReportEditInput = z.infer<typeof reportEditSchema>;
+
 export const decisionSchema = z
   .object({
     expectedRevision: z.number().int().positive(),
