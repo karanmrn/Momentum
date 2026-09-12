@@ -28,6 +28,7 @@ import type {
   Area,
   EvidenceGraph,
   HelpCard,
+  HistoricalCoverage,
   Notice,
   Notification,
   Persona,
@@ -45,7 +46,7 @@ type AreaData = {
   notices: Notice[];
   help: HelpCard[];
   sources: SourceCard[];
-  history: { status: string; estimate: null; explanation: string } | null;
+  history: HistoricalCoverage | null;
 };
 type MemberPersona = Exclude<Persona, "moderator">;
 const tabs: Array<[Tab, string]> = [
@@ -169,7 +170,7 @@ function Modal({
   );
 }
 
-function PilotMap({ area }: { area: Area }) {
+function PilotMap({ area, help }: { area: Area; help: HelpCard[] }) {
   const element = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -177,11 +178,12 @@ function PilotMap({ area }: { area: Area }) {
     setFailed(false);
     let map: L.Map | undefined;
     try {
-      map = L.map(element.current, { zoomControl: false }).setView(
+      const leafletMap = L.map(element.current, { zoomControl: false }).setView(
         area.center,
         14,
       );
-      L.control.zoom({ position: "bottomright" }).addTo(map);
+      map = leafletMap;
+      L.control.zoom({ position: "bottomright" }).addTo(leafletMap);
       const tiles = L.tileLayer(
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
@@ -189,8 +191,25 @@ function PilotMap({ area }: { area: Area }) {
           attribution:
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         },
-      ).addTo(map);
+      ).addTo(leafletMap);
       tiles.on("tileerror", () => setFailed(true));
+      const popup = (title: string, detail: string, href?: string) => {
+        const content = document.createElement("div");
+        const heading = document.createElement("strong");
+        heading.textContent = title;
+        const description = document.createElement("p");
+        description.textContent = detail;
+        content.append(heading, description);
+        if (href) {
+          const link = document.createElement("a");
+          link.href = href;
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.textContent = "Open source";
+          content.append(link);
+        }
+        return content;
+      };
       L.marker(area.center, {
         icon: L.divIcon({
           className: "",
@@ -199,17 +218,35 @@ function PilotMap({ area }: { area: Area }) {
           iconAnchor: [7, 7],
         }),
       })
-        .addTo(map)
-        .bindPopup(
-          `<strong>${area.shortName}</strong><br>Approximate pilot-area anchor`,
-        );
+        .addTo(leafletMap)
+        .bindPopup(popup(area.shortName, "Approximate pilot-area anchor"));
+      help
+        .filter((item) => item.coordinates)
+        .forEach((item) => {
+          L.marker(item.coordinates!, {
+            icon: L.divIcon({
+              className: "",
+              html: '<div class="help-anchor" aria-hidden="true"></div>',
+              iconSize: [18, 18],
+              iconAnchor: [9, 9],
+            }),
+          })
+            .addTo(leafletMap)
+            .bindPopup(
+              popup(
+                item.name,
+                `${item.address || "Council-listed location"}. Availability unconfirmed.`,
+                item.url,
+              ),
+            );
+        });
     } catch {
       setFailed(true);
     }
     return () => {
       map?.remove();
     };
-  }, [area]);
+  }, [area, help]);
   return failed ? (
     <div className="map-fallback">
       <div>
@@ -248,25 +285,20 @@ function NoticeCard({
     <article className="notice">
       <div className="notice-head">
         <StatusTag tone="orange">Synthetic</StatusTag>
-        <StatusTag>{notice.category}</StatusTag>
-        <StatusTag tone={notice.status === "active" ? "dark" : ""}>
-          {notice.status}
-        </StatusTag>
       </div>
       <h3>{notice.title}</h3>
       <p>{notice.summary}</p>
       <p>
         <strong>{notice.place}</strong> · observed {observed}
       </p>
-      <div className="tag-row">
-        <StatusTag>
-          {source?.sourceKind.replaceAll("_", " ") || "Source not supplied"}
-        </StatusTag>
-        <StatusTag>
-          {source?.precision.replaceAll("_", " ") || "Precision unknown"}
-        </StatusTag>
-        <StatusTag>{notice.reviewStatus.replaceAll("_", " ")}</StatusTag>
-      </div>
+      <p className="notice-facts">
+        {notice.category} · {notice.status} ·{" "}
+        {source?.sourceKind.replaceAll("_", " ") || "Source not supplied"}
+      </p>
+      <p className="notice-facts">
+        {source?.precision.replaceAll("_", " ") || "Precision unknown"} ·{" "}
+        {notice.reviewStatus.replaceAll("_", " ")}
+      </p>
       <div className="actions">
         <button className="button secondary" onClick={() => onInspect(notice)}>
           Source and history <ChevronRight size={14} />
@@ -550,6 +582,23 @@ function Sources({ sources }: { sources: SourceCard[] }) {
             </div>
             <h3>{source.title}</h3>
             <p>{source.summary}</p>
+            {source.coverage && (
+              <p className="source-fact">
+                <strong>Coverage:</strong>{" "}
+                {source.coverage === "sample"
+                  ? "Retrieved sample"
+                  : source.coverage.replaceAll("_", " ")}
+              </p>
+            )}
+            {typeof source.recordCount === "number" &&
+              source.coverage === "sample" && (
+                <p className="source-fact">
+                  <strong>
+                    {source.recordCountLabel || "Records in this sample"}:
+                  </strong>{" "}
+                  {source.recordCount}
+                </p>
+              )}
             <p>
               {source.publishedAt
                 ? `Published ${new Date(source.publishedAt).toLocaleString("en-GB")}`
@@ -559,6 +608,14 @@ function Sources({ sources }: { sources: SourceCard[] }) {
                 ? `retrieved ${new Date(source.fetchedAt).toLocaleString("en-GB")}`
                 : "retrieval time unavailable"}
             </p>
+            {source.checkedAt && (
+              <p className="source-fact">
+                Checked {new Date(source.checkedAt).toLocaleString("en-GB")}
+              </p>
+            )}
+            {source.attribution && (
+              <p className="source-fact">{source.attribution}</p>
+            )}
             <a href={source.url} target="_blank" rel="noreferrer">
               Open source
             </a>
@@ -583,6 +640,8 @@ function Dashboard({
   canReport,
   report,
   inspect,
+  mapOpen,
+  toggleMap,
 }: {
   area: Area;
   tab: Tab;
@@ -593,6 +652,8 @@ function Dashboard({
   canReport: boolean;
   report: () => void;
   inspect: (notice: Notice) => void;
+  mapOpen: boolean;
+  toggleMap: () => void;
 }) {
   return (
     <>
@@ -608,24 +669,46 @@ function Dashboard({
           </button>
         ))}
       </div>
-      <div className="page-heading">
+      <div className="page-heading area-heading">
         <div>
+          <span className="eyebrow">Local information</span>
           <h1>{area.shortName}</h1>
           <p className="subtle">{area.place} · boundary review pending</p>
         </div>
-        {canReport && (
-          <button className="button" onClick={report}>
-            <Plus size={16} /> Share observation
-          </button>
-        )}
+        <div className="heading-actions">
+          {(tab === "now" || tab === "community") && (
+            <div className="map-switcher" aria-label="Map and list view">
+              <button
+                className="button secondary"
+                onClick={() => mapOpen && toggleMap()}
+                aria-pressed={!mapOpen}
+              >
+                List view
+              </button>
+              <button
+                className="button secondary"
+                onClick={() => !mapOpen && toggleMap()}
+                aria-pressed={mapOpen}
+              >
+                Map view
+              </button>
+            </div>
+          )}
+          {canReport && (
+            <button className="button" onClick={report}>
+              <Plus size={16} /> Share observation
+            </button>
+          )}
+        </div>
       </div>
       {(tab === "now" || tab === "community") && (
         <>
-          <div className="dashboard">
+          <div className={`dashboard ${mapOpen ? "map-open" : ""}`}>
             <section className="panel map-panel">
-              <PilotMap area={area} />
+              <PilotMap area={area} help={data.help} />
               <div className="map-caption">
-                Approximate pilot-area anchor. No incident coordinates.
+                Approximate pilot-area anchor and council-listed help points. No
+                incident coordinates.
               </div>
             </section>
             <section className="panel feed-panel">
@@ -659,7 +742,7 @@ function Dashboard({
               </div>
             </section>
           </div>
-          <section className="grid section">
+          <section className="grid section overview-grid">
             <section className="panel feed-panel">
               <h2>Source status</h2>
               <Sources sources={data.sources} />
@@ -709,6 +792,33 @@ function Dashboard({
           {data.history ? (
             <>
               <p>{data.history.explanation}</p>
+              {data.history.latestMonth && (
+                <p>
+                  <strong>Latest published month:</strong>{" "}
+                  {data.history.latestMonth}
+                </p>
+              )}
+              {data.history.availableMonths?.length ? (
+                <p>
+                  <strong>Available periods:</strong>{" "}
+                  {data.history.availableMonths.join(", ")}
+                </p>
+              ) : null}
+              {data.history.fetchedAt && (
+                <p className="source-fact">
+                  Checked{" "}
+                  {new Date(data.history.fetchedAt).toLocaleString("en-GB")}
+                </p>
+              )}
+              {data.history.sourceUrl && (
+                <a
+                  href={data.history.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open historical data source
+                </a>
+              )}
               <p>
                 <strong>Result:</strong>{" "}
                 {data.history.status.replaceAll("_", " ")}
@@ -741,13 +851,31 @@ function Help({ item }: { item: HelpCard }) {
       </div>
       <h3>{item.name}</h3>
       <p>{item.summary}</p>
+      {item.address && (
+        <p className="source-fact">
+          <strong>Address:</strong> {item.address}
+        </p>
+      )}
+      {item.services?.length ? (
+        <p className="source-fact">
+          <strong>Services:</strong> {item.services.join(", ")}
+        </p>
+      ) : null}
       {item.schedule && (
         <p>
           <strong>Published schedule:</strong> {item.schedule}
         </p>
       )}
+      {item.sourceLabel && (
+        <p className="source-fact">Source: {item.sourceLabel}</p>
+      )}
+      {item.checkedAt && (
+        <p className="source-fact">
+          Checked {new Date(item.checkedAt).toLocaleString("en-GB")}
+        </p>
+      )}
       <a href={item.url} target="_blank" rel="noreferrer">
-        Open source listing
+        Open source
       </a>
     </article>
   );
@@ -1174,12 +1302,14 @@ function PreferencesPanel({
 
 function App() {
   const personaPending = useRef(false);
+  const areaRequestGeneration = useRef(0);
   const [switchingPersona, setSwitchingPersona] = useState(false);
   const [session, setSession] = useState<{ persona: Persona } | null>(null);
   const [areas, setAreas] = useState<Area[]>([]);
   const [areaId, setAreaId] = useState("hounslow_town_centre");
   const [tab, setTab] = useState<Tab>("now");
   const [view, setView] = useState<View>("dashboard");
+  const [mapOpen, setMapOpen] = useState(false);
   const [data, setData] = useState<AreaData>({
     notices: [],
     help: [],
@@ -1205,13 +1335,17 @@ function App() {
     setReportOpen(false);
   };
   const loadArea = async (id: string) => {
+    const generation = ++areaRequestGeneration.current;
+    setData({ notices: [], help: [], sources: [], history: null });
     const [notices, help, sources, history] = await Promise.all([
       api.feed(id),
       api.help(id),
       api.sources(id),
       api.history(id),
     ]);
-    setData({ notices, help, sources, history });
+    if (generation === areaRequestGeneration.current) {
+      setData({ notices, help, sources, history });
+    }
   };
   const loadMember = async () => {
     const [nextReports, nextPrefs, nextFeed, nextNotes] = await Promise.all([
@@ -1358,7 +1492,7 @@ function App() {
           </span>
           Streetwise
         </div>
-        <nav className="nav" aria-label="Primary navigation">
+        <nav className="nav" aria-label="Website navigation">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -1386,6 +1520,7 @@ function App() {
           service for an emergency or as a live safety warning.
         </div>
         <header className="topbar">
+          <div className="mobile-brand">Streetwise</div>
           <div className="area-control">
             <span className="eyebrow">Pilot area</span>
             <select
@@ -1421,6 +1556,22 @@ function App() {
               </select>
             </label>
           </div>
+          {isMember(session.persona) && (
+            <div className="mobile-utilities" aria-label="More sections">
+              <button
+                className="utility-button"
+                onClick={() => setView("preferences")}
+              >
+                Preferences
+              </button>
+              <button
+                className="utility-button"
+                onClick={() => setView("research")}
+              >
+                Research
+              </button>
+            </div>
+          )}
         </header>
         {error && (
           <div className="error" role="alert">
@@ -1441,6 +1592,8 @@ function App() {
             canReport={isMember(session.persona)}
             report={() => setReportOpen(true)}
             inspect={setNoticeOpen}
+            mapOpen={mapOpen}
+            toggleMap={() => setMapOpen((open) => !open)}
           />
         )}
         {view === "reports" && isMember(session.persona) && (
@@ -1498,19 +1651,68 @@ function App() {
         )}
       </main>
       <nav className="mobile-nav" aria-label="Mobile navigation">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <button
-              className={view === item.id ? "active" : ""}
-              key={item.id}
-              onClick={() => setView(item.id)}
-            >
-              <Icon size={18} />
-              {item.label}
-            </button>
-          );
-        })}
+        {isMember(session.persona)
+          ? [
+              {
+                id: "dashboard" as View,
+                label: "Explore",
+                icon: MapIcon,
+                action: () => {
+                  setView("dashboard");
+                  setTab("now");
+                },
+              },
+              {
+                id: "reports" as View,
+                label: "My reports",
+                icon: ClipboardList,
+                action: () => setView("reports"),
+              },
+              {
+                id: "inbox" as View,
+                label: "Updates",
+                icon: Bell,
+                action: () => setView("inbox"),
+              },
+              {
+                id: "help" as View,
+                label: "Get help",
+                icon: Compass,
+                action: () => {
+                  setView("dashboard");
+                  setTab("help");
+                },
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              const active =
+                item.label === "Get help"
+                  ? view === "dashboard" && tab === "help"
+                  : view === item.id;
+              return (
+                <button
+                  className={active ? "active" : ""}
+                  key={item.id}
+                  onClick={item.action}
+                >
+                  <Icon size={18} />
+                  {item.label}
+                </button>
+              );
+            })
+          : navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  className={view === item.id ? "active" : ""}
+                  key={item.id}
+                  onClick={() => setView(item.id)}
+                >
+                  <Icon size={18} />
+                  {item.label}
+                </button>
+              );
+            })}
       </nav>
       {reportOpen && isMember(session.persona) && (
         <ReportForm
