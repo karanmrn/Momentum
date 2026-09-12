@@ -1,3 +1,4 @@
+import { getCamdenHelpCacheTtl } from "../services/data/camden-help.js";
 import { getTransport, getTrafficCameras } from "../services/transport.js";
 import { randomUUID } from "node:crypto";
 import { Router, type Response } from "express";
@@ -14,7 +15,7 @@ import { getDatasetCoverage } from "../packages/datasets/src/coverage.js";
 /** Cache only validated pilot IDs. Each cache and pending map has at most three entries. */
 function areaCache<T>(
   read: (area: PilotId) => T | Promise<T>,
-  ttl: (data: T) => number = () => 300000,
+  ttl: (data: T, readStartedAt: number) => number = () => 300000,
 ) {
   const cache = new Map<
     PilotId,
@@ -29,10 +30,14 @@ function areaCache<T>(
     }
     let refresh = pending.get(area);
     if (!refresh) {
+      const readStartedAt = Date.now();
       refresh = Promise.resolve()
         .then(() => read(area))
         .then((data) => {
-          cache.set(area, { data, until: Date.now() + ttl(data) });
+          cache.set(area, {
+            data,
+            until: readStartedAt + Math.max(0, ttl(data, readStartedAt)),
+          });
           return data;
         })
         .catch(() => {
@@ -51,7 +56,9 @@ export function createPublicRoutes(): Router {
   const sources = areaCache(getSources, (data) =>
     data.some((source) => source.status === "unavailable") ? 60000 : 300000,
   );
-  const help = areaCache(getHelp);
+  const help = areaCache(getHelp, (_data, startedAt) =>
+    getCamdenHelpCacheTtl(new Date(startedAt)),
+  );
   const history = areaCache(getHistoricalCoverage, (data) =>
     data.status === "source_unavailable" ? 60000 : 300000,
   );

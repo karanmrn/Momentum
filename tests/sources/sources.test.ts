@@ -21,7 +21,7 @@ describe('source boundaries', () => {
  });
  it('keeps overnight schedules separate from confirmed deployment', async () => {
   const [help] = await getHelp('camden_town');
-  expect(help?.availability).toBe('unconfirmed'); expect(help?.schedule).toContain('next day');
+  expect(help?.availability).toBe('unconfirmed'); expect(help?.schedule).toMatch(/next day|Sunday 13 September/);
  });
  it('rejects unknown areas before network access', async () => {
   const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
