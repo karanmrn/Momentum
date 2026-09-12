@@ -1,0 +1,299 @@
+{
+  "schemaVersion": "1.0",
+  "fetchedAt": "2026-09-12T12:59:05.269Z",
+  "synthetic": false,
+  "publicationAllowed": false,
+  "live": {
+    "status": "collected",
+    "client": "Node fetch with truthful StreetwiseResearch/1.0 user agent",
+    "priorDefaultPythonRequest": "HTTP 403; no bypass used",
+    "sourceId": "TFL-UNIFIED",
+    "licence": "TfL transport data terms",
+    "licenceUrl": "https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service",
+    "requests": [
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/StopPoint/Search?query=Camden%20Town",
+        "fetchedAt": "2026-09-12T13:00:35.885Z",
+        "httpStatus": 200,
+        "checksum": "76ff88c2b15b8b367fa8fa90ca232788862501f14162be5c3e94d89958dd9c78",
+        "bytes": 2203,
+        "rawPath": ".data/datasets/tfl/search-940GZZLUCTN.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/StopPoint/940GZZLUCTN",
+        "fetchedAt": "2026-09-12T13:00:35.981Z",
+        "httpStatus": 200,
+        "checksum": "9ede76da039242a5ce1253fb4d80c31a3c2d4a3bcefa09cbaf7294ff850bcb58",
+        "bytes": 37824,
+        "rawPath": ".data/datasets/tfl/station-940GZZLUCTN.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/StopPoint/Search?query=Camden%20Road",
+        "fetchedAt": "2026-09-12T13:00:36.015Z",
+        "httpStatus": 200,
+        "checksum": "5f2717b4d82f0ff0a9792d071f5bc64c43d42d0459c601cf49f24039cfa50193",
+        "bytes": 2803,
+        "rawPath": ".data/datasets/tfl/search-910GCMDNRD.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/StopPoint/910GCMDNRD",
+        "fetchedAt": "2026-09-12T13:00:36.080Z",
+        "httpStatus": 200,
+        "checksum": "2118e91e8dcd4cf6e1911fac5c3996c0ec52c70c8309ac135c00c34f15fe901a",
+        "bytes": 11172,
+        "rawPath": ".data/datasets/tfl/station-910GCMDNRD.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/StopPoint/Search?query=Hounslow%20Central",
+        "fetchedAt": "2026-09-12T13:00:36.147Z",
+        "httpStatus": 200,
+        "checksum": "33c3b240cf4a22746873ce4a8925e4fa21046238b01f7b2daa43b522376df0c9",
+        "bytes": 946,
+        "rawPath": ".data/datasets/tfl/search-940GZZLUHWC.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/StopPoint/940GZZLUHWC",
+        "fetchedAt": "2026-09-12T13:00:36.183Z",
+        "httpStatus": 200,
+        "checksum": "bc8d6abf813595f59a68c94fec4810e85c3460f7fdae79ed8290f9108e18a409",
+        "bytes": 19307,
+        "rawPath": ".data/datasets/tfl/station-940GZZLUHWC.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/StopPoint/Search?query=Hounslow%20East",
+        "fetchedAt": "2026-09-12T13:00:36.219Z",
+        "httpStatus": 200,
+        "checksum": "0380bd7609895bd232558e7617cbe773ab4d3c4bbb8f3423d7a95e71fb88eaef",
+        "bytes": 944,
+        "rawPath": ".data/datasets/tfl/search-940GZZLUHWE.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/StopPoint/940GZZLUHWE",
+        "fetchedAt": "2026-09-12T13:00:36.257Z",
+        "httpStatus": 200,
+        "checksum": "4ee9d973e356d4594c27aec0b5bd3ef29121df4f8adfb0c540c996eb0d0a1fb7",
+        "bytes": 24510,
+        "rawPath": ".data/datasets/tfl/station-940GZZLUHWE.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/StopPoint/Search?query=West%20Croydon",
+        "fetchedAt": "2026-09-12T13:00:36.293Z",
+        "httpStatus": 200,
+        "checksum": "9d631dc2320b45d06d8e382aaf313f1539649439a58945bc268ee2994ed482ac",
+        "bytes": 1883,
+        "rawPath": ".data/datasets/tfl/search-HUBWCY.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/StopPoint/HUBWCY",
+        "fetchedAt": "2026-09-12T13:00:36.336Z",
+        "httpStatus": 200,
+        "checksum": "428d50c72d27a11e14be7cc86ae45f623355b3f9ff76e0d9c4b3a2caf17b634f",
+        "bytes": 58135,
+        "rawPath": ".data/datasets/tfl/station-HUBWCY.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/Line/109,154,157,166,194,198,250,264,289,367,403,407,410,450,60,64,645,689,75,mildmay/Status",
+        "fetchedAt": "2026-09-12T13:00:36.505Z",
+        "httpStatus": 200,
+        "checksum": "b41168eab186b369cc9648ce467eecacef030764b1c0ac336a1c8ad2f2d406e5",
+        "bytes": 14455,
+        "rawPath": ".data/datasets/tfl/line-status-0.json"
+      },
+      {
+        "sourceUrl": "https://api.tfl.gov.uk/Line/n109,n250,northern,piccadilly,sl6,sl7,southern,tram,windrush/Status",
+        "fetchedAt": "2026-09-12T13:00:36.933Z",
+        "httpStatus": 200,
+        "checksum": "f85be055a0fe95b6b3e8b45bbcbf121fb8f3545e80fa922ad11f1dcfbe5da391",
+        "bytes": 9087,
+        "rawPath": ".data/datasets/tfl/line-status-1.json"
+      }
+    ],
+    "stations": [
+      {
+        "pilotId": "camden_town",
+        "id": "940GZZLUCTN",
+        "name": "Camden Town Underground Station",
+        "identityMatch": "verified_tfl_search_and_detail"
+      },
+      {
+        "pilotId": "camden_town",
+        "id": "910GCMDNRD",
+        "name": "Camden Road Rail Station",
+        "identityMatch": "verified_tfl_search_and_detail"
+      },
+      {
+        "pilotId": "hounslow_town_centre",
+        "id": "940GZZLUHWC",
+        "name": "Hounslow Central Underground Station",
+        "identityMatch": "verified_tfl_search_and_detail"
+      },
+      {
+        "pilotId": "hounslow_town_centre",
+        "id": "940GZZLUHWE",
+        "name": "Hounslow East Underground Station",
+        "identityMatch": "verified_tfl_search_and_detail"
+      },
+      {
+        "pilotId": "west_croydon",
+        "id": "HUBWCY",
+        "name": "West Croydon",
+        "identityMatch": "verified_tfl_search_and_detail"
+      }
+    ],
+    "stationCount": 5,
+    "lineCount": 29,
+    "selectedPath": ".data/datasets/tfl/selected-tfl.json",
+    "liveStatusCollected": true,
+    "attribution": "Powered by TfL Open Data",
+    "licenceReview": "Official transparency page confirms separate transport-data terms; full terms page retrieval timed out. Public release remains disabled.",
+    "reportedStatusLineCount": 29,
+    "unknownStatusLineCount": 0,
+    "operationalStatusCoverage": "complete"
+  },
+  "staticFallback": {
+    "sourceId": "DFT-NAPTAN",
+    "publisher": "Department for Transport",
+    "sourceUrl": "https://naptan.api.dft.gov.uk/v1/access-nodes?atcoAreaCodes=490,910,940&dataFormat=csv",
+    "licence": "UK Open Government Licence",
+    "licenceEvidence": "https://www.data.gov.uk/dataset/ff93ffc1-6656-47d8-9155-85ea0b8f2251/naptan",
+    "attribution": "Contains public sector information licensed under the Open Government Licence.",
+    "httpStatus": 200,
+    "checksum": "1be12439d7d1f6bdbed9a061ae93ba0035847bf82761a1e7d2106a33005657a3",
+    "bytes": 5679362,
+    "sourceRows": 26664,
+    "selectedRecords": 12,
+    "lastModified": null,
+    "dataKind": "static_transport_access_nodes",
+    "identities": [
+      {
+        "pilotId": "camden_town",
+        "id": "9400ZZLUCTN",
+        "name": "Camden Town Underground Station",
+        "stopType": "MET",
+        "longitude": -0.14273950793,
+        "latitude": 51.53929194126,
+        "modified": "2007-09-26T09:00:00",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "camden_town",
+        "id": "9100CMDNRD",
+        "name": "Camden Road Rail Station",
+        "stopType": "RLY",
+        "longitude": -0.138700821,
+        "latitude": 51.54179078703,
+        "modified": "2010-05-10T19:45:00",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "hounslow_town_centre",
+        "id": "9400ZZLUHWC",
+        "name": "Hounslow Central Underground Station",
+        "stopType": "MET",
+        "longitude": -0.36657842155,
+        "latitude": 51.47129520696,
+        "modified": "2010-06-23T16:52:00",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "hounslow_town_centre",
+        "id": "9400ZZLUHWE",
+        "name": "Hounslow East Underground Station",
+        "stopType": "MET",
+        "longitude": -0.35647379385,
+        "latitude": 51.47321325864,
+        "modified": "2010-06-23T16:52:00",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "west_croydon",
+        "id": "9100WCROYDN",
+        "name": "West Croydon Rail Station",
+        "stopType": "RLY",
+        "longitude": -0.10258547056,
+        "latitude": 51.37842775403,
+        "modified": "2007-09-26T13:00:00",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "west_croydon",
+        "id": "9400ZZCRWCR",
+        "name": "West Croydon Tram Stop",
+        "stopType": "MET",
+        "longitude": -0.10170081496,
+        "latitude": 51.37897097308,
+        "modified": "2010-06-23T15:22:00",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "west_croydon",
+        "id": "490014420B8",
+        "name": "West Croydon Bus Station",
+        "stopType": "BCT",
+        "longitude": -0.10108,
+        "latitude": 51.3787,
+        "modified": "2019-03-12T11:56:10",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "west_croydon",
+        "id": "490014420V",
+        "name": "West Croydon Bus Station",
+        "stopType": "BCT",
+        "longitude": -0.10112,
+        "latitude": 51.37916,
+        "modified": "2025-10-23T10:58:17",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "west_croydon",
+        "id": "490014420W",
+        "name": "West Croydon Bus Station",
+        "stopType": "BCT",
+        "longitude": -0.10124,
+        "latitude": 51.37906,
+        "modified": "2016-09-27T10:51:05",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "west_croydon",
+        "id": "490014420X",
+        "name": "West Croydon Bus Station",
+        "stopType": "BCT",
+        "longitude": -0.10156,
+        "latitude": 51.37891,
+        "modified": "2016-09-27T10:51:22",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "west_croydon",
+        "id": "490014420Y",
+        "name": "West Croydon Bus Station",
+        "stopType": "BCT",
+        "longitude": -0.10148,
+        "latitude": 51.37907,
+        "modified": "2016-09-27T10:51:36",
+        "match": "verified_source_identity"
+      },
+      {
+        "pilotId": "west_croydon",
+        "id": "490014420Z",
+        "name": "West Croydon Bus Station",
+        "stopType": "BCT",
+        "longitude": -0.10131,
+        "latitude": 51.37932,
+        "modified": "2016-10-03T08:39:47",
+        "match": "verified_source_identity"
+      }
+    ],
+    "rawPath": ".data/datasets/tfl/naptan.csv",
+    "selectedPath": ".data/datasets/tfl/selected-stops.json"
+  },
+  "limitations": [
+    "Static stop registration does not confirm current service, staffing, accessibility, or working facilities.",
+    "Bounds validate named identity vicinity. They are not approved pilot boundaries.",
+    "National Rail and tram categories contain national rows. Only named anchor records are selected.",
+    "TfL status is a retrieval-time snapshot for entire lines. It is not proof of local danger or current service after retrieval.",
+    "NaPTAN ATCO codes and TfL grouped StopPoint IDs are separate identifiers. Preserve both source namespaces."
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-12T13:00:19.314Z",
+  "areas": [
+    {
+      "pilotId": "hounslow_town_centre",
+      "status": "acquired",
+      "sourceUrl": "https://data.police.uk/api/metropolitan/E05013620N/priorities",
+      "lookupUrl": "https://data.police.uk/api/locate-neighbourhood?q=51.4683,-0.3618",
+      "fetchedAt": "2026-09-12T13:00:19.075Z",
+      "neighbourhoodId": "E05013620N",
+      "priorityCount": 3,
+      "issueCount": 3,
+      "actionCount": 3,
+      "sourceAssertedLinks": 3,
+      "firstSourceDate": "2026-05-05T00:00:00",
+      "lastSourceDate": "2026-09-04T00:00:00",
+      "checksum": "b23de8b733a450795d246cc5420c04a5c174b51ecfb5f57b45e656f7ba4d1ac6",
+      "geographyDescription": "Police neighbourhood containing the research anchor; not an approved pilot boundary.",
+      "licence": "Open Government Licence v3.0",
+      "publicationAllowed": false,
+      "limitations": [
+        "Police-published priorities are not independent community reports.",
+        "Action wording may describe plans, not completed work.",
+        "Publication dates do not prove current local conditions."
+      ]
+    },
+    {
+      "pilotId": "camden_town",
+      "status": "acquired",
+      "sourceUrl": "https://data.police.uk/api/metropolitan/E05013655/priorities",
+      "lookupUrl": "https://data.police.uk/api/locate-neighbourhood?q=51.5392,-0.1426",
+      "fetchedAt": "2026-09-12T13:00:19.187Z",
+      "neighbourhoodId": "E05013655",
+      "priorityCount": 3,
+      "issueCount": 3,
+      "actionCount": 3,
+      "sourceAssertedLinks": 3,
+      "firstSourceDate": "2026-09-01T00:00:00",
+      "lastSourceDate": "2026-09-01T00:00:00",
+      "checksum": "629a4aa2f52b4ddc07d7c138bd7b34ebfe9da3e2e47ed5f151338a1086b8d200",
+      "geographyDescription": "Police neighbourhood containing the research anchor; not an approved pilot boundary.",
+      "licence": "Open Government Licence v3.0",
+      "publicationAllowed": false,
+      "limitations": [
+        "Police-published priorities are not independent community reports.",
+        "Action wording may describe plans, not completed work.",
+        "Publication dates do not prove current local conditions."
+      ]
+    },
+    {
+      "pilotId": "west_croydon",
+      "status": "acquired",
+      "sourceUrl": "https://data.police.uk/api/metropolitan/E05011468N/priorities",
+      "lookupUrl": "https://data.police.uk/api/locate-neighbourhood?q=51.3784,-0.1023",
+      "fetchedAt": "2026-09-12T13:00:19.259Z",
+      "neighbourhoodId": "E05011468N",
+      "priorityCount": 3,
+      "issueCount": 3,
+      "actionCount": 3,
+      "sourceAssertedLinks": 3,
+      "firstSourceDate": "2026-07-05T00:00:00",
+      "lastSourceDate": "2026-07-05T00:00:00",
+      "checksum": "aea2cb1b850a40f651712decfdf32bdd1ee991cb2a47fc5248bbb32dcf7acfd6",
+      "geographyDescription": "Police neighbourhood containing the research anchor; not an approved pilot boundary.",
+      "licence": "Open Government Licence v3.0",
+      "publicationAllowed": false,
+      "limitations": [
+        "Police-published priorities are not independent community reports.",
+        "Action wording may describe plans, not completed work.",
+        "Publication dates do not prove current local conditions."
+      ]
+    }
+  ]
+}

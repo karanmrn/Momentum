@@ -1,0 +1,155 @@
+{
+  "schemaVersion": "1.0",
+  "source": "ONS Census 2021, delivered by Nomis",
+  "dataset": "TS001",
+  "apiDataset": "NM_2021_1",
+  "period": "2021-03-21",
+  "fetchedAt": "2026-09-12T12:59:56.080Z",
+  "synthetic": false,
+  "publicationAllowed": false,
+  "alertEligible": false,
+  "licence": {
+    "name": "Open Government Licence",
+    "url": "https://www.nomisweb.co.uk/home/copyright.asp",
+    "attribution": "Source: Office for National Statistics, Census 2021, via Nomis. Crown copyright."
+  },
+  "documentation": [
+    "https://www.nomisweb.co.uk/datasets/c2021ts001",
+    "https://www.nomisweb.co.uk/api/v01/help",
+    "https://postcodes.io/docs/postcode/schema/"
+  ],
+  "limitations": [
+    "These are Census Day usual-resident counts. They are not current population or night-time footfall.",
+    "Each anchor selects the nearest postcode within 100 metres. Its 2021 geography codes select Census areas.",
+    "The lookup does not prove that the anchor lies inside that area. No boundary overlay was performed.",
+    "LSOA and MSOA totals overlap. Do not add them together.",
+    "These statistical areas are not approved pilot boundaries or town-centre population totals.",
+    "Do not use these counts as a personal danger estimate or a crime-rate denominator for pilot counts.",
+    "ONS applies statistical disclosure control. Counts can differ slightly between Census tables.",
+    "Postcodes.io supplies the geographic lookup. ONS through Nomis supplies the population counts."
+  ],
+  "status": "downloaded",
+  "rowCount": 6,
+  "queryUrl": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE01034143%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
+  "pilots": [
+    {
+      "pilotId": "camden_town",
+      "latitude": 51.5392,
+      "longitude": -0.1426,
+      "boroughCode": "E09000007",
+      "selectionMethod": "nearest_postcode_geography_lookup",
+      "lookupSource": "Postcodes.io",
+      "lookupUrl": "https://api.postcodes.io/postcodes?lon=-0.1426&lat=51.5392&limit=1",
+      "postcode": "NW1 8QL",
+      "postcodeDistanceMetres": 11.347427626274142,
+      "counts": [
+        {
+          "geographyCode": "E01000863",
+          "geographyName": "Camden 021A",
+          "geographyType": "2021 super output areas - lower layer",
+          "geographyVintage": 2021,
+          "usualResidents": 1476,
+          "observationStatus": "A",
+          "publicationFlag": "F"
+        },
+        {
+          "geographyCode": "E02000186",
+          "geographyName": "Camden 021",
+          "geographyType": "2021 super output areas - middle layer",
+          "geographyVintage": 2021,
+          "usualResidents": 6223,
+          "observationStatus": "A",
+          "publicationFlag": "F"
+        }
+      ]
+    },
+    {
+      "pilotId": "hounslow_town_centre",
+      "latitude": 51.4683,
+      "longitude": -0.3618,
+      "boroughCode": "E09000018",
+      "selectionMethod": "nearest_postcode_geography_lookup",
+      "lookupSource": "Postcodes.io",
+      "lookupUrl": "https://api.postcodes.io/postcodes?lon=-0.3618&lat=51.4683&limit=1",
+      "postcode": "TW3 1DA",
+      "postcodeDistanceMetres": 10.182368295226809,
+      "counts": [
+        {
+          "geographyCode": "E01033083",
+          "geographyName": "Hounslow 018F",
+          "geographyType": "2021 super output areas - lower layer",
+          "geographyVintage": 2021,
+          "usualResidents": 2217,
+          "observationStatus": "A",
+          "publicationFlag": "F"
+        },
+        {
+          "geographyCode": "E02000543",
+          "geographyName": "Hounslow 018",
+          "geographyType": "2021 super output areas - middle layer",
+          "geographyVintage": 2021,
+          "usualResidents": 14001,
+          "observationStatus": "A",
+          "publicationFlag": "F"
+        }
+      ]
+    },
+    {
+      "pilotId": "west_croydon",
+      "latitude": 51.3784,
+      "longitude": -0.1023,
+      "boroughCode": "E09000008",
+      "selectionMethod": "nearest_postcode_geography_lookup",
+      "lookupSource": "Postcodes.io",
+      "lookupUrl": "https://api.postcodes.io/postcodes?lon=-0.1023&lat=51.3784&limit=1",
+      "postcode": "CR0 1UF",
+      "postcodeDistanceMetres": 28.122303982450532,
+      "counts": [
+        {
+          "geographyCode": "E01034143",
+          "geographyName": "Croydon 020H",
+          "geographyType": "2021 super output areas - lower layer",
+          "geographyVintage": 2021,
+          "usualResidents": 1307,
+          "observationStatus": "A",
+          "publicationFlag": "F"
+        },
+        {
+          "geographyCode": "E02000213",
+          "geographyName": "Croydon 020",
+          "geographyType": "2021 super output areas - middle layer",
+          "geographyVintage": 2021,
+          "usualResidents": 12798,
+          "observationStatus": "A",
+          "publicationFlag": "F"
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "url": "https://api.postcodes.io/postcodes?lon=-0.1426&lat=51.5392&limit=1",
+      "rawPath": ".data/datasets/ons/2026-09-12T12-59-56-080Z/camden_town-lookup.json",
+      "sha256": "5717f21c78d0c858d5ed1e4a9633ce23331e72dc6e10c45d95865b2e6aeacf74",
+      "bytes": 1898
+    },
+    {
+      "url": "https://api.postcodes.io/postcodes?lon=-0.3618&lat=51.4683&limit=1",
+      "rawPath": ".data/datasets/ons/2026-09-12T12-59-56-080Z/hounslow_town_centre-lookup.json",
+      "sha256": "e521e60f4b8bd4dbacf0cafc7439e3b06500b589c59a931b5ed3d96cf5db85b2",
+      "bytes": 1934
+    },
+    {
+      "url": "https://api.postcodes.io/postcodes?lon=-0.1023&lat=51.3784&limit=1",
+      "rawPath": ".data/datasets/ons/2026-09-12T12-59-56-080Z/west_croydon-lookup.json",
+      "sha256": "0db040a8cdfbf294410bb4e7943e358eb13226c7242b94825883c7f46f2ce1cd",
+      "bytes": 1870
+    },
+    {
+      "url": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE01034143%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
+      "rawPath": ".data/datasets/ons/2026-09-12T12-59-56-080Z/ts001-population.csv",
+      "sha256": "2095a65e3aa47a49ad1e9242a56ad5ab1b0f0fd2b630e82d6822d433169c0802",
+      "bytes": 2560
+    }
+  ]
+}

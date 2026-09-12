@@ -1,14 +1,15 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-09-12T13:04:11.740Z",
+  "generatedAt": "2026-09-12T13:08:21.810Z",
   "records": [
     {
-      "pilotId": "hounslow_town_centre",
-      "recordCount": null,
       "id": "police-street",
       "title": "Historical police records",
+      "pilotId": "hounslow_town_centre",
       "sourceKind": "historical_police",
       "status": "acquired",
+      "sourceUrl": "https://data.police.uk/docs/method/crime-street/",
+      "geographyDescription": "Source-defined one-mile radius around the research anchor. This is not an approved town-centre boundary.",
       "acquiredMonths": [
         "2023-08",
         "2023-09",
@@ -49,10 +50,9 @@
       ],
       "latestMonth": "2026-07",
       "fetchedAt": "2026-09-12T13:01:07.550Z",
-      "sourceUrl": "https://data.police.uk/docs/method/crime-street/",
-      "geographyDescription": "Source-defined one-mile radius around the research anchor. This is not an approved town-centre boundary.",
       "acquiredUnits": 36,
       "unitLabel": "monthly source files",
+      "recordCount": null,
       "limitations": [
         "These files contain historical records and published outcome categories, not a complete account of police activity.",
         "Approximate locations cannot confirm that a community report describes the same event.",
@@ -60,59 +60,59 @@
       ]
     },
     {
-      "pilotId": "hounslow_town_centre",
-      "recordCount": null,
       "id": "tfl-stations",
       "title": "Transport stations and line status",
+      "pilotId": "hounslow_town_centre",
       "sourceKind": "transport",
       "status": "acquired",
+      "sourceUrl": "https://api.tfl.gov.uk/",
+      "geographyDescription": "Hounslow Central Underground Station; Hounslow East Underground Station",
       "acquiredMonths": [],
       "latestMonth": null,
       "fetchedAt": "2026-09-12T13:00:36.933Z",
-      "sourceUrl": "https://api.tfl.gov.uk/",
-      "geographyDescription": "Hounslow Central Underground Station; Hounslow East Underground Station",
       "acquiredUnits": 2,
       "unitLabel": "verified station groups",
+      "recordCount": null,
       "limitations": [
-        "Station details and line status were downloaded at the stated time. This snapshot is not a continuously updated feed.",
-        "A line disruption does not establish personal danger.",
+        "Station details and line responses were downloaded at the stated time. This snapshot is not a continuously updated feed.",
+        "A line with no published status remains unknown. A line disruption does not establish personal danger.",
         "Transport data use separate TfL terms. Raw records remain internal."
       ]
     },
     {
-      "pilotId": "hounslow_town_centre",
-      "recordCount": null,
       "id": "naptan-stops",
       "title": "Transport stop references",
+      "pilotId": "hounslow_town_centre",
       "sourceKind": "transport",
       "status": "acquired",
+      "sourceUrl": "https://naptan.api.dft.gov.uk/v1/access-nodes?atcoAreaCodes=490,910,940&dataFormat=csv",
+      "geographyDescription": "Selected official station and interchange access records for the research locations.",
       "acquiredMonths": [],
       "latestMonth": null,
       "fetchedAt": "2026-09-12T12:59:05.269Z",
-      "sourceUrl": "https://naptan.api.dft.gov.uk/v1/access-nodes?atcoAreaCodes=490,910,940&dataFormat=csv",
-      "geographyDescription": "Selected official station and interchange access records for the research locations.",
       "acquiredUnits": 2,
       "unitLabel": "static stop references",
+      "recordCount": null,
       "limitations": [
         "NaPTAN provides static identities. It does not confirm current arrivals, access or staff availability."
       ]
     },
     {
-      "pilotId": "hounslow_town_centre",
-      "recordCount": null,
       "id": "ons-population",
       "title": "Census population context",
+      "pilotId": "hounslow_town_centre",
       "sourceKind": "official_statistics",
       "status": "acquired",
+      "sourceUrl": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE01034143%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
+      "geographyDescription": "Hounslow 018F (E01033083); Hounslow 018 (E02000543); selected through the nearest postcode to the research anchor.",
       "acquiredMonths": [
         "2021-03"
       ],
       "latestMonth": "2021-03",
       "fetchedAt": "2026-09-12T12:59:56.080Z",
-      "sourceUrl": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE01034143%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
-      "geographyDescription": "Hounslow 018F (E01033083); Hounslow 018 (E02000543); selected through the nearest postcode to the research anchor.",
       "acquiredUnits": 2,
       "unitLabel": "Census statistical-area rows",
+      "recordCount": null,
       "limitations": [
         "Census Day: 21 March 2021. These are statistical-area resident counts, not town-centre populations or current footfall.",
         "The nearest-postcode lookup does not prove that the anchor lies inside that statistical area.",
@@ -120,19 +120,19 @@
       ]
     },
     {
-      "pilotId": "hounslow_town_centre",
-      "recordCount": null,
       "id": "police-priorities",
       "title": "Police priorities and action updates",
+      "pilotId": "hounslow_town_centre",
       "sourceKind": "civic",
       "status": "acquired",
+      "sourceUrl": "https://data.police.uk/api/metropolitan/E05013620N/priorities",
+      "geographyDescription": "Police neighbourhood containing the research anchor; not an approved pilot boundary.",
       "acquiredMonths": [],
       "latestMonth": null,
       "fetchedAt": "2026-09-12T13:00:19.075Z",
-      "sourceUrl": "https://data.police.uk/api/metropolitan/E05013620N/priorities",
-      "geographyDescription": "Police neighbourhood containing the research anchor; not an approved pilot boundary.",
       "acquiredUnits": 3,
       "unitLabel": "published priority pairs",
+      "recordCount": null,
       "limitations": [
         "Police-published priorities are not independent community reports.",
         "Action wording may describe plans, not completed work.",
@@ -141,10 +141,9 @@
       ]
     },
     {
-      "pilotId": "hounslow_town_centre",
-      "recordCount": null,
       "id": "community-observations",
       "title": "Independent community observations",
+      "pilotId": "hounslow_town_centre",
       "sourceKind": "community",
       "status": "not_collected",
       "acquiredMonths": [],
@@ -152,6 +151,7 @@
       "fetchedAt": null,
       "sourceUrl": "",
       "geographyDescription": "No genuine recent community dataset has been imported for this pilot.",
+      "recordCount": null,
       "acquiredUnits": null,
       "unitLabel": null,
       "limitations": [
@@ -161,12 +161,13 @@
       ]
     },
     {
-      "pilotId": "camden_town",
-      "recordCount": null,
       "id": "police-street",
       "title": "Historical police records",
+      "pilotId": "camden_town",
       "sourceKind": "historical_police",
       "status": "acquired",
+      "sourceUrl": "https://data.police.uk/docs/method/crime-street/",
+      "geographyDescription": "Source-defined one-mile radius around the research anchor. This is not an approved town-centre boundary.",
       "acquiredMonths": [
         "2023-08",
         "2023-09",
@@ -207,10 +208,9 @@
       ],
       "latestMonth": "2026-07",
       "fetchedAt": "2026-09-12T13:01:09.527Z",
-      "sourceUrl": "https://data.police.uk/docs/method/crime-street/",
-      "geographyDescription": "Source-defined one-mile radius around the research anchor. This is not an approved town-centre boundary.",
       "acquiredUnits": 36,
       "unitLabel": "monthly source files",
+      "recordCount": null,
       "limitations": [
         "These files contain historical records and published outcome categories, not a complete account of police activity.",
         "Approximate locations cannot confirm that a community report describes the same event.",
@@ -218,59 +218,59 @@
       ]
     },
     {
-      "pilotId": "camden_town",
-      "recordCount": null,
       "id": "tfl-stations",
       "title": "Transport stations and line status",
+      "pilotId": "camden_town",
       "sourceKind": "transport",
       "status": "acquired",
+      "sourceUrl": "https://api.tfl.gov.uk/",
+      "geographyDescription": "Camden Town Underground Station; Camden Road Rail Station",
       "acquiredMonths": [],
       "latestMonth": null,
       "fetchedAt": "2026-09-12T13:00:36.933Z",
-      "sourceUrl": "https://api.tfl.gov.uk/",
-      "geographyDescription": "Camden Town Underground Station; Camden Road Rail Station",
       "acquiredUnits": 2,
       "unitLabel": "verified station groups",
+      "recordCount": null,
       "limitations": [
-        "Station details and line status were downloaded at the stated time. This snapshot is not a continuously updated feed.",
-        "A line disruption does not establish personal danger.",
+        "Station details and line responses were downloaded at the stated time. This snapshot is not a continuously updated feed.",
+        "A line with no published status remains unknown. A line disruption does not establish personal danger.",
         "Transport data use separate TfL terms. Raw records remain internal."
       ]
     },
     {
-      "pilotId": "camden_town",
-      "recordCount": null,
       "id": "naptan-stops",
       "title": "Transport stop references",
+      "pilotId": "camden_town",
       "sourceKind": "transport",
       "status": "acquired",
+      "sourceUrl": "https://naptan.api.dft.gov.uk/v1/access-nodes?atcoAreaCodes=490,910,940&dataFormat=csv",
+      "geographyDescription": "Selected official station and interchange access records for the research locations.",
       "acquiredMonths": [],
       "latestMonth": null,
       "fetchedAt": "2026-09-12T12:59:05.269Z",
-      "sourceUrl": "https://naptan.api.dft.gov.uk/v1/access-nodes?atcoAreaCodes=490,910,940&dataFormat=csv",
-      "geographyDescription": "Selected official station and interchange access records for the research locations.",
       "acquiredUnits": 2,
       "unitLabel": "static stop references",
+      "recordCount": null,
       "limitations": [
         "NaPTAN provides static identities. It does not confirm current arrivals, access or staff availability."
       ]
     },
     {
-      "pilotId": "camden_town",
-      "recordCount": null,
       "id": "ons-population",
       "title": "Census population context",
+      "pilotId": "camden_town",
       "sourceKind": "official_statistics",
       "status": "acquired",
+      "sourceUrl": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE01034143%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
+      "geographyDescription": "Camden 021A (E01000863); Camden 021 (E02000186); selected through the nearest postcode to the research anchor.",
       "acquiredMonths": [
         "2021-03"
       ],
       "latestMonth": "2021-03",
       "fetchedAt": "2026-09-12T12:59:56.080Z",
-      "sourceUrl": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE01034143%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
-      "geographyDescription": "Camden 021A (E01000863); Camden 021 (E02000186); selected through the nearest postcode to the research anchor.",
       "acquiredUnits": 2,
       "unitLabel": "Census statistical-area rows",
+      "recordCount": null,
       "limitations": [
         "Census Day: 21 March 2021. These are statistical-area resident counts, not town-centre populations or current footfall.",
         "The nearest-postcode lookup does not prove that the anchor lies inside that statistical area.",
@@ -278,19 +278,19 @@
       ]
     },
     {
-      "pilotId": "camden_town",
-      "recordCount": null,
       "id": "police-priorities",
       "title": "Police priorities and action updates",
+      "pilotId": "camden_town",
       "sourceKind": "civic",
       "status": "acquired",
+      "sourceUrl": "https://data.police.uk/api/metropolitan/E05013655/priorities",
+      "geographyDescription": "Police neighbourhood containing the research anchor; not an approved pilot boundary.",
       "acquiredMonths": [],
       "latestMonth": null,
       "fetchedAt": "2026-09-12T13:00:19.187Z",
-      "sourceUrl": "https://data.police.uk/api/metropolitan/E05013655/priorities",
-      "geographyDescription": "Police neighbourhood containing the research anchor; not an approved pilot boundary.",
       "acquiredUnits": 3,
       "unitLabel": "published priority pairs",
+      "recordCount": null,
       "limitations": [
         "Police-published priorities are not independent community reports.",
         "Action wording may describe plans, not completed work.",
@@ -299,10 +299,9 @@
       ]
     },
     {
-      "pilotId": "camden_town",
-      "recordCount": null,
       "id": "community-observations",
       "title": "Independent community observations",
+      "pilotId": "camden_town",
       "sourceKind": "community",
       "status": "not_collected",
       "acquiredMonths": [],
@@ -310,6 +309,7 @@
       "fetchedAt": null,
       "sourceUrl": "",
       "geographyDescription": "No genuine recent community dataset has been imported for this pilot.",
+      "recordCount": null,
       "acquiredUnits": null,
       "unitLabel": null,
       "limitations": [
@@ -319,12 +319,13 @@
       ]
     },
     {
-      "pilotId": "west_croydon",
-      "recordCount": null,
       "id": "police-street",
       "title": "Historical police records",
+      "pilotId": "west_croydon",
       "sourceKind": "historical_police",
       "status": "acquired",
+      "sourceUrl": "https://data.police.uk/docs/method/crime-street/",
+      "geographyDescription": "Source-defined one-mile radius around the research anchor. This is not an approved town-centre boundary.",
       "acquiredMonths": [
         "2023-08",
         "2023-09",
@@ -365,10 +366,9 @@
       ],
       "latestMonth": "2026-07",
       "fetchedAt": "2026-09-12T13:01:11.380Z",
-      "sourceUrl": "https://data.police.uk/docs/method/crime-street/",
-      "geographyDescription": "Source-defined one-mile radius around the research anchor. This is not an approved town-centre boundary.",
       "acquiredUnits": 36,
       "unitLabel": "monthly source files",
+      "recordCount": null,
       "limitations": [
         "These files contain historical records and published outcome categories, not a complete account of police activity.",
         "Approximate locations cannot confirm that a community report describes the same event.",
@@ -376,59 +376,59 @@
       ]
     },
     {
-      "pilotId": "west_croydon",
-      "recordCount": null,
       "id": "tfl-stations",
       "title": "Transport stations and line status",
+      "pilotId": "west_croydon",
       "sourceKind": "transport",
       "status": "acquired",
+      "sourceUrl": "https://api.tfl.gov.uk/",
+      "geographyDescription": "West Croydon",
       "acquiredMonths": [],
       "latestMonth": null,
       "fetchedAt": "2026-09-12T13:00:36.933Z",
-      "sourceUrl": "https://api.tfl.gov.uk/",
-      "geographyDescription": "West Croydon",
       "acquiredUnits": 1,
       "unitLabel": "verified station groups",
+      "recordCount": null,
       "limitations": [
-        "Station details and line status were downloaded at the stated time. This snapshot is not a continuously updated feed.",
-        "A line disruption does not establish personal danger.",
+        "Station details and line responses were downloaded at the stated time. This snapshot is not a continuously updated feed.",
+        "A line with no published status remains unknown. A line disruption does not establish personal danger.",
         "Transport data use separate TfL terms. Raw records remain internal."
       ]
     },
     {
-      "pilotId": "west_croydon",
-      "recordCount": null,
       "id": "naptan-stops",
       "title": "Transport stop references",
+      "pilotId": "west_croydon",
       "sourceKind": "transport",
       "status": "acquired",
+      "sourceUrl": "https://naptan.api.dft.gov.uk/v1/access-nodes?atcoAreaCodes=490,910,940&dataFormat=csv",
+      "geographyDescription": "Selected official station and interchange access records for the research locations.",
       "acquiredMonths": [],
       "latestMonth": null,
       "fetchedAt": "2026-09-12T12:59:05.269Z",
-      "sourceUrl": "https://naptan.api.dft.gov.uk/v1/access-nodes?atcoAreaCodes=490,910,940&dataFormat=csv",
-      "geographyDescription": "Selected official station and interchange access records for the research locations.",
       "acquiredUnits": 8,
       "unitLabel": "static stop references",
+      "recordCount": null,
       "limitations": [
         "NaPTAN provides static identities. It does not confirm current arrivals, access or staff availability."
       ]
     },
     {
-      "pilotId": "west_croydon",
-      "recordCount": null,
       "id": "ons-population",
       "title": "Census population context",
+      "pilotId": "west_croydon",
       "sourceKind": "official_statistics",
       "status": "acquired",
+      "sourceUrl": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE01034143%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
+      "geographyDescription": "Croydon 020H (E01034143); Croydon 020 (E02000213); selected through the nearest postcode to the research anchor.",
       "acquiredMonths": [
         "2021-03"
       ],
       "latestMonth": "2021-03",
       "fetchedAt": "2026-09-12T12:59:56.080Z",
-      "sourceUrl": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE01034143%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
-      "geographyDescription": "Croydon 020H (E01034143); Croydon 020 (E02000213); selected through the nearest postcode to the research anchor.",
       "acquiredUnits": 2,
       "unitLabel": "Census statistical-area rows",
+      "recordCount": null,
       "limitations": [
         "Census Day: 21 March 2021. These are statistical-area resident counts, not town-centre populations or current footfall.",
         "The nearest-postcode lookup does not prove that the anchor lies inside that statistical area.",
@@ -436,19 +436,19 @@
       ]
     },
     {
-      "pilotId": "west_croydon",
-      "recordCount": null,
       "id": "police-priorities",
       "title": "Police priorities and action updates",
+      "pilotId": "west_croydon",
       "sourceKind": "civic",
       "status": "acquired",
+      "sourceUrl": "https://data.police.uk/api/metropolitan/E05011468N/priorities",
+      "geographyDescription": "Police neighbourhood containing the research anchor; not an approved pilot boundary.",
       "acquiredMonths": [],
       "latestMonth": null,
       "fetchedAt": "2026-09-12T13:00:19.259Z",
-      "sourceUrl": "https://data.police.uk/api/metropolitan/E05011468N/priorities",
-      "geographyDescription": "Police neighbourhood containing the research anchor; not an approved pilot boundary.",
       "acquiredUnits": 3,
       "unitLabel": "published priority pairs",
+      "recordCount": null,
       "limitations": [
         "Police-published priorities are not independent community reports.",
         "Action wording may describe plans, not completed work.",
@@ -457,10 +457,9 @@
       ]
     },
     {
-      "pilotId": "west_croydon",
-      "recordCount": null,
       "id": "community-observations",
       "title": "Independent community observations",
+      "pilotId": "west_croydon",
       "sourceKind": "community",
       "status": "not_collected",
       "acquiredMonths": [],
@@ -468,6 +467,7 @@
       "fetchedAt": null,
       "sourceUrl": "",
       "geographyDescription": "No genuine recent community dataset has been imported for this pilot.",
+      "recordCount": null,
       "acquiredUnits": null,
       "unitLabel": null,
       "limitations": [
