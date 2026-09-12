@@ -1,6 +1,6 @@
 import { z } from "zod";
-import sourceData from "../../research/camden-evidence/police-records.json";
-import reportingData from "../../research/camden-evidence/reporting-sources.json";
+import sourceData from "../../research/camden-evidence/police-records.json" with { type: "json" };
+import reportingData from "../../research/camden-evidence/reporting-sources.json" with { type: "json" };
 
 const text = z.string().min(1).max(2000);
 const timestamp = z.string().datetime({ offset: true });

@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { localContextGraph } from "./local-context.js";
+import { buildCaseGraph } from "../camden-evidence/index.js";
+import {
+  camdenExampleIds,
+  readCamdenStudy,
+} from "../camden-evidence/session.js";
 import { areas, pilotSchema, type DemoState } from "../contracts/index.js";
 import {
   findPublicNotice,
@@ -118,27 +124,37 @@ export function projectSemanticGraph(
       methodVersion: "1.0",
     };
   }
-  const police = records
-    .filter(
-      (row) =>
-        row.pilotId === pilotId && row.sourceKind === "historical_police",
-    )
+  const selectedDatasets = records
+    .filter((row) => row.pilotId === pilotId)
     .sort((a, b) => a.id.localeCompare(b.id));
   const contextualIds: string[] = [];
-  if (!police.length)
+  if (!selectedDatasets.some((row) => row.sourceKind === "historical_police"))
     graph.limitations.push(
       "Police source coverage is unavailable. Missing data does not mean no incidents.",
     );
-  for (const row of police) {
+  for (const row of selectedDatasets) {
     const id = `coverage:${pilotId}:${row.id}`,
-      sourceId = `source:police-uk:${row.id}`;
+      sourceId = `source:dataset:${row.id}`;
+    const isPolice = row.sourceKind === "historical_police";
+    const sourceFamilyId =
+      row.sourceKind === "historical_police" || row.id === "police-priorities"
+        ? "police-uk"
+        : row.id === "naptan-stops"
+          ? "dft-naptan"
+          : row.sourceKind === "transport"
+            ? "tfl"
+            : row.sourceKind === "official_statistics"
+              ? "ons"
+              : `dataset:${row.id}`;
     const available =
       (row.status === "acquired" || row.status === "partial") &&
-      row.acquiredMonths.length > 0 &&
+      (isPolice
+        ? row.acquiredMonths.length > 0
+        : row.acquiredUnits !== null && row.acquiredUnits > 0) &&
       row.fetchedAt !== null;
     const provenance = {
       sourceId: row.id,
-      sourceFamilyId: "police-uk",
+      sourceFamilyId,
       sourceUrl: row.sourceUrl || null,
       fetchedAt: row.fetchedAt,
       originGroupId: null,
@@ -148,7 +164,7 @@ export function projectSemanticGraph(
         {
           id: sourceId,
           type: "Source",
-          label: "Police.uk monthly records",
+          label: isPolice ? "Police.uk monthly records" : `${row.title} source`,
           synthetic: false,
           provenance,
           metadata: {},
@@ -160,10 +176,16 @@ export function projectSemanticGraph(
           synthetic: false,
           provenance,
           metadata: {
-            status: available ? row.status : "blocked",
+            status: available
+              ? row.status
+              : row.status === "not_collected"
+                ? "not_collected"
+                : "blocked",
             months: available ? [...row.acquiredMonths].sort() : [],
             fetchedAt: available ? row.fetchedAt : null,
             geographyDescription: row.geographyDescription,
+            acquiredUnits: isPolice ? null : row.acquiredUnits,
+            unitLabel: isPolice ? null : row.unitLabel,
           },
         },
       ],
@@ -186,12 +208,106 @@ export function projectSemanticGraph(
         ),
       ],
     );
-    if (inserted && available) contextualIds.push(id);
-    if (!available)
+    if (inserted && available && isPolice) contextualIds.push(id);
+    if (!available && isPolice)
       graph.limitations.push(
         "Police source coverage is unavailable. Missing data does not mean no incidents.",
       );
     graph.limitations.push(...row.limitations);
+  }
+  if (noticeId === undefined) {
+    const context = localContextGraph(pilotId);
+    add(context.nodes, context.assertions);
+  }
+  if (pilotId === "camden_town" && noticeId === undefined) {
+    const study = state
+      ? readCamdenStudy(state as DemoState & { camdenStudy?: unknown })
+      : null;
+    for (const example of camdenExampleIds) {
+      const studyGraph = buildCaseGraph(
+        example,
+        study?.examples[example] ?? "withdrawn",
+      );
+      const caseNodes: Node[] = studyGraph.nodes.map((node) => ({
+        id: node.id,
+        type: node.type,
+        label: node.label,
+        synthetic: node.synthetic,
+        provenance: node.provenance
+          ? {
+              sourceId: node.provenance.sourceFamilyId,
+              sourceFamilyId: node.provenance.sourceFamilyId,
+              sourceUrl: node.provenance.sourceUrl,
+              fetchedAt: node.provenance.fetchedAt,
+              originGroupId: node.provenance.originGroupId,
+              snapshotSha256: node.provenance.snapshotSha256,
+            }
+          : null,
+        metadata: {
+          revision: node.revision,
+          precision: node.precision,
+          ...(node.observedAt ? { observedAt: node.observedAt } : {}),
+          ...(node.reportedAt ? { reportedAt: node.reportedAt } : {}),
+          ...(node.correctionNote
+            ? { correctionNote: node.correctionNote }
+            : {}),
+        },
+      }));
+      const caseAssertions: Assertion[] = studyGraph.assertions
+        .map((assertion) => {
+          const {
+            sourceFamilyId,
+            originGroupId,
+            revision,
+            recordedAt,
+            validFrom,
+            validTo,
+            timePrecision,
+            spatialPrecision,
+            relationStatus,
+            independence,
+            ...base
+          } = assertion;
+          return {
+            ...base,
+            metadata: {
+              sourceFamilyId,
+              originGroupId,
+              revision,
+              recordedAt,
+              validFrom,
+              validTo,
+              timePrecision,
+              spatialPrecision,
+              relationStatus,
+              independence,
+            },
+          };
+        })
+        .filter(
+          (assertion) =>
+            !graph.assertions.some((existing) => existing.id === assertion.id),
+        );
+      if (!add(caseNodes, caseAssertions)) break;
+    }
+    const studyArea = graph.nodes.find((node) => node.type === "ResearchArea");
+    if (studyArea)
+      add(
+        [],
+        [
+          edge(
+            studyArea.id,
+            "CONTEXTUAL_AREA_ONLY",
+            areaId,
+            false,
+            ["candidate_study_footprint_not_approved_boundary"],
+            [studyArea.id],
+          ),
+        ],
+      );
+    graph.limitations.push(
+      "The five Camden police rows are a selected research sample. Fictional accounts do not describe those incidents.",
+    );
   }
   const notices = state
     ? listPublicNotices(state, pilotId)

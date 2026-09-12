@@ -46,7 +46,11 @@ export async function createDatabase(
     await mkdir(dirname(dataPath), { recursive: true });
   const lite = pool ? null : new PGlite(dataPath);
   if (lite)
-    for (const migration of ["001_demo_sessions.sql", "002_semantic_graph.sql"])
+    for (const migration of [
+      "001_demo_sessions.sql",
+      "002_semantic_graph.sql",
+      "003_camden_graph.sql",
+    ])
       await lite.exec(
         await readFile(
           new URL(`../supabase/migrations/${migration}`, import.meta.url),

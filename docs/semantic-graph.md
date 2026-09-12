@@ -6,7 +6,8 @@ The source records remain authoritative. Graph tables hold replaceable projectio
 ## Ontology and access
 
 `packages/semantic-graph/schema.ts` defines the runtime schema and allowed node and relation pairs.
-Nodes represent areas, approximate places, sources, reviewed notices, and acquired dataset coverage.
+Nodes represent areas, places, sources, reviewed notices, source snapshots, selected police records, help locations, and dataset coverage.
+The Camden demonstration also contains predefined fictional observations and summaries. Real private submissions remain excluded.
 Each assertion retains its method, evidence references, reason codes, and synthetic status.
 Source family and original claim lineage remain separate.
 
@@ -21,8 +22,8 @@ Public mode contains no real community reports. Account creation does not change
 
 ## Storage and correction
 
-Apply `001_demo_sessions.sql`, then `002_semantic_graph.sql`, to a dedicated demonstration database.
-Local startup applies both files automatically. Hosted startup does not apply migrations.
+Apply `001_demo_sessions.sql`, `002_semantic_graph.sql`, then `003_camden_graph.sql` to a dedicated demonstration database.
+Local startup applies all three files automatically. Hosted startup does not apply migrations.
 No production migration was performed during this implementation.
 
 The three derived tables contain snapshot metadata, typed nodes, and qualified assertions.
@@ -35,16 +36,25 @@ State mutations invalidate all session projections before commit. The next graph
 Transaction failure rolls back both state and projection changes. Session expiry hides graph rows; deletion cascades to them.
 Real account reports will require their own ownership schema before intake can open.
 
-## Graphify assessment
+## Graphify export
 
-[Graphify](https://github.com/Graphify-Labs/graphify) supports offline code and document graph exploration.
-It is optional analysis tooling. It does not replace the application's authorization and correction rules.
-The assessment checked the repository's `v8` branch at `23f2ffaa43fd12f25d9eabe91e6d184b5d89b474`.
+`GET /api/graph/export?area=camden_town` returns the current validated demonstration snapshot.
+`GET /api/public/graph/export?area=camden_town` returns real public source context without a session.
+Each assertion becomes a separate node with directed links. Parallel assertions retain their qualifications.
+Exports exclude private reports, identities, and preferences. A downloaded snapshot cannot update or be recalled.
+Export again after a correction or withdrawal. The API always rebuilds from current session state.
 
-Its simple graph structure can collapse parallel assertions. Its export also assigns numerical confidence defaults.
-Those defaults must never become evidence confidence or harm probabilities.
-If an export is added, each qualified assertion needs its own node and directed links to its endpoints.
-Exports would also need withdrawal invalidation and access limits. No Graphify extraction or external model call was run here.
+`scripts/graphify-export.py` imports this structured graph into Graphify 0.9.58 for clustering and topology analysis.
+It generates `graph.json`, `graph.html`, and `GRAPH_REPORT.md` in the chosen output folder.
+It uses the existing domain records directly. Code extraction would describe implementation files instead of Camden evidence.
+No model call or extraction token is needed. The exporter preserves source metadata without adding numeric confidence defaults.
+Graphify does not replace the existing PostgreSQL store, authorization, or correction rules.
+
+```sh
+uv tool run --from graphifyy==0.9.58 python scripts/graphify-export.py input.json graphify-out
+```
+
+Save `input.json` from the Graphify download action. Do not export arbitrary internal state.
 
 ## Verification
 
