@@ -73,3 +73,48 @@ test("puts the compact mobile account control beside the brand", async ({
   );
   expect(header.area.y).toBeGreaterThan(header.account.y);
 });
+
+test("keeps tablet header controls separate in public and demo browsing", async ({
+  page,
+}) => {
+  await page.route(/tile\.openstreetmap\.org/, (route) => route.abort());
+
+  for (const path of ["/?demo=1", "/?public=1&area=hounslow_town_centre"]) {
+    for (const width of [821, 903, 1024]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto(path, { waitUntil: "domcontentloaded" });
+      await expect(
+        page.getByRole("heading", { name: "Hounslow", exact: true }),
+      ).toBeVisible();
+
+      const controls = await page
+        .locator(
+          ".topbar > .button.secondary, .topbar .area-control, .topbar .persona, .topbar .public-actions > button, .topbar .public-actions > a",
+        )
+        .evaluateAll((elements) =>
+          elements
+            .map((element) => {
+              const { x, y, width, height } = element.getBoundingClientRect();
+              return { x, y, width, height };
+            })
+            .filter((box) => box.width > 0 && box.height > 0),
+        );
+
+      for (let index = 0; index < controls.length; index += 1) {
+        for (let other = index + 1; other < controls.length; other += 1) {
+          const first = controls[index];
+          const second = controls[other];
+          const overlap =
+            first.x < second.x + second.width &&
+            first.x + first.width > second.x &&
+            first.y < second.y + second.height &&
+            first.y + first.height > second.y;
+          expect(
+            overlap,
+            `${path} at ${width}px has overlapping header controls`,
+          ).toBe(false);
+        }
+      }
+    }
+  }
+});

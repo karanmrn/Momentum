@@ -850,6 +850,32 @@ textarea {
 }
 
 @media (min-width: 821px) and (max-width: 1119px) {
+  .topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    grid-template-areas:
+      "account auxiliary"
+      "area area";
+    align-items: center;
+    gap: 12px;
+    min-height: 0;
+  }
+  .topbar > .button.secondary {
+    grid-area: account;
+    justify-self: start;
+  }
+  .topbar .area-control {
+    grid-area: area;
+    justify-self: start;
+  }
+  .topbar .persona,
+  .topbar .public-actions {
+    grid-area: auxiliary;
+    justify-self: end;
+  }
+  .topbar .public-actions {
+    margin-left: 0;
+  }
   .dashboard,
   .now-layout {
     grid-template-columns: minmax(0, 1fr);
