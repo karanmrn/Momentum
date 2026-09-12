@@ -89,7 +89,11 @@ describe("verified private account routes", () => {
     const own = await request("/follows");
     expect(own.headers.get("cache-control")).toBe("no-store");
     expect(own.headers.has("set-cookie")).toBe(false);
-    expect((await own.json()).data).toEqual(follows);
+    expect((await own.json()).data).toEqual({
+      ...follows,
+      revision: 2,
+      settings: null,
+    });
     expect(
       (await (await request("/follows", "GET", undefined, "bob")).json()).data
         .pilotIds,
@@ -122,7 +126,11 @@ describe("verified private account routes", () => {
   it("exports only owned data and deletion prevents stale-token reuse", async () => {
     await request("/follows", "PUT", follows);
     const exported = await (await request("/export")).json();
-    expect(exported.data.follows).toEqual(follows);
+    expect(exported.data.follows).toEqual({
+      ...follows,
+      revision: 2,
+      settings: null,
+    });
     expect(exported.data.reports).toEqual([]);
     expect((await request("/", "DELETE", { confirmation: "yes" })).status).toBe(
       400,

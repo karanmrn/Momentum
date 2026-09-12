@@ -6,9 +6,7 @@ test("Camden evidence entry, source limits, correction and withdrawal work", asy
   baseURL,
 }) => {
   await page.goto("/?public=1&area=camden_town");
-  await page
-    .getByRole("tab", { name: "Historical context", exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Police records", exact: true }).click();
   await page
     .getByRole("link", { name: "Explore Camden evidence example", exact: true })
     .click();

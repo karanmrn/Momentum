@@ -210,6 +210,7 @@ export interface HistoricalCoverage {
   recordCount?: null;
 }
 export interface DemoState {
+  researchConsent?: import("../recruitment/index.js").RecruitmentState;
   personalization?: import("../personalization/schema.js").PersonalizationState;
   communityWorkflow?: import("../community-workflow/schema.js").CommunityWorkflowState;
   relationReview?: import("../relation-review/schema.js").RelationReviewState;

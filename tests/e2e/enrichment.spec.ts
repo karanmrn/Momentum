@@ -6,9 +6,7 @@ test("data context preserves all entry routes and exports source metadata", asyn
 }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/?public=1&area=camden_town");
-  await page
-    .getByRole("tab", { name: "Historical context", exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Police records", exact: true }).click();
   await page
     .getByRole("link", { name: "Explore data context", exact: true })
     .click();

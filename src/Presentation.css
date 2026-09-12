@@ -188,3 +188,131 @@
     max-width: 360px;
   }
 }
+
+.presentation-content {
+  min-width: 0;
+}
+.presentation-slide h1 {
+  font-size: clamp(24px, 2.4vw, 36px);
+  margin: 0 0 8px;
+  max-width: none;
+}
+.presentation-count {
+  margin-bottom: 8px;
+}
+.presentation-boundary {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.presentation-deck-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid #b9c3b3;
+  background: white;
+}
+.presentation-transcript summary {
+  cursor: pointer;
+  min-height: 48px;
+  padding: 12px 0;
+  font-weight: 600;
+}
+.presentation-transcript summary:focus-visible {
+  outline: 3px solid #a74612;
+  outline-offset: 4px;
+}
+.presentation-transcript p {
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.presentation-journey {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+.presentation-journey h2 {
+  margin-bottom: 4px;
+  font-size: 24px;
+}
+.presentation-journey a {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 12px;
+  color: #183e33;
+  border: 1px solid #b9c3b3;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.presentation-journey a:hover {
+  background: #e9eee5;
+}
+.presentation-footer {
+  display: flex;
+  gap: 12px 24px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.presentation-footer a {
+  min-height: 48px;
+  padding: 12px 0;
+  color: inherit;
+}
+@media (min-width: 1000px) {
+  .presentation-layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 28px;
+  }
+  .presentation-scan {
+    padding: 16px;
+  }
+  .presentation-qr {
+    max-width: 224px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .streetwise-presentation {
+    padding: 24px;
+    gap: 16px;
+  }
+  .presentation-header {
+    padding-bottom: 12px;
+  }
+  .presentation-slide {
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  .presentation-deck-image {
+    max-height: max(240px, calc(100dvh - 460px));
+    object-fit: contain;
+    background: #fffef9;
+  }
+  .presentation-scan h2 {
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+  .presentation-journey {
+    margin-bottom: 16px;
+  }
+  .presentation-journey h2 {
+    margin-bottom: 0;
+  }
+  .presentation-qr {
+    max-width: 180px;
+    margin-bottom: 8px;
+  }
+  .presentation-url {
+    font-size: 13px;
+    line-height: 1.4;
+    margin-top: 8px;
+    padding: 8px 0;
+  }
+  .presentation-footer {
+    padding-top: 4px;
+    font-size: 14px;
+  }
+}

@@ -53,6 +53,8 @@ beforeEach(async () => {
     "001_demo_sessions.sql",
     "002_semantic_graph.sql",
     "003_camden_graph.sql",
+    "004_reviewed_relations.sql",
+    "20260912171500_graph_enrichment.sql",
   ])
     await pg.exec(
       await readFile(

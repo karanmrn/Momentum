@@ -8,6 +8,13 @@ import {
 
 export const CONSENT_VERSION = "research-demo-v1" as const;
 export const MAX_OBSERVATIONS = 100;
+export const researchPolicy = {
+  version: CONSENT_VERSION,
+  purpose: "Test fictional community research and aggregate coverage.",
+  retentionHours: 24,
+  withdrawal: "Withdrawal removes answers and excludes them from coverage.",
+  fictional: true,
+} as const;
 export const comfortFactors = [
   "lighting",
   "visibility",
@@ -126,6 +133,8 @@ export interface ActiveObservation {
   consent: ResearchObservationInput["consent"];
   consentedAt: string;
   createdAt: string;
+  expiresAt: string;
+  purpose: typeof researchPolicy.purpose;
   provenance: {
     sourceKind: "fictional_firsthand";
     sourceFamily: "research-demo";
@@ -295,6 +304,10 @@ export function submitResearchObservation(
         status: "active",
         consentedAt: context.now,
         createdAt: context.now,
+        expiresAt: new Date(
+          Date.parse(context.now) + researchPolicy.retentionHours * 3600000,
+        ).toISOString(),
+        purpose: researchPolicy.purpose,
         provenance: {
           sourceKind: "fictional_firsthand",
           sourceFamily: "research-demo",
@@ -368,7 +381,8 @@ export function compareResearchCoverage(
         item.consent.participation &&
         item.consent.aggregate &&
         item.consent.version === CONSENT_VERSION &&
-        Date.parse(item.createdAt) <= Date.parse(now),
+        Date.parse(item.createdAt) <= Date.parse(now) &&
+        Date.parse(item.expiresAt) > Date.parse(now),
     ).length;
     return {
       pilotId: area.id,
@@ -381,3 +395,132 @@ export function compareResearchCoverage(
     };
   });
 }
+
+export function expireResearchObservations(
+  state: RecruitmentState,
+  now: string,
+): RecruitmentState {
+  timestamp.parse(now);
+  let result = structuredClone(state);
+  for (const item of result.observations) {
+    if (
+      item.status === "active" &&
+      Date.parse(item.expiresAt) <= Date.parse(now)
+    ) {
+      result = withdrawResearchObservation(
+        result,
+        item.owner,
+        { id: item.id, expectedRevision: item.revision },
+        now,
+      );
+    }
+  }
+  return result;
+}
+
+export const researchObservationSchema = z.union([
+  observationInputSchema
+    .innerType()
+    .omit({ idempotencyKey: true })
+    .extend({
+      id: boundedId,
+      owner: z.enum(["alex", "sam"]),
+      revision: z.number().int().positive(),
+      status: z.literal("active"),
+      consentedAt: timestamp,
+      createdAt: timestamp,
+      expiresAt: timestamp,
+      purpose: z.literal(researchPolicy.purpose),
+      provenance: z
+        .object({
+          sourceKind: z.literal("fictional_firsthand"),
+          sourceFamily: z.literal("research-demo"),
+          originId: boundedId,
+          recruitmentEntryId: boundedId,
+          collectionMethod: z.literal("structured_demo_form"),
+        })
+        .strict(),
+    })
+    .strict()
+    .superRefine((value, ctx) => {
+      const {
+        id,
+        owner,
+        revision,
+        status,
+        consentedAt,
+        createdAt,
+        expiresAt,
+        purpose,
+        provenance,
+        ...input
+      } = value;
+      if (
+        !observationInputSchema.safeParse({
+          ...input,
+          idempotencyKey: "validate",
+        }).success ||
+        Date.parse(expiresAt) > Date.parse(createdAt) + 86400000 ||
+        Date.parse(expiresAt) <= Date.parse(createdAt)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid stored research observation.",
+        });
+      }
+    }),
+  z
+    .object({
+      id: boundedId,
+      owner: z.enum(["alex", "sam"]),
+      revision: z.number().int().positive(),
+      status: z.literal("withdrawn"),
+      fictional: z.literal(true),
+      withdrawnAt: timestamp,
+    })
+    .strict(),
+]);
+export const recruitmentStateSchema = z
+  .object({
+    observations: z.array(researchObservationSchema).max(MAX_OBSERVATIONS),
+    submissions: z
+      .array(
+        z
+          .object({
+            owner: z.enum(["alex", "sam"]),
+            key: boundedId,
+            observationId: boundedId,
+          })
+          .strict(),
+      )
+      .max(MAX_OBSERVATIONS),
+  })
+  .strict();
+export const researchSnapshotSchema = z
+  .object({
+    observations: z.array(researchObservationSchema).max(MAX_OBSERVATIONS),
+    coverage: z
+      .array(
+        z
+          .object({
+            pilotId: pilotSchema,
+            fictional: z.literal(true),
+            count: z.number().int().min(3).nullable(),
+            coverage: z.enum(["suppressed", "available"]),
+            comparisonStatus: z.literal("insufficient_comparable_data"),
+            explanation: z.string().max(1000),
+          })
+          .strict(),
+      )
+      .length(3),
+    policy: z
+      .object({
+        version: z.literal(CONSENT_VERSION),
+        purpose: z.literal(researchPolicy.purpose),
+        retentionHours: z.literal(24),
+        withdrawal: z.literal(researchPolicy.withdrawal),
+        fictional: z.literal(true),
+      })
+      .strict(),
+  })
+  .strict();

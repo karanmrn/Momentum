@@ -93,7 +93,9 @@ test("Community loads the station layer instead of a permanent not-loaded state"
   await expect(
     page.getByRole("combobox", { name: "Choose pilot area" }),
   ).toBeEnabled();
-  await page.getByRole("tab", { name: "Community", exact: true }).click();
+  await page
+    .getByRole("tab", { name: "Community reports", exact: true })
+    .click();
   await expect(
     page.getByRole("button", {
       name: "Test station reference Transport",

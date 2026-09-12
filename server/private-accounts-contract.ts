@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { settingsSchema } from "../packages/personalization/schema.js";
 import { pilotSchema } from "../packages/contracts/index.js";
 export const accountIdSchema = z.string().uuid();
 export const privateReportInputSchema = z
@@ -21,6 +22,8 @@ export const followInputSchema = z
       .max(3)
       .refine((a) => new Set(a).size === a.length),
     paused: z.boolean(),
+    settings: settingsSchema.optional(),
+    expectedRevision: z.number().int().min(1).max(2147483646).optional(),
   })
   .strict();
 export type PrivateReportInput = z.infer<typeof privateReportInputSchema>;

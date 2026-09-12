@@ -44,7 +44,42 @@ export function localContextGraph(
     assertions: Assertion[] = [];
   const areaId = `area:${pilotId}`;
   function connect(node: Node, source: Node) {
-    nodes.push(source, node);
+    const availability: Node = {
+      id: `availability:${node.id}:${node.provenance?.fetchedAt ?? "unknown"}`,
+      type: "AvailabilityAssertion",
+      label: `${node.label}: availability ${node.metadata.availability ?? "unknown"}`,
+      synthetic: false,
+      provenance: node.provenance,
+      metadata: {
+        availability: node.metadata.availability ?? "unknown",
+        schedule: node.metadata.schedule ?? null,
+        precision: "dated_directory_not_live_operator_status",
+        alertEligible: false,
+      },
+    };
+    nodes.push(source, node, availability);
+    assertions.push({
+      id: `${availability.id}:AVAILABILITY_FOR:${node.id}`,
+      subjectId: availability.id,
+      predicate: "AVAILABILITY_FOR",
+      objectId: node.id,
+      inferenceType: "source_statement",
+      reasonCodes: ["published_schedule_not_confirmed_current_availability"],
+      evidenceRefs: [availability.id, node.id],
+      sourceQualification: {
+        sourceFamilyId: node.provenance!.sourceFamilyId,
+        snapshotSha256: node.provenance!.snapshotSha256 ?? null,
+        recordedAt: node.provenance!.fetchedAt,
+        observedPeriod: null,
+        precision: availability.metadata.precision!,
+        visibility: "public_context",
+        lifecycle: "dated_source_snapshot",
+        independence: "unknown",
+        alertEligible: false,
+      },
+      methodVersion: "availability-projection/1",
+      synthetic: false,
+    });
     assertions.push(
       {
         id: `${node.id}:ISSUED_BY:${source.id}`,

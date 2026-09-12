@@ -352,9 +352,7 @@ test("full Camden graph keeps selected details inside the viewport and preserves
     route.fulfill({ json: { schemaVersion: "1.0", data: graph } }),
   );
   await page.goto("/?demo=1&area=camden_town");
-  await page
-    .getByRole("tab", { name: "Historical context", exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Police records", exact: true }).click();
   const network = page.getByRole("region", {
     name: "Connected evidence",
     exact: true,

@@ -4,6 +4,8 @@ const mutationSpecs =
   /\/(report-editor|report-receipt|refresh-recovery|scenarios)\.spec\.ts$/;
 const workspaceSpecs = /\/(remaining-work|analysis)\.spec\.ts$/;
 const coreSpecs = /\/(demo|map-layers|client-recovery)\.spec\.ts$/;
+const graphSpecs =
+  /\/(graph-explorer|graph-datasets|graph-controls|graph-foundation|semantic)\.spec\.ts$/;
 export default defineConfig({
   testDir: "tests/e2e",
   timeout: 45000,
@@ -20,8 +22,13 @@ export default defineConfig({
     },
     {
       name: "features",
-      testIgnore: [coreSpecs, mutationSpecs, workspaceSpecs],
+      testIgnore: [coreSpecs, mutationSpecs, workspaceSpecs, graphSpecs],
       use: { baseURL: `http://127.0.0.1:${basePort + 1}` },
+    },
+    {
+      name: "graphs",
+      testMatch: graphSpecs,
+      use: { baseURL: `http://127.0.0.1:${basePort + 4}` },
     },
     {
       name: "workspaces",
@@ -35,12 +42,16 @@ export default defineConfig({
     },
   ],
   // Separate fixtures prevent unrelated journeys sharing the demo request budget.
-  webServer: [basePort, basePort + 1, basePort + 2, basePort + 3].map(
-    (port) => ({
-      command: `PORT=${port} DEMO_DB_PATH=memory:// VITE_PUBLIC_SITE_URL=https://streetwise-safety.vercel.app npm run dev`,
-      url: `http://127.0.0.1:${port}/api/health`,
-      reuseExistingServer: false,
-      timeout: 60000,
-    }),
-  ),
+  webServer: [
+    basePort,
+    basePort + 1,
+    basePort + 2,
+    basePort + 3,
+    basePort + 4,
+  ].map((port) => ({
+    command: `PORT=${port} DEMO_DB_PATH=memory:// VITE_PUBLIC_SITE_URL=https://streetwise-safety.vercel.app npm run dev`,
+    url: `http://127.0.0.1:${port}/api/health`,
+    reuseExistingServer: false,
+    timeout: 60000,
+  })),
 });

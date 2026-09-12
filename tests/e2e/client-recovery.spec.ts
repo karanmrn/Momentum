@@ -28,9 +28,7 @@ test("malformed dataset responses show unavailable state and support retry", asy
     }),
   );
   await page.goto("/?public=1");
-  await page
-    .getByRole("tab", { name: "Historical context", exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Police records", exact: true }).click();
   await expect(
     page.getByText("Dataset coverage is unavailable.", { exact: true }),
   ).toBeVisible();
