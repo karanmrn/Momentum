@@ -4,6 +4,7 @@ import type {
   Envelope,
   EvidenceGraph,
   HelpCard,
+  HistoricalCoverage,
   Notice,
   Notification,
   Persona,
@@ -68,7 +69,7 @@ export const api = {
   sources: (area: string) =>
     request<SourceCard[]>(`/api/sources?area=${encodeURIComponent(area)}`),
   history: (area: string) =>
-    request<{ status: string; estimate: null; explanation: string }>(
+    request<HistoricalCoverage>(
       `/api/history?area=${encodeURIComponent(area)}`,
     ),
   reports: () => request<Report[]>("/api/reports"),

@@ -151,6 +151,11 @@ export interface SourceCard {
   publishedAt: string | null;
   synthetic: false;
   scope: string;
+  recordCount?: number;
+  recordCountLabel?: string;
+  checkedAt?: string;
+  coverage?: "sample" | "metadata" | "directory" | "unavailable";
+  attribution?: string;
 }
 export interface HelpCard {
   id: string;
@@ -160,6 +165,22 @@ export interface HelpCard {
   url: string;
   availability: "unconfirmed";
   schedule: string | null;
+  address?: string;
+  coordinates?: [number, number];
+  sourceLabel?: string;
+  checkedAt?: string;
+  services?: string[];
+  kind?: "venue" | "service" | "reporting";
+}
+export interface HistoricalCoverage {
+  status: string;
+  estimate: null;
+  explanation: string;
+  latestMonth?: string | null;
+  availableMonths?: string[];
+  fetchedAt?: string | null;
+  sourceUrl?: string;
+  recordCount?: null;
 }
 export interface DemoState {
   schemaVersion: "1.0";
