@@ -1,0 +1,239 @@
+.local-map-browser {
+  min-width: 0;
+  background: #fffdf7;
+  color: #183e33;
+  border: 1px solid #d5d8ca;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.local-map-layers {
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 0;
+}
+.local-map-layers legend {
+  float: left;
+  width: 100%;
+  padding: 0 0 10px;
+  font-weight: 750;
+}
+.local-map-layers > div {
+  display: flex;
+  clear: both;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.local-map-layers button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 9px 11px;
+  border: 1px solid #b6c3b5;
+  border-radius: 8px;
+  color: #183e33;
+  background: #fffdf7;
+  font-size: 13px;
+  font-weight: 650;
+}
+.local-map-layers button[aria-pressed="true"] {
+  background: #e6ecde;
+  border-color: #315846;
+  box-shadow: inset 0 0 0 1px #315846;
+}
+.local-map-key {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  border: 1px solid #183e3380;
+  border-radius: 50%;
+}
+.local-map-key-help {
+  background: #487653;
+}
+.local-map-key-transport {
+  background: #497ca3;
+  border-radius: 2px;
+}
+.local-map-key-cameras {
+  background: #b17b3a;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+.local-map-browser .map-shell {
+  height: 380px;
+  min-height: 280px;
+  position: relative;
+  isolation: isolate;
+  background: #dfe6dd;
+}
+.local-map-canvas {
+  width: 100%;
+  height: 100%;
+}
+.local-map-fallback {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 24px;
+  text-align: center;
+  background: #e6ebdf;
+}
+.local-map-fallback p {
+  line-height: 1.5;
+}
+.local-map-marker {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+.local-map-marker[aria-pressed="true"] {
+  background: #fffdf7cc;
+  box-shadow: 0 0 0 2px #183e33;
+}
+.local-map-marker .help-anchor {
+  background: #487653;
+  border-radius: 50%;
+}
+.local-map-dot-transport,
+.local-map-dot-cameras {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fffdf7;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px #0a291c77;
+}
+.local-map-dot-transport {
+  background: #497ca3;
+}
+.local-map-dot-cameras {
+  background: #b17b3a;
+  transform: rotate(45deg);
+}
+.local-map-caption,
+.local-map-status,
+.local-map-empty {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.local-map-caption {
+  border-bottom: 1px solid #d5d8ca;
+}
+.local-map-status {
+  background: #f6efdf;
+}
+.local-map-detail {
+  margin: 12px;
+  padding: 14px;
+  border: 1px solid #9cab93;
+  border-radius: 9px;
+  background: #f1f3e9;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.local-map-detail-heading {
+  display: flex;
+  gap: 10px;
+  align-items: start;
+  justify-content: space-between;
+}
+.local-map-detail h3 {
+  margin: 0;
+  font-size: 17px;
+}
+.local-map-detail:focus-visible {
+  outline: 3px solid #e98946;
+  outline-offset: 2px;
+}
+.local-map-detail p {
+  margin: 10px 0;
+}
+.local-map-detail ul {
+  padding-left: 18px;
+}
+.local-map-detail-heading button {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  min-height: 44px;
+  border: 1px solid #b6c3b5;
+  border-radius: 7px;
+  background: #fffdf7;
+  color: #183e33;
+}
+.local-map-detail a {
+  color: #214f3f;
+  font-weight: 700;
+}
+.local-map-list-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  gap: 8px;
+}
+.local-map-list-heading h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.local-map-list-heading > span {
+  font-size: 12px;
+}
+.local-map-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 12px 12px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.local-map-list li + li {
+  border-top: 1px solid #e0e3d7;
+}
+.local-map-list button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 8px;
+  text-align: left;
+  color: #183e33;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.local-map-list button[aria-pressed="true"],
+.local-map-list button:hover {
+  background: #e6ecde;
+}
+.local-map-row-kind {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: #52685d;
+}
+@media (max-width: 600px) {
+  .local-map-browser .map-shell {
+    height: 300px;
+    min-height: 280px;
+  }
+  .local-map-detail {
+    margin: 10px;
+    padding: 12px;
+  }
+}

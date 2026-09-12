@@ -13,7 +13,8 @@ import {
   type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
-import * as L from "leaflet";
+import { LocalMap } from "./LocalMap";
+import { TransportPanel, useLocalTransport } from "./TransportPanel";
 import {
   Bell,
   ChevronRight,
@@ -21,7 +22,6 @@ import {
   ClipboardList,
   Compass,
   Map as MapIcon,
-  MapPin,
   Plus,
   RefreshCw,
   Send,
@@ -222,145 +222,6 @@ function Modal({
         <h2 id="dialog-title">{title}</h2>
         {children}
       </section>
-    </div>
-  );
-}
-
-function PilotMap({
-  area,
-  help,
-  visible,
-}: {
-  area: Area;
-  help: HelpCard[];
-  visible: boolean;
-}) {
-  const element = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    if (!element.current) return;
-    setFailed(false);
-    let map: L.Map | undefined;
-    let resizeObserver: ResizeObserver | undefined;
-    try {
-      const leafletMap = L.map(element.current, { zoomControl: false }).setView(
-        area.center,
-        14,
-      );
-      map = leafletMap;
-      mapRef.current = leafletMap;
-      resizeObserver = new ResizeObserver(() => {
-        leafletMap.invalidateSize({ animate: false });
-      });
-      resizeObserver.observe(element.current);
-      L.control.zoom({ position: "bottomright" }).addTo(leafletMap);
-      const tiles = L.tileLayer(
-        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-          maxZoom: 19,
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        },
-      ).addTo(leafletMap);
-      tiles.on("tileerror", () => setFailed(true));
-      const popup = (title: string, detail: string, href?: string) => {
-        const content = document.createElement("div");
-        const heading = document.createElement("strong");
-        heading.textContent = title;
-        const description = document.createElement("p");
-        description.textContent = detail;
-        content.append(heading, description);
-        if (href) {
-          const link = document.createElement("a");
-          link.href = href;
-          link.target = "_blank";
-          link.rel = "noreferrer";
-          link.textContent = "Open source";
-          content.append(link);
-        }
-        return content;
-      };
-      const addMarker = (
-        coordinates: L.LatLngExpression,
-        label: string,
-        iconClass: "anchor" | "help-anchor",
-        detail: string,
-        href?: string,
-      ) => {
-        const marker = L.marker(coordinates, {
-          alt: label,
-          keyboard: true,
-          title: label,
-          icon: L.divIcon({
-            className: "",
-            html: `<div class="map-marker-hit" aria-hidden="true"><div class="${iconClass}"></div></div>`,
-            iconSize: [48, 48],
-            iconAnchor: [24, 24],
-          }),
-        })
-          .addTo(leafletMap)
-          .bindPopup(popup(label, detail, href));
-        const markerElement = marker.getElement();
-        markerElement?.setAttribute("aria-label", label);
-        markerElement?.setAttribute("role", "button");
-        markerElement?.setAttribute("title", label);
-      };
-      addMarker(
-        area.center,
-        `${area.shortName} approximate pilot-area anchor`,
-        "anchor",
-        "Approximate pilot-area anchor",
-      );
-      help
-        .filter((item) => item.coordinates)
-        .forEach((item) => {
-          addMarker(
-            item.coordinates!,
-            `${item.name}, council-listed help location`,
-            "help-anchor",
-            `${item.address || "Council-listed location"}. Availability unconfirmed.`,
-            item.url,
-          );
-        });
-    } catch {
-      setFailed(true);
-    }
-    return () => {
-      resizeObserver?.disconnect();
-      mapRef.current = null;
-      map?.remove();
-    };
-  }, [area, help]);
-  useEffect(() => {
-    if (!visible || !mapRef.current) return;
-    const frame = requestAnimationFrame(() => {
-      mapRef.current?.invalidateSize({ animate: false });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [visible]);
-  return (
-    <div className="map-shell">
-      <div
-        className="map"
-        ref={element}
-        aria-label={`Map centred on the approximate ${area.name} pilot-area anchor`}
-        aria-hidden={failed || undefined}
-      />
-      {failed && (
-        <div className="map-fallback">
-          <div>
-            <MapPin size={28} />
-            <p>
-              <strong>Map tiles are unavailable</strong>
-            </p>
-            <p>
-              The list remains available. {area.shortName} is an approximate
-              pilot-area anchor.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -777,6 +638,7 @@ function Dashboard({
   retryArea: () => void;
   isPublic: boolean;
 }) {
+  const transportData = useLocalTransport(area.id, tab === "now");
   const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, id: Tab) => {
     const current = tabs.findIndex(([tabId]) => tabId === id);
     const last = tabs.length - 1;
@@ -860,14 +722,16 @@ function Dashboard({
         {tab === "now" && (
           <div className={`now-view ${mapOpen ? "map-open" : ""}`}>
             <div className="now-layout">
-              <section className="panel map-panel">
-                <PilotMap area={area} help={data.help} visible={mapOpen} />
-                <div className="map-caption">
-                  Approximate pilot-area anchor and council-listed help points.
-                  No incident coordinates.
-                </div>
+              <section className="panel map-panel local-map-panel">
+                <LocalMap
+                  area={area}
+                  help={data.help}
+                  transport={transportData.transport ?? undefined}
+                  cameras={transportData.cameras ?? undefined}
+                />
               </section>
               <section className="panel feed-panel source-panel">
+                <TransportPanel area={area.id} data={transportData} />
                 <div className="panel-title">
                   <h2>Local source updates</h2>
                   <span className="count">Source-backed</span>
@@ -926,12 +790,13 @@ function Dashboard({
         {tab === "community" && (
           <>
             <div className={`dashboard ${mapOpen ? "map-open" : ""}`}>
-              <section className="panel map-panel">
-                <PilotMap area={area} help={data.help} visible={mapOpen} />
-                <div className="map-caption">
-                  Approximate pilot-area anchor and council-listed help points.
-                  No incident coordinates.
-                </div>
+              <section className="panel map-panel local-map-panel">
+                <LocalMap
+                  area={area}
+                  help={data.help}
+                  transport={transportData.transport ?? undefined}
+                  cameras={transportData.cameras ?? undefined}
+                />
               </section>
               <section className="panel feed-panel">
                 <div className="panel-title">
