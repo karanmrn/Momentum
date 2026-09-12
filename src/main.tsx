@@ -617,16 +617,18 @@ function Sources({
                 ? `retrieved ${new Date(source.fetchedAt).toLocaleString("en-GB")}`
                 : "retrieval time unavailable"}
             </p>
-            {source.checkedAt && !compact && (
-              <p className="source-fact">
-                Checked {new Date(source.checkedAt).toLocaleString("en-GB")}
-              </p>
-            )}
+            {source.checkedAt &&
+              source.checkedAt !== source.fetchedAt &&
+              !compact && (
+                <p className="source-fact">
+                  Checked {new Date(source.checkedAt).toLocaleString("en-GB")}
+                </p>
+              )}
             {source.attribution && !compact && (
               <p className="source-fact">{source.attribution}</p>
             )}
             <a href={source.url} target="_blank" rel="noreferrer">
-              Open source
+              View {source.title}
             </a>
           </article>
         ))
@@ -668,7 +670,10 @@ function Dashboard({
   retryArea: () => void;
   isPublic: boolean;
 }) {
-  const transportData = useLocalTransport(area.id, tab === "now");
+  const transportData = useLocalTransport(
+    area.id,
+    tab === "now" || tab === "community",
+  );
   const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, id: Tab) => {
     const current = tabs.findIndex(([tabId]) => tabId === id);
     const last = tabs.length - 1;
@@ -763,12 +768,11 @@ function Dashboard({
               <section className="panel feed-panel source-panel">
                 <TransportPanel area={area.id} data={transportData} />
                 <div className="panel-title">
-                  <h2>Local source updates</h2>
-                  <span className="count">Source-backed</span>
+                  <h2>Local information sources</h2>
                 </div>
                 {data.errors.sources ? (
                   <Unavailable
-                    title="Local source updates are unavailable"
+                    title="Local sources are unavailable"
                     message={data.errors.sources}
                     retry={retryArea}
                   />
@@ -795,7 +799,7 @@ function Dashboard({
                   />
                 ) : loading ? (
                   <Empty title="Loading reviewed updates">
-                    Checking the current projection.
+                    Loading community updates.
                   </Empty>
                 ) : notices.length ? (
                   notices.map((notice) => (
@@ -809,7 +813,7 @@ function Dashboard({
                 ) : (
                   <Empty title="No published notices">
                     {isPublic
-                      ? "Community updates are not collected in public browsing."
+                      ? "Community reporting is not open yet. You can still find local help and official reporting routes."
                       : "No current item was returned. This does not show that conditions are clear."}
                   </Empty>
                 )}
@@ -842,7 +846,7 @@ function Dashboard({
                     />
                   ) : loading ? (
                     <Empty title="Loading notices">
-                      Checking the current projection.
+                      Loading community updates.
                     </Empty>
                   ) : notices.length ? (
                     notices.map((notice) => (
@@ -856,7 +860,7 @@ function Dashboard({
                   ) : (
                     <Empty title="No published notices">
                       {isPublic
-                        ? "Community updates are not collected in public browsing."
+                        ? "Community reporting is not open yet. You can still find local help and official reporting routes."
                         : "No current item was returned. This does not show that conditions are clear."}
                     </Empty>
                   )}
@@ -877,39 +881,89 @@ function Dashboard({
           </>
         )}
         {tab === "help" && (
-          <div className="grid section">
-            <section className="panel feed-panel">
-              <h2>Help directory</h2>
-              <div className="stack">
-                {data.errors.help ? (
+          <section className="help-view">
+            <section
+              className="panel feed-panel section"
+              aria-labelledby="official-help-title"
+            >
+              <h2 id="official-help-title">Get help or report an issue</h2>
+              <p>
+                <strong>In an emergency, call 999.</strong>
+              </p>
+              <div className="actions">
+                <a
+                  className="button secondary"
+                  href="https://www.met.police.uk/ro/report/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Report to the police
+                </a>
+                <a
+                  className="button secondary"
+                  href="https://www.btp.police.uk/police-forces/british-transport-police/areas/campaigns/How-to-use-our-text-number/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Rail incidents: BTP 61016
+                </a>
+                <a
+                  className="button secondary"
+                  href={area.reportUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Report a street problem
+                </a>
+              </div>
+              <p className="source-fact">
+                61016 is for non-emergency rail incidents. These links open
+                official services; Streetwise does not send a report.
+              </p>
+            </section>
+            <div className="grid section">
+              <section className="panel feed-panel">
+                <h2>Help directory</h2>
+                <div className="stack">
+                  {data.errors.help ? (
+                    <Unavailable
+                      title="Help directory is unavailable"
+                      message={data.errors.help}
+                      retry={retryArea}
+                    />
+                  ) : loading ? (
+                    <p role="status">Loading help directory.</p>
+                  ) : data.help.length ? (
+                    data.help.map((item) => <Help item={item} key={item.id} />)
+                  ) : (
+                    <Empty title="No help locations returned">
+                      No local help listing is available. Use the official
+                      routes above.
+                    </Empty>
+                  )}
+                </div>
+              </section>
+              <section className="panel feed-panel">
+                <h2>Local reporting sources</h2>
+                {data.errors.sources ? (
                   <Unavailable
-                    title="Help directory is unavailable"
-                    message={data.errors.help}
+                    title="Source status is unavailable"
+                    message={data.errors.sources}
                     retry={retryArea}
                   />
-                ) : data.help.length ? (
-                  data.help.map((item) => <Help item={item} key={item.id} />)
+                ) : loading ? (
+                  <p role="status">Loading local sources.</p>
                 ) : (
-                  <Empty title="No help locations returned">
-                    Directory omissions are visible. A listed service is not
-                    confirmation that help is available now.
-                  </Empty>
+                  <Sources
+                    sources={data.sources.filter(
+                      (source) =>
+                        source.coverage === "directory" || source.id === "R01",
+                    )}
+                  />
                 )}
-              </div>
-            </section>
-            <section className="panel feed-panel">
-              <h2>Source status</h2>
-              {data.errors.sources ? (
-                <Unavailable
-                  title="Source status is unavailable"
-                  message={data.errors.sources}
-                  retry={retryArea}
-                />
-              ) : (
-                <Sources sources={data.sources} />
-              )}
-            </section>
-          </div>
+              </section>
+            </div>
+          </section>
         )}
         {tab === "history" && (
           <section className="panel history section">
@@ -917,7 +971,7 @@ function Dashboard({
               <StatusTag tone="orange">Historical context</StatusTag>
               <StatusTag>not a live warning</StatusTag>
             </div>
-            <h2>Comparable history</h2>
+            <h2>Historical police records</h2>
             {data.errors.history ? (
               <Unavailable
                 title="Historical coverage is unavailable"
@@ -1023,7 +1077,7 @@ function Help({ item }: { item: HelpCard }) {
         </p>
       )}
       <a href={item.url} target="_blank" rel="noreferrer">
-        Open source
+        View {item.name} details
       </a>
     </article>
   );
