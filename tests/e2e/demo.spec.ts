@@ -396,3 +396,44 @@ test("dataset acquisition is visible for every area and failures never become ze
     .click();
   await expect(page.locator(".dataset-record")).toHaveCount(6);
 });
+
+test("area tabs support keyboard navigation and failed resources stay explicit", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const now = page.getByRole("tab", { name: "Now", exact: true });
+  await now.focus();
+  await page.keyboard.press("ArrowRight");
+  const community = page.getByRole("tab", {
+    name: "Community",
+    exact: true,
+  });
+  await expect(community).toBeFocused();
+  await expect(community).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { name: "Now", exact: true }).click();
+
+  await page.route("**/api/help?area=camden_town", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({
+        error: { message: "Help directory unavailable" },
+      }),
+    }),
+  );
+  await page.getByLabel("Choose pilot area").selectOption("camden_town");
+  await expect(
+    page.getByText("Camden street lighting inventory", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Get help", exact: true }).click();
+  await expect(
+    page.getByText("Help directory is unavailable", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("No help locations returned", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Preferences", exact: true }),
+  ).toHaveCSS("min-height", "48px");
+});

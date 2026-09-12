@@ -905,7 +905,7 @@ textarea {
     gap: 3px;
   }
   .utility-button {
-    min-height: 32px;
+    min-height: 48px;
     border: 0;
     border-radius: 6px;
     padding: 5px 8px;

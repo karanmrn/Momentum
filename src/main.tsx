@@ -48,6 +48,7 @@ type AreaData = {
   help: HelpCard[];
   sources: SourceCard[];
   history: HistoricalCoverage | null;
+  errors: Partial<Record<"notices" | "help" | "sources" | "history", string>>;
 };
 type MemberPersona = Exclude<Persona, "moderator">;
 const tabs: Array<[Tab, string]> = [
@@ -73,12 +74,38 @@ const localDateTime = (value = new Date()) => {
   const pad = (number: number) => String(number).padStart(2, "0");
   return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
 };
+const emptyAreaData = (): AreaData => ({
+  notices: [],
+  help: [],
+  sources: [],
+  history: null,
+  errors: {},
+});
 
 function Empty({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="empty">
       <strong>{title}</strong>
       {children}
+    </div>
+  );
+}
+function Unavailable({
+  title,
+  message,
+  retry,
+}: {
+  title: string;
+  message: string;
+  retry: () => void;
+}) {
+  return (
+    <div className="empty" role="alert">
+      <strong>{title}</strong>
+      <p>{message}</p>
+      <button className="button secondary" onClick={retry}>
+        Retry area data
+      </button>
     </div>
   );
 }
@@ -698,6 +725,7 @@ function Dashboard({
   inspect,
   mapOpen,
   toggleMap,
+  retryArea,
 }: {
   area: Area;
   tab: Tab;
@@ -710,15 +738,45 @@ function Dashboard({
   inspect: (notice: Notice) => void;
   mapOpen: boolean;
   toggleMap: () => void;
+  retryArea: () => void;
 }) {
+  const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, id: Tab) => {
+    const current = tabs.findIndex(([tabId]) => tabId === id);
+    const last = tabs.length - 1;
+    const next =
+      event.key === "ArrowRight"
+        ? current === last
+          ? 0
+          : current + 1
+        : event.key === "ArrowLeft"
+          ? current === 0
+            ? last
+            : current - 1
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? last
+              : null;
+    if (next === null) return;
+    event.preventDefault();
+    const nextId = tabs[next][0];
+    setTab(nextId);
+    requestAnimationFrame(() => {
+      document.getElementById(`area-tab-${nextId}`)?.focus();
+    });
+  };
   return (
     <>
       <div className="tabs" role="tablist" aria-label="Area information">
         {tabs.map(([id, label]) => (
           <button
+            id={`area-tab-${id}`}
             role="tab"
             aria-selected={tab === id}
+            aria-controls="area-information-panel"
+            tabIndex={tab === id ? 0 : -1}
             onClick={() => setTab(id)}
+            onKeyDown={(event) => moveTab(event, id)}
             key={id}
           >
             {label}
@@ -757,76 +815,55 @@ function Dashboard({
           )}
         </div>
       </div>
-      {tab === "now" && (
-        <div className={`now-view ${mapOpen ? "map-open" : ""}`}>
-          <div className="now-layout">
-            <section className="panel map-panel">
-              <PilotMap area={area} help={data.help} visible={mapOpen} />
-              <div className="map-caption">
-                Approximate pilot-area anchor and council-listed help points. No
-                incident coordinates.
-              </div>
-            </section>
-            <section className="panel feed-panel source-panel">
-              <div className="panel-title">
-                <h2>Local source updates</h2>
-                <span className="count">Source-backed</span>
-              </div>
-              {loading ? (
-                <Empty title="Loading local sources">
-                  Checking source coverage.
-                </Empty>
-              ) : (
-                <Sources sources={data.sources} compact />
-              )}
-            </section>
-          </div>
-          <section className="panel feed-panel section now-community">
-            <div className="panel-title">
-              <h2>Reviewed community update</h2>
-              <span className="count">{notices.length} shown</span>
-            </div>
-            <div className="stack">
-              {loading ? (
-                <Empty title="Loading reviewed updates">
-                  Checking the current projection.
-                </Empty>
-              ) : notices.length ? (
-                notices.map((notice) => (
-                  <NoticeCard
-                    notice={notice}
-                    onInspect={inspect}
-                    key={notice.id}
+      <div
+        id="area-information-panel"
+        role="tabpanel"
+        aria-labelledby={`area-tab-${tab}`}
+      >
+        {tab === "now" && (
+          <div className={`now-view ${mapOpen ? "map-open" : ""}`}>
+            <div className="now-layout">
+              <section className="panel map-panel">
+                <PilotMap area={area} help={data.help} visible={mapOpen} />
+                <div className="map-caption">
+                  Approximate pilot-area anchor and council-listed help points.
+                  No incident coordinates.
+                </div>
+              </section>
+              <section className="panel feed-panel source-panel">
+                <div className="panel-title">
+                  <h2>Local source updates</h2>
+                  <span className="count">Source-backed</span>
+                </div>
+                {data.errors.sources ? (
+                  <Unavailable
+                    title="Local source updates are unavailable"
+                    message={data.errors.sources}
+                    retry={retryArea}
                   />
-                ))
-              ) : (
-                <Empty title="No published notices">
-                  No current item was returned. This does not show that
-                  conditions are clear.
-                </Empty>
-              )}
+                ) : loading ? (
+                  <Empty title="Loading local sources">
+                    Checking source coverage.
+                  </Empty>
+                ) : (
+                  <Sources sources={data.sources} compact />
+                )}
+              </section>
             </div>
-          </section>
-        </div>
-      )}
-      {tab === "community" && (
-        <>
-          <div className={`dashboard ${mapOpen ? "map-open" : ""}`}>
-            <section className="panel map-panel">
-              <PilotMap area={area} help={data.help} visible={mapOpen} />
-              <div className="map-caption">
-                Approximate pilot-area anchor and council-listed help points. No
-                incident coordinates.
-              </div>
-            </section>
-            <section className="panel feed-panel">
+            <section className="panel feed-panel section now-community">
               <div className="panel-title">
-                <h2>Reviewed community</h2>
+                <h2>Reviewed community update</h2>
                 <span className="count">{notices.length} shown</span>
               </div>
               <div className="stack">
-                {loading ? (
-                  <Empty title="Loading notices">
+                {data.errors.notices ? (
+                  <Unavailable
+                    title="Reviewed community updates are unavailable"
+                    message={data.errors.notices}
+                    retry={retryArea}
+                  />
+                ) : loading ? (
+                  <Empty title="Loading reviewed updates">
                     Checking the current projection.
                   </Empty>
                 ) : notices.length ? (
@@ -846,94 +883,159 @@ function Dashboard({
               </div>
             </section>
           </div>
-          <section className="panel feed-panel section">
-            <h2>What this area covers</h2>
-            <p className="subtle">
-              {area.name} is a proposed compact pilot. Its boundary and station
-              identifiers still need review.
-            </p>
-            <p className="subtle">
-              Map anchors help orientation only. They do not establish an event
-              location.
-            </p>
-          </section>
-        </>
-      )}
-      {tab === "help" && (
-        <div className="grid section">
-          <section className="panel feed-panel">
-            <h2>Help directory</h2>
-            <div className="stack">
-              {data.help.length ? (
-                data.help.map((item) => <Help item={item} key={item.id} />)
-              ) : (
-                <Empty title="No help locations returned">
-                  Directory omissions are visible. A listed service is not
-                  confirmation that help is available now.
-                </Empty>
-              )}
+        )}
+        {tab === "community" && (
+          <>
+            <div className={`dashboard ${mapOpen ? "map-open" : ""}`}>
+              <section className="panel map-panel">
+                <PilotMap area={area} help={data.help} visible={mapOpen} />
+                <div className="map-caption">
+                  Approximate pilot-area anchor and council-listed help points.
+                  No incident coordinates.
+                </div>
+              </section>
+              <section className="panel feed-panel">
+                <div className="panel-title">
+                  <h2>Reviewed community</h2>
+                  <span className="count">{notices.length} shown</span>
+                </div>
+                <div className="stack">
+                  {data.errors.notices ? (
+                    <Unavailable
+                      title="Reviewed community updates are unavailable"
+                      message={data.errors.notices}
+                      retry={retryArea}
+                    />
+                  ) : loading ? (
+                    <Empty title="Loading notices">
+                      Checking the current projection.
+                    </Empty>
+                  ) : notices.length ? (
+                    notices.map((notice) => (
+                      <NoticeCard
+                        notice={notice}
+                        onInspect={inspect}
+                        key={notice.id}
+                      />
+                    ))
+                  ) : (
+                    <Empty title="No published notices">
+                      No current item was returned. This does not show that
+                      conditions are clear.
+                    </Empty>
+                  )}
+                </div>
+              </section>
             </div>
-          </section>
-          <section className="panel feed-panel">
-            <h2>Source status</h2>
-            <Sources sources={data.sources} />
-          </section>
-        </div>
-      )}
-      {tab === "history" && (
-        <section className="panel history section">
-          <div className="tag-row">
-            <StatusTag tone="orange">Historical context</StatusTag>
-            <StatusTag>not a live warning</StatusTag>
-          </div>
-          <h2>Comparable history</h2>
-          {data.history ? (
-            <>
-              <p>{data.history.explanation}</p>
-              {data.history.latestMonth && (
-                <p>
-                  <strong>Latest published month:</strong>{" "}
-                  {data.history.latestMonth}
-                </p>
-              )}
-              {data.history.availableMonths?.length ? (
-                <details className="published-periods">
-                  <summary>
-                    {data.history.availableMonths.length} published months
-                  </summary>
-                  <p>{data.history.availableMonths.join(", ")}</p>
-                </details>
-              ) : null}
-              {data.history.fetchedAt && (
-                <p className="source-fact">
-                  Checked{" "}
-                  {new Date(data.history.fetchedAt).toLocaleString("en-GB")}
-                </p>
-              )}
-              {data.history.sourceUrl && (
-                <a
-                  href={data.history.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Open historical data source
-                </a>
-              )}
-              <p>
-                <strong>Area totals:</strong> Unavailable. Pilot boundaries
-                still need review.
+            <section className="panel feed-panel section">
+              <h2>What this area covers</h2>
+              <p className="subtle">
+                {area.name} is a proposed compact pilot. Its boundary and
+                station identifiers still need review.
               </p>
-            </>
-          ) : (
-            <p className="subtle">Loading historical coverage.</p>
-          )}
-          <p className="subtle">
-            Historical records are separate from current observations. This view
-            does not estimate a person's risk.
-          </p>
-          <DatasetCoverage pilotId={area.id} />
-        </section>
-      )}
+              <p className="subtle">
+                Map anchors help orientation only. They do not establish an
+                event location.
+              </p>
+            </section>
+          </>
+        )}
+        {tab === "help" && (
+          <div className="grid section">
+            <section className="panel feed-panel">
+              <h2>Help directory</h2>
+              <div className="stack">
+                {data.errors.help ? (
+                  <Unavailable
+                    title="Help directory is unavailable"
+                    message={data.errors.help}
+                    retry={retryArea}
+                  />
+                ) : data.help.length ? (
+                  data.help.map((item) => <Help item={item} key={item.id} />)
+                ) : (
+                  <Empty title="No help locations returned">
+                    Directory omissions are visible. A listed service is not
+                    confirmation that help is available now.
+                  </Empty>
+                )}
+              </div>
+            </section>
+            <section className="panel feed-panel">
+              <h2>Source status</h2>
+              {data.errors.sources ? (
+                <Unavailable
+                  title="Source status is unavailable"
+                  message={data.errors.sources}
+                  retry={retryArea}
+                />
+              ) : (
+                <Sources sources={data.sources} />
+              )}
+            </section>
+          </div>
+        )}
+        {tab === "history" && (
+          <section className="panel history section">
+            <div className="tag-row">
+              <StatusTag tone="orange">Historical context</StatusTag>
+              <StatusTag>not a live warning</StatusTag>
+            </div>
+            <h2>Comparable history</h2>
+            {data.errors.history ? (
+              <Unavailable
+                title="Historical coverage is unavailable"
+                message={data.errors.history}
+                retry={retryArea}
+              />
+            ) : data.history ? (
+              <>
+                <p>{data.history.explanation}</p>
+                {data.history.latestMonth && (
+                  <p>
+                    <strong>Latest published month:</strong>{" "}
+                    {data.history.latestMonth}
+                  </p>
+                )}
+                {data.history.availableMonths?.length ? (
+                  <details className="published-periods">
+                    <summary>
+                      {data.history.availableMonths.length} published months
+                    </summary>
+                    <p>{data.history.availableMonths.join(", ")}</p>
+                  </details>
+                ) : null}
+                {data.history.fetchedAt && (
+                  <p className="source-fact">
+                    Checked{" "}
+                    {new Date(data.history.fetchedAt).toLocaleString("en-GB")}
+                  </p>
+                )}
+                {data.history.sourceUrl && (
+                  <a
+                    href={data.history.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open historical data source
+                  </a>
+                )}
+                <p>
+                  <strong>Area totals:</strong> Unavailable. Pilot boundaries
+                  still need review.
+                </p>
+              </>
+            ) : (
+              <p className="subtle">Loading historical coverage.</p>
+            )}
+            <p className="subtle">
+              Historical records are separate from current observations. This
+              view does not estimate a person's risk.
+            </p>
+            <DatasetCoverage pilotId={area.id} />
+          </section>
+        )}
+      </div>
     </>
   );
 }
@@ -1411,12 +1513,7 @@ function App() {
   const [tab, setTab] = useState<Tab>("now");
   const [view, setView] = useState<View>("dashboard");
   const [mapOpen, setMapOpen] = useState(false);
-  const [data, setData] = useState<AreaData>({
-    notices: [],
-    help: [],
-    sources: [],
-    history: null,
-  });
+  const [data, setData] = useState<AreaData>(emptyAreaData);
   const [reports, setReports] = useState<Report[]>([]);
   const [preferences, setPreferences] = useState<Preferences | null>(null);
   const [personalFeed, setPersonalFeed] = useState<Notice[]>([]);
@@ -1437,15 +1534,43 @@ function App() {
   };
   const loadArea = async (id: string) => {
     const generation = ++areaRequestGeneration.current;
-    setData({ notices: [], help: [], sources: [], history: null });
-    const [notices, help, sources, history] = await Promise.all([
+    setData(emptyAreaData());
+    const [notices, help, sources, history] = await Promise.allSettled([
       api.feed(id),
       api.help(id),
       api.sources(id),
       api.history(id),
     ]);
     if (generation === areaRequestGeneration.current) {
-      setData({ notices, help, sources, history });
+      setData({
+        notices: notices.status === "fulfilled" ? notices.value : [],
+        help: help.status === "fulfilled" ? help.value : [],
+        sources: sources.status === "fulfilled" ? sources.value : [],
+        history: history.status === "fulfilled" ? history.value : null,
+        errors: {
+          ...(notices.status === "rejected"
+            ? { notices: errorText(notices.reason) }
+            : {}),
+          ...(help.status === "rejected"
+            ? { help: errorText(help.reason) }
+            : {}),
+          ...(sources.status === "rejected"
+            ? { sources: errorText(sources.reason) }
+            : {}),
+          ...(history.status === "rejected"
+            ? { history: errorText(history.reason) }
+            : {}),
+        },
+      });
+    }
+  };
+  const retryArea = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      await loadArea(areaId);
+    } finally {
+      setLoading(false);
     }
   };
   const loadMember = async () => {
@@ -1695,6 +1820,7 @@ function App() {
             inspect={setNoticeOpen}
             mapOpen={mapOpen}
             toggleMap={() => setMapOpen((open) => !open)}
+            retryArea={() => void retryArea()}
           />
         )}
         {view === "reports" && isMember(session.persona) && (
