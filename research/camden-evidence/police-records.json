@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "1.0",
+  "scope": "five_record_research_example",
+  "pilotId": "camden_town",
+  "sourceUrl": "https://data.police.uk/api/crimes-street/all-crime?date=2026-07&lat=51.5392&lng=-0.1426",
+  "sourceSnapshotSha256": "332ee515a650f9df9cb7d264b65b870f57a2d8d42a75822bf043bf53b76c75ad",
+  "sourceFetchedAt": "2026-09-12T13:01:09.527Z",
+  "recheckedAt": "2026-09-12T14:16:27.614868+00:00",
+  "recheckedSnapshotSha256": "87b080e97589cdbe4b73c55e562e898fe6bde70a38d2b3f4a138b97f9d91ed92",
+  "allSelectedRowsUnchanged": true,
+  "selection": {
+    "month": "2026-07",
+    "category": "violent-crime",
+    "sourceCircleMiles": 1,
+    "anchor": {
+      "latitude": 51.5392,
+      "longitude": -0.1426
+    },
+    "method": "Purposive sample at Camden High Street, Parkway and Camden Road station approach. Two distinct records share one anonymised point. Not a representative sample or approved pilot total.",
+    "approvedPilotBoundary": false
+  },
+  "records": [
+    {
+      "exampleId": "CAM-01",
+      "sourceRowIndex": 1274,
+      "raw": {
+        "category": "violent-crime",
+        "location_type": "Force",
+        "location": {
+          "latitude": "51.537796",
+          "street": {
+            "id": 1675998,
+            "name": "On or near Parkway"
+          },
+          "longitude": "-0.144934"
+        },
+        "context": "",
+        "outcome_status": {
+          "category": "Under investigation",
+          "date": "2026-07"
+        },
+        "persistent_id": "af916967a50816b3734866b8de71cd2bee5fc80c9d07804ea781ce29801234d9",
+        "id": 136284076,
+        "location_subtype": "",
+        "month": "2026-07"
+      }
+    },
+    {
+      "exampleId": "CAM-02",
+      "sourceRowIndex": 1279,
+      "raw": {
+        "category": "violent-crime",
+        "location_type": "Force",
+        "location": {
+          "latitude": "51.538136",
+          "street": {
+            "id": 1676293,
+            "name": "On or near Camden High Street"
+          },
+          "longitude": "-0.141993"
+        },
+        "context": "",
+        "outcome_status": {
+          "category": "Unable to prosecute suspect",
+          "date": "2026-07"
+        },
+        "persistent_id": "16b13c14c4dbc1e1227167bae8b1bdb4ae57a5b175499156287cc2bc0fa9ac11",
+        "id": 136311506,
+        "location_subtype": "",
+        "month": "2026-07"
+      }
+    },
+    {
+      "exampleId": "CAM-03",
+      "sourceRowIndex": 1331,
+      "raw": {
+        "category": "violent-crime",
+        "location_type": "Force",
+        "location": {
+          "latitude": "51.538136",
+          "street": {
+            "id": 1676293,
+            "name": "On or near Camden High Street"
+          },
+          "longitude": "-0.141993"
+        },
+        "context": "",
+        "outcome_status": {
+          "category": "Under investigation",
+          "date": "2026-07"
+        },
+        "persistent_id": "4e5ec260e51464d84490c805f66976197eac4e11c994b80010ccf1c1ff87a23e",
+        "id": 136340068,
+        "location_subtype": "",
+        "month": "2026-07"
+      }
+    },
+    {
+      "exampleId": "CAM-04",
+      "sourceRowIndex": 1419,
+      "raw": {
+        "category": "violent-crime",
+        "location_type": "Force",
+        "location": {
+          "latitude": "51.541987",
+          "street": {
+            "id": 1676757,
+            "name": "On or near Camden Road"
+          },
+          "longitude": "-0.139270"
+        },
+        "context": "",
+        "outcome_status": {
+          "category": "Under investigation",
+          "date": "2026-07"
+        },
+        "persistent_id": "df7d92229574044be37961fd94bdec681ff6ebd723dbaec044b94312805ba33e",
+        "id": 136305750,
+        "location_subtype": "",
+        "month": "2026-07"
+      }
+    },
+    {
+      "exampleId": "CAM-05",
+      "sourceRowIndex": 1494,
+      "raw": {
+        "category": "violent-crime",
+        "location_type": "Force",
+        "location": {
+          "latitude": "51.534789",
+          "street": {
+            "id": 1676817,
+            "name": "On or near Camden High Street"
+          },
+          "longitude": "-0.139015"
+        },
+        "context": "",
+        "outcome_status": {
+          "category": "Under investigation",
+          "date": "2026-07"
+        },
+        "persistent_id": "3246c174df75d7addd537a4e5b10190cdeb3316c5f2ee179061c073d06286667",
+        "id": 136338147,
+        "location_subtype": "",
+        "month": "2026-07"
+      }
+    }
+  ]
+}
