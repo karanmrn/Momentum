@@ -1,6 +1,6 @@
 {
   "prepared_date": "2026-09-12",
-  "verification_boundary": "Web pages and documentation researched. No crime backfill, boundary publication, deployed connector or partnership has been completed. Container network probes failed and are logged separately.",
+  "verification_boundary": "Selected council help and service cards are integrated. Police.uk publication metadata and a bounded Camden lighting sample were retrieved. Pilot boundaries and local crime totals remain unapproved. TfL direct requests return HTTP 403.",
   "sources": [
     {
       "id": "P01",
@@ -42,7 +42,7 @@
       "id": "P03",
       "name": "Police.uk latest reporting month",
       "url": "https://data.police.uk/api/crime-last-updated",
-      "verification_status": "response_read_via_web",
+      "verification_status": "live_adapter_verified",
       "checked_date": "2026-09-12",
       "areas": [
         "hounslow_town_centre",
@@ -51,9 +51,9 @@
       ],
       "kind": "metadata",
       "reuse_status": "Police.uk data terms",
-      "finding": "Web response on research date: {\"date\":\"2026-07-01\"}; this is July 2026 reporting month.",
+      "finding": "Live metadata returned July 2026. The history route lists 36 publication months. No pilot count is calculated.",
       "implementation_action": "Re-fetch at implementation; a reporting month is not an incident timestamp.",
-      "connector_status": "not_implemented",
+      "connector_status": "implemented_metadata_only",
       "automation_enabled": false
     },
     {
@@ -212,48 +212,48 @@
       "id": "C01",
       "name": "Camden staying safe at night",
       "url": "https://www.camden.gov.uk/staying-safe-at-night",
-      "verification_status": "page_read",
+      "verification_status": "page_retrieved",
       "checked_date": "2026-09-12",
       "areas": [
         "camden_town"
       ],
       "kind": "help_directory",
       "reuse_status": "Review reuse; cite official source",
-      "finding": "Page lists Safety Bus outside Camden Town station Friday/Saturday 21:30–02:30. Published schedule, not live deployment confirmation.",
+      "finding": "Safety Bus listing retrieved with Context.dev. Published schedule is separate from deployment tonight.",
       "implementation_action": "Review schedule before publication and model overnight dates correctly.",
-      "connector_status": "not_implemented",
+      "connector_status": "curated_help_card",
       "automation_enabled": false
     },
     {
       "id": "C02",
       "name": "Camden Safe Havens",
       "url": "https://www.camden.gov.uk/safe-havens",
-      "verification_status": "page_read",
+      "verification_status": "selected_facts_reviewed",
       "checked_date": "2026-09-12",
       "areas": [
         "camden_town"
       ],
       "kind": "help_directory",
       "reuse_status": "Review map/dataset terms before bulk extraction",
-      "finding": "Council scheme and map of participating places; current availability separate.",
+      "finding": "Four selected council-listed venues appear as factual source-linked cards. Availability remains unconfirmed. Raw directory is not republished.",
       "implementation_action": "Extract only permitted locations and verify scheme eligibility, entrance and hours.",
-      "connector_status": "not_implemented",
+      "connector_status": "curated_help_cards",
       "automation_enabled": false
     },
     {
       "id": "C03",
       "name": "Camden street-lighting dataset",
       "url": "https://opendata.camden.gov.uk/Environment/Camden-Street-Lighting/dfq3-8wzu",
-      "verification_status": "catalogue_read",
+      "verification_status": "live_adapter_verified",
       "checked_date": "2026-09-12",
       "areas": [
         "camden_town"
       ],
       "kind": "asset_inventory",
-      "reuse_status": "Dataset-specific licence/API not validated",
-      "finding": "Street-lighting inventory discovered; asset existence is not current working status.",
+      "reuse_status": "Metadata declares Open Government Licence v3; attribute London Borough of Camden.",
+      "finding": "Live candidate-rectangle sample returned 200 assets across 36 named streets. It is not a complete pilot inventory or lamp operation feed.",
       "implementation_action": "Inspect Socrata metadata, fields, licence, freshness and sample rows; probe failed in this runtime.",
-      "connector_status": "not_implemented",
+      "connector_status": "implemented_bounded_sample",
       "automation_enabled": false
     },
     {
