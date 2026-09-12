@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, expect, it } from "vitest";
 import type { Server } from "node:http";
+import express from "express";
 import { createApp } from "../../server/app";
 import { createDatabase, type DemoDatabase } from "../../server/database";
 import { createDemoState } from "../../packages/domain";
@@ -8,7 +9,15 @@ import { semanticGraphSchema } from "../../packages/semantic-graph/schema";
 let db: DemoDatabase, server: Server, base: string;
 beforeAll(async () => {
   db = await createDatabase(createDemoState, { path: "memory://" });
-  server = createApp(db).listen(0, "127.0.0.1");
+  const hosted = express();
+  hosted.use((request, _response, next) => {
+    if (request.path.includes("/graph"))
+      Object.defineProperty(request, "query", {
+        value: { ...request.query, path: "public/graph" },
+      });
+    next();
+  });
+  server = hosted.use(createApp(db)).listen(0, "127.0.0.1");
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("Missing port");
@@ -41,6 +50,8 @@ it("rejects unbounded traversals and write requests", async () => {
     "area=london",
     "area=camden_town&depth=3",
     "area=camden_town&notice=private",
+    "area=camden_town&area=west_croydon",
+    "area=camden_town&path=public/graph",
   ]) {
     expect((await fetch(`${base}/api/public/graph?${query}`)).status).toBe(400);
   }
