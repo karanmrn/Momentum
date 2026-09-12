@@ -1,0 +1,941 @@
+{
+  "scope": "Specified application acceptance scenarios. No application tests have been executed by this planning package.",
+  "cases": [
+    {
+      "id": "GEO-01",
+      "owner_thread": "01",
+      "group": "geography_sources",
+      "title": "Only three configured pilots are accepted",
+      "expected": "Unknown area ID is rejected; whole borough is not silently selected.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "GEO-02",
+      "owner_thread": "01",
+      "group": "geography_sources",
+      "title": "Geometry coordinate conversion",
+      "expected": "Known GeoJSON lng/lat fixture converts correctly to Police.uk lat,lng polygon syntax.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "GEO-03",
+      "owner_thread": "01",
+      "group": "geography_sources",
+      "title": "Invalid geometry",
+      "expected": "Self-intersection, invalid ring, wrong CRS and out-of-range coordinates fail validation.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "GEO-04",
+      "owner_thread": "01",
+      "group": "geography_sources",
+      "title": "Versioned boundary",
+      "expected": "Changing pilot geometry increments version and invalidates previous aggregate scope.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "GEO-05",
+      "owner_thread": "01",
+      "group": "geography_sources",
+      "title": "Station identity",
+      "expected": "Similar names and rail/tram/bus facility variants require canonical reviewed IDs.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "GEO-06",
+      "owner_thread": "01",
+      "group": "geography_sources",
+      "title": "Entrance precision",
+      "expected": "Station-centre location never becomes a claimed exact entrance.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "GEO-07",
+      "owner_thread": "01",
+      "group": "geography_sources",
+      "title": "Boundary retrieval margin",
+      "expected": "Outside-pilot retrieval rows do not leak into pilot totals without a labelled outside context.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "GEO-08",
+      "owner_thread": "01",
+      "group": "geography_sources",
+      "title": "Licence/access gate",
+      "expected": "A discovered public page with unapproved reuse cannot enable automated bulk ingestion.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "GEO-09",
+      "owner_thread": "01",
+      "group": "geography_sources",
+      "title": "Source independence",
+      "expected": "A derived council map/table retains lineage to its primary source family.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-01",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Idempotent replay",
+      "expected": "Re-running identical source snapshot does not double counts.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-02",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Shared location multiplicity",
+      "expected": "Distinct legitimate events at the same anonymised point are retained.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-03",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Missing persistent IDs",
+      "expected": "Repeated source rows with missing IDs preserve within-snapshot multiplicity and import idempotency.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-04",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Source revision",
+      "expected": "Changed classification/location creates traceable revision without counting old and new as separate events.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-05",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Missing month",
+      "expected": "Unavailable month remains missing; no fake zero or imputation.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-06",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Source taxonomy",
+      "expected": "Combined violence-and-sexual-offences cannot produce an invented sexual-only street filter.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-07",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Force duplication",
+      "expected": "BTP provenance retained; geographic import plus force-specific import do not double-count records.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-08",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Query limits",
+      "expected": "Oversized polygon response is split/checkpointed safely or marked incomplete, never silently truncated.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-09",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Source-period labels",
+      "expected": "Each publication displays its actual period; metadata lookup does not relabel an older snapshot.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-10",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "No live alert from history",
+      "expected": "A historical count increase cannot pass current-notice alert eligibility.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-11",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Suppression",
+      "expected": "Withheld source categories/locations are not reconstructed through enrichment.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "HIS-12",
+      "owner_thread": "02",
+      "group": "historical_ingestion",
+      "title": "Heavy backfill separation",
+      "expected": "Long ingestion runs outside short scheduled request path and resumes from checkpoint.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-01",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Failed fetch",
+      "expected": "Provider timeout retains appropriate stale/unknown state and does not mark all notices resolved.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-02",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Re-fetch old content",
+      "expected": "FetchedAt changes without renewing source observation/validity.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-03",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Partial snapshot",
+      "expected": "Records absent from incomplete fetch are not treated as removed/resolved.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-04",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Scope fidelity",
+      "expected": "Line-wide status does not generate invented station entrance/lift closure.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-05",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Future validity",
+      "expected": "Planned disruption appears as scheduled, not active before effective start.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-06",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Overnight help schedule",
+      "expected": "Friday 21:30\u201302:30 is evaluated correctly into Saturday and through relevant DST transitions.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-07",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Inventory versus condition",
+      "expected": "Mapped lamp and lit=yes do not create lights-working-now or guaranteed-safety claims.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-08",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Registration versus availability",
+      "expected": "Registered haven displays unconfirmed availability unless appropriate evidence exists.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-09",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Schema drift",
+      "expected": "Unexpected source schema is quarantined with safe previous state and operational warning.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-10",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Permission blocked partner",
+      "expected": "BID/private radio network stays blocked without explicit approved source agreement.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-11",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Conditional response",
+      "expected": "304/ETag handling preserves source publication time and correct snapshot metadata.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SRC-12",
+      "owner_thread": "03",
+      "group": "operational_sources",
+      "title": "Scheduled-worker budget",
+      "expected": "Worker respects configured timeout/checkpoints and can be invoked/tested without assuming preview cron runs.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-01",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "Private intake",
+      "expected": "New observation is unreadable through public feed/evidence routes.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-02",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "Role spoofing",
+      "expected": "Client-provided moderator/sourceKind claims cannot grant authority.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-03",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "Owner isolation",
+      "expected": "Member cannot read or change another member report.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-04",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "Area-scoped reviewer",
+      "expected": "Moderator restricted to one pilot cannot access another pilot private queue.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-05",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "Identity redaction",
+      "expected": "Disallowed identifying narrative cannot appear in public summaries or notice sources.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-06",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "No police submission claim",
+      "expected": "Submission UI distinguishes app intake from official reporting and never displays police-notified falsely.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-07",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "Review is not truth",
+      "expected": "Approved community summary retains reviewed-community evidence class.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-08",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "Concurrent review",
+      "expected": "Stale expectedRevision returns conflict instead of overwriting a newer correction.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-09",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "Withdrawal",
+      "expected": "Owner withdrawal cancels pending publication and applies policy to derived public summaries.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-10",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "Intake kill switch",
+      "expected": "Server rejects/defers live public intake when feature gate/staffing is disabled while public help remains accessible.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "COM-11",
+      "owner_thread": "04",
+      "group": "reporting_moderation",
+      "title": "Duplicate privacy",
+      "expected": "Candidate duplicate response does not expose another user private submission.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-01",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Typed predicates",
+      "expected": "Illegal subject/predicate/object combinations fail schema/database validation.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-02",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Qualified evidence",
+      "expected": "Published relation requires applicable provenance, method and allowed evidence visibility.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-03",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Month-only police evidence",
+      "expected": "Nearby monthly police record creates contextual relation only, not individual report confirmation.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-04",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Public ID is not case reference",
+      "expected": "Police API id never joins to user official crime-reference field.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-05",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Unknown precision",
+      "expected": "Missing spatial/temporal precision cannot score as an exact match.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-06",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Shared original source",
+      "expected": "Two copied posts remain one evidence family, not independent confirmation.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-07",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Nontransitive similarity",
+      "expected": "A~B and B~C do not auto-collapse A and C as identical incident.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-08",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Undo merge",
+      "expected": "Candidate cluster merge can be reversed with lineage preserved.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-09",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Retraction cascade",
+      "expected": "Retracted source assertion invalidates current dependent explanations/projections.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-10",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "No private graph inference",
+      "expected": "Unauthorised nodes cannot be inferred through paths/counts/neighbour lists/errors.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-11",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Bounded traversal",
+      "expected": "Depth/node/query limits hold before expensive execution.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-12",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Allegation preservation",
+      "expected": "Official source wording remains allegation/report where applicable, not adjudicated guilt.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-01",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "Explicit preference differences",
+      "expected": "Two synthetic users following different stations see distinct relevant items with accurate reason codes.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-02",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "No demographic risk inference",
+      "expected": "No gender/ethnicity/home-address field is required or used in relevance.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-03",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "Personal cache isolation",
+      "expected": "User A cannot receive user B private/personalised response through cache.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-04",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "Unsubscribe after enqueue",
+      "expected": "Pending notification is suppressed after a user withdraws channel/topic permission.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-05",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "Idempotent delivery scheduling",
+      "expected": "Replay does not create duplicate outbox/inbox items for same revision/subscription/channel.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-06",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "Retracted before dispatch",
+      "expected": "Dispatcher rechecks current notice and cancels stale queued revision.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-07",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "Correction audience",
+      "expected": "Previously notified recipient can see necessary correction even when ordinary topic ordering changes.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-08",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "Quiet hours/DST",
+      "expected": "Overnight windows and timezone transition rules work without duplicate or missed unintended dispatch.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-09",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "Expiry is not resolution",
+      "expected": "Expired notice displays freshness limitation, not confirmed problem solved.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-10",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "Historical digest isolation",
+      "expected": "Opting into digest never authorises urgent alerts from historical counts.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-11",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "In-app first",
+      "expected": "Disabled push does not break saved feed/inbox.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "PER-12",
+      "owner_thread": "06",
+      "group": "personalization_notifications",
+      "title": "Generic lockscreen",
+      "expected": "Notification content does not reveal report narrative, live location or sensitive preference.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "UI-01",
+      "owner_thread": "07",
+      "group": "consumer_experience",
+      "title": "Public access",
+      "expected": "Map/list/help available without sign-in or location permission.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "UI-02",
+      "owner_thread": "07",
+      "group": "consumer_experience",
+      "title": "Three areas",
+      "expected": "All area selectors and coverage states functional with no Westminster seed fallback.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "UI-03",
+      "owner_thread": "07",
+      "group": "consumer_experience",
+      "title": "Accessible list",
+      "expected": "Map tile failure still permits useful text navigation and source inspection.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "UI-04",
+      "owner_thread": "07",
+      "group": "consumer_experience",
+      "title": "Keyboard/mobile",
+      "expected": "Core tasks work at narrow width, keyboard-only and without colour-dependent statuses.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "UI-05",
+      "owner_thread": "07",
+      "group": "consumer_experience",
+      "title": "History versus now",
+      "expected": "Testers can identify period/source and cannot reasonably mistake historical layer for active incident feed.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "UI-06",
+      "owner_thread": "07",
+      "group": "consumer_experience",
+      "title": "No all-clear on empty",
+      "expected": "No relevant source notices is labelled as limited coverage, not guaranteed safe.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "UI-07",
+      "owner_thread": "07",
+      "group": "consumer_experience",
+      "title": "Uncertain help availability",
+      "expected": "Unknown/registered/scheduled/confirmed states render distinctly.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "UI-08",
+      "owner_thread": "07",
+      "group": "consumer_experience",
+      "title": "Original/current notice",
+      "expected": "Old bookmarked notification opens current corrected status.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "UI-09",
+      "owner_thread": "07",
+      "group": "consumer_experience",
+      "title": "Content rendering",
+      "expected": "Injected HTML/script in source/report is displayed as inert text or rejected.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "ANA-01",
+      "owner_thread": "08",
+      "group": "analytics",
+      "title": "Launch insufficiency",
+      "expected": "No real community history returns insufficient_comparable_data with null estimate.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "ANA-02",
+      "owner_thread": "08",
+      "group": "analytics",
+      "title": "No n=3 inference",
+      "expected": "Three borough totals cannot pass intended longitudinal association eligibility.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "ANA-03",
+      "owner_thread": "08",
+      "group": "analytics",
+      "title": "Shared source lineage",
+      "expected": "Police dataset plus its republished dashboard cannot count as independent corroboration.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "ANA-04",
+      "owner_thread": "08",
+      "group": "analytics",
+      "title": "Unit mismatch",
+      "expected": "Mismatched geography vintage/category/time grain fails comparison or produces explicit ineligible state.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "ANA-05",
+      "owner_thread": "08",
+      "group": "analytics",
+      "title": "Constant/sparse/missing",
+      "expected": "Degenerate values do not produce fake coefficients or significance.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "ANA-06",
+      "owner_thread": "08",
+      "group": "analytics",
+      "title": "Dependence disclaimer",
+      "expected": "Inferential result without documented dependence/multiplicity plan is blocked from publication.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "ANA-07",
+      "owner_thread": "08",
+      "group": "analytics",
+      "title": "No risk probability",
+      "expected": "Coefficient never rendered as personal risk, percentage confirmed or causality.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "ANA-08",
+      "owner_thread": "08",
+      "group": "analytics",
+      "title": "Privacy slices",
+      "expected": "Unsupported overlapping rare-count query combinations are denied.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "ANA-09",
+      "owner_thread": "08",
+      "group": "analytics",
+      "title": "Synthetic separation",
+      "expected": "Synthetic analytic result cannot become an empirical public finding.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SEC-01",
+      "owner_thread": "09",
+      "group": "privacy_security",
+      "title": "SSRF/redirect control",
+      "expected": "Loopback/private/link-local target and unsafe redirects are rejected by source fetch layer.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SEC-02",
+      "owner_thread": "09",
+      "group": "privacy_security",
+      "title": "Secrets",
+      "expected": "Service keys, tokens and credentials do not appear in browser bundle/logs/export.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SEC-03",
+      "owner_thread": "09",
+      "group": "privacy_security",
+      "title": "RLS views/RPCs",
+      "expected": "Public role cannot bypass policy through views, joins, RPC or service-role proxy endpoint.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SEC-04",
+      "owner_thread": "09",
+      "group": "privacy_security",
+      "title": "Deletion propagation",
+      "expected": "Deletion/withdrawal policy covers graph projections, caches, indexes and pending delivery.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SEC-05",
+      "owner_thread": "09",
+      "group": "privacy_security",
+      "title": "No sensitive logging",
+      "expected": "Reports/contact details/precise locations are absent from telemetry and error messages.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SEC-06",
+      "owner_thread": "09",
+      "group": "privacy_security",
+      "title": "No LLM instruction execution",
+      "expected": "Source/report prompt injection cannot execute URL fetch, database query or tool instruction.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SEC-07",
+      "owner_thread": "09",
+      "group": "privacy_security",
+      "title": "Demo tenant isolation",
+      "expected": "Synthetic records/accounts cannot trigger live subscriber messages or contaminate real analysis.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SEC-08",
+      "owner_thread": "09",
+      "group": "privacy_security",
+      "title": "Abuse limits",
+      "expected": "Bounded body, rate/concurrency and query limits enforced server-side, not only browser.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SEC-09",
+      "owner_thread": "09",
+      "group": "privacy_security",
+      "title": "Role revocation",
+      "expected": "Revoked partner/moderator loses read/write access and queued publishing permissions.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "SEC-10",
+      "owner_thread": "09",
+      "group": "privacy_security",
+      "title": "Legal/operations gate",
+      "expected": "Unresolved launch requirements leave affected public features off; no invented legal signoff.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "E2E-01",
+      "owner_thread": "10",
+      "group": "integration_release",
+      "title": "Report-to-correction journey",
+      "expected": "Synthetic report \u2192 moderation \u2192 graph \u2192 relevant inbox \u2192 retraction runs end to end.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "E2E-02",
+      "owner_thread": "10",
+      "group": "integration_release",
+      "title": "Real-source honesty",
+      "expected": "Each connector status accurately distinguishes live tested, fixture, blocked and unavailable.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "E2E-03",
+      "owner_thread": "10",
+      "group": "integration_release",
+      "title": "Build evidence",
+      "expected": "Build/type/unit/integration outcomes recorded from actual commands, not assumed.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "E2E-04",
+      "owner_thread": "10",
+      "group": "integration_release",
+      "title": "Deployment target",
+      "expected": "Deployment runs only against specifically authorised target; no fabricated live URL.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "E2E-05",
+      "owner_thread": "10",
+      "group": "integration_release",
+      "title": "Rollback exercise",
+      "expected": "Operator can disable intake/push and retract bad content without deleting valid history.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "E2E-06",
+      "owner_thread": "10",
+      "group": "integration_release",
+      "title": "Dependency outage",
+      "expected": "Map provider, transport source and database failure modes are tested with safe user states.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "E2E-07",
+      "owner_thread": "10",
+      "group": "integration_release",
+      "title": "No production reset",
+      "expected": "Parallel tests/backfills cannot reset shared production database.",
+      "status": "specified_not_executed",
+      "result": null
+    },
+    {
+      "id": "KG-13",
+      "owner_thread": "05",
+      "group": "knowledge_graph",
+      "title": "Source family versus claim origin",
+      "expected": "Distinct events from one publisher are retained; copied claims across publishers share origin lineage; unknown origin is not independent corroboration.",
+      "status": "specified_not_executed",
+      "result": null
+    }
+  ]
+}

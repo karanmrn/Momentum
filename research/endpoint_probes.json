@@ -1,0 +1,93 @@
+{
+  "scope": "Read-only research probes; not production connector tests or permission approval. Responses may change.",
+  "probes": [
+    {
+      "id": "police_latest",
+      "requested_url": "https://data.police.uk/api/crime-last-updated",
+      "checked_at_utc": "2026-09-12T11:14:38.821910+00:00",
+      "credentials_used": false,
+      "status": "request_failed",
+      "error": "ConnectionError: HTTPSConnectionPool(host='data.police.uk', port=443): Max retries exceeded with url: /api/crime-last-updated (Caused by NameResolutionError(\"HTTPSConnection(host='data.police.uk', port=443): Failed to resolve 'data.police.uk' ([Errno -3] Temporary fa"
+    },
+    {
+      "id": "camden_assets_metadata",
+      "requested_url": "https://opendata.camden.gov.uk/api/views/dfq3-8wzu.json",
+      "checked_at_utc": "2026-09-12T11:14:38.822448+00:00",
+      "credentials_used": false,
+      "status": "request_failed",
+      "error": "ConnectionError: HTTPSConnectionPool(host='opendata.camden.gov.uk', port=443): Max retries exceeded with url: /api/views/dfq3-8wzu.json (Caused by NameResolutionError(\"HTTPSConnection(host='opendata.camden.gov.uk', port=443): Failed to resolve 'opendata.camden.gov.uk"
+    },
+    {
+      "id": "camden_assets_sample",
+      "requested_url": "https://opendata.camden.gov.uk/resource/dfq3-8wzu.json?$limit=2",
+      "checked_at_utc": "2026-09-12T11:14:38.822875+00:00",
+      "credentials_used": false,
+      "status": "request_failed",
+      "error": "ConnectionError: HTTPSConnectionPool(host='opendata.camden.gov.uk', port=443): Max retries exceeded with url: /resource/dfq3-8wzu.json?$limit=2 (Caused by NameResolutionError(\"HTTPSConnection(host='opendata.camden.gov.uk', port=443): Failed to resolve 'opendata.camde"
+    },
+    {
+      "id": "camden_safe_havens_links",
+      "requested_url": "https://www.camden.gov.uk/safe-havens",
+      "checked_at_utc": "2026-09-12T11:14:38.823272+00:00",
+      "credentials_used": false,
+      "status": "request_failed",
+      "error": "ConnectionError: HTTPSConnectionPool(host='www.camden.gov.uk', port=443): Max retries exceeded with url: /safe-havens (Caused by NameResolutionError(\"HTTPSConnection(host='www.camden.gov.uk', port=443): Failed to resolve 'www.camden.gov.uk' ([Errno -3] Temporary fail"
+    },
+    {
+      "id": "hounslow_faults_links",
+      "requested_url": "https://fms.hounslowhighways.org/",
+      "checked_at_utc": "2026-09-12T11:14:38.827504+00:00",
+      "credentials_used": false,
+      "status": "request_failed",
+      "error": "ConnectionError: HTTPSConnectionPool(host='fms.hounslowhighways.org', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='fms.hounslowhighways.org', port=443): Failed to resolve 'fms.hounslowhighways.org' ([Errno -3] Temp"
+    },
+    {
+      "id": "tfl_hounslow_central",
+      "requested_url": "https://api.tfl.gov.uk/StopPoint/Search?query=Hounslow%20Central",
+      "checked_at_utc": "2026-09-12T11:14:38.829571+00:00",
+      "credentials_used": false,
+      "status": "request_failed",
+      "error": "ConnectionError: HTTPSConnectionPool(host='api.tfl.gov.uk', port=443): Max retries exceeded with url: /StopPoint/Search?query=Hounslow%20Central (Caused by NameResolutionError(\"HTTPSConnection(host='api.tfl.gov.uk', port=443): Failed to resolve 'api.tfl.gov.uk' ([Err"
+    },
+    {
+      "id": "tfl_hounslow_east",
+      "requested_url": "https://api.tfl.gov.uk/StopPoint/Search?query=Hounslow%20East",
+      "checked_at_utc": "2026-09-12T11:14:43.834549+00:00",
+      "credentials_used": false,
+      "status": "request_failed",
+      "error": "ConnectionError: HTTPSConnectionPool(host='api.tfl.gov.uk', port=443): Max retries exceeded with url: /StopPoint/Search?query=Hounslow%20East (Caused by NameResolutionError(\"HTTPSConnection(host='api.tfl.gov.uk', port=443): Failed to resolve 'api.tfl.gov.uk' ([Errno "
+    },
+    {
+      "id": "tfl_camden_town",
+      "requested_url": "https://api.tfl.gov.uk/StopPoint/Search?query=Camden%20Town",
+      "checked_at_utc": "2026-09-12T11:14:43.835448+00:00",
+      "credentials_used": false,
+      "status": "request_failed",
+      "error": "ConnectionError: HTTPSConnectionPool(host='api.tfl.gov.uk', port=443): Max retries exceeded with url: /StopPoint/Search?query=Camden%20Town (Caused by NameResolutionError(\"HTTPSConnection(host='api.tfl.gov.uk', port=443): Failed to resolve 'api.tfl.gov.uk' ([Errno -3"
+    },
+    {
+      "id": "tfl_camden_road",
+      "requested_url": "https://api.tfl.gov.uk/StopPoint/Search?query=Camden%20Road",
+      "checked_at_utc": "2026-09-12T11:14:43.835704+00:00",
+      "credentials_used": false,
+      "status": "request_failed",
+      "error": "ConnectionError: HTTPSConnectionPool(host='api.tfl.gov.uk', port=443): Max retries exceeded with url: /StopPoint/Search?query=Camden%20Road (Caused by NameResolutionError(\"HTTPSConnection(host='api.tfl.gov.uk', port=443): Failed to resolve 'api.tfl.gov.uk' ([Errno -3"
+    },
+    {
+      "id": "tfl_west_croydon",
+      "requested_url": "https://api.tfl.gov.uk/StopPoint/Search?query=West%20Croydon",
+      "checked_at_utc": "2026-09-12T11:14:43.837613+00:00",
+      "credentials_used": false,
+      "status": "request_failed",
+      "error": "ConnectionError: HTTPSConnectionPool(host='api.tfl.gov.uk', port=443): Max retries exceeded with url: /StopPoint/Search?query=West%20Croydon (Caused by NameResolutionError(\"HTTPSConnection(host='api.tfl.gov.uk', port=443): Failed to resolve 'api.tfl.gov.uk' ([Errno -"
+    }
+  ],
+  "separate_web_channel_observation": {
+    "date": "2026-09-12",
+    "url": "https://data.police.uk/api/crime-last-updated",
+    "response": {
+      "date": "2026-07-01"
+    },
+    "note": "Response displayed by web tool, not successful container HTTP. Camden/TfL direct JSON bodies not inspected here."
+  }
+}

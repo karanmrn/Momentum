@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "timezone": "Europe/London",
+  "scope_rule": "No live map aggregation until custom polygons and station identifiers are reviewed. Landmarks are design anchors, not verified boundaries.",
+  "areas": [
+    {
+      "id": "hounslow_town_centre",
+      "name": "Hounslow town centre",
+      "borough_label": "Hounslow",
+      "scope_assumption": "Compact town-centre pilot, not entire borough.",
+      "landmarks_to_review": [
+        "High Street",
+        "Treaty Centre",
+        "Bell Square"
+      ],
+      "station_search_terms": [
+        "Hounslow Central",
+        "Hounslow East"
+      ],
+      "boundary_geojson": null,
+      "boundary_version": null,
+      "boundary_status": "proposed_requires_review",
+      "station_ids": [],
+      "local_sources": [
+        "H01",
+        "H02",
+        "H03",
+        "H04",
+        "H05"
+      ],
+      "main_user_task": "Check town-centre walking and station information after work; find relevant support and report a concrete environmental concern.",
+      "help_directory_status": "No general street-refuge register verified in this research; curate with local partner."
+    },
+    {
+      "id": "camden_town",
+      "name": "Camden Town centre",
+      "borough_label": "Camden",
+      "scope_assumption": "Camden interpreted as Camden Town centre, not the whole borough.",
+      "landmarks_to_review": [
+        "Camden High Street",
+        "Parkway",
+        "Camden Town station approaches",
+        "Camden Road station approaches"
+      ],
+      "station_search_terms": [
+        "Camden Town",
+        "Camden Road"
+      ],
+      "boundary_geojson": null,
+      "boundary_version": null,
+      "boundary_status": "proposed_requires_review",
+      "station_ids": [],
+      "local_sources": [
+        "C01",
+        "C02",
+        "C03",
+        "C04"
+      ],
+      "main_user_task": "Check station approaches and night-support information before leaving an evening activity.",
+      "help_directory_status": "Council Safety Bus schedule and Safe Havens scheme verified as listings, not live availability."
+    },
+    {
+      "id": "west_croydon",
+      "name": "West Croydon",
+      "borough_label": "Croydon",
+      "scope_assumption": "Compact interchange and town-centre approach pilot, not East Croydon or the whole borough.",
+      "landmarks_to_review": [
+        "West Croydon interchange",
+        "London Road",
+        "North End",
+        "Rail, tram and bus approaches"
+      ],
+      "station_search_terms": [
+        "West Croydon"
+      ],
+      "boundary_geojson": null,
+      "boundary_version": null,
+      "boundary_status": "proposed_requires_review",
+      "station_ids": [],
+      "local_sources": [
+        "W01",
+        "W02",
+        "W03",
+        "W04"
+      ],
+      "main_user_task": "Understand interchange changes and nearby community observations without confusing them with monthly crime records.",
+      "help_directory_status": "BID rangers are a partnership lead; no live assistance/feed agreement or general safe-haven register verified."
+    }
+  ]
+}

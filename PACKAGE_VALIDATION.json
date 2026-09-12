@@ -1,0 +1,181 @@
+{
+  "checked_at_utc": "2026-09-12T11:23:15.941579+00:00",
+  "scope": "Planning-package structural checks only. No application built, no production connector/deployment or application acceptance test executed.",
+  "checks": [
+    {
+      "name": "all_json_parses",
+      "passed": true,
+      "detail": "6 JSON files parsed"
+    },
+    {
+      "name": "source_ids_unique",
+      "passed": true,
+      "detail": "40 sources"
+    },
+    {
+      "name": "acceptance_ids_unique",
+      "passed": true,
+      "detail": "104 specified scenarios"
+    },
+    {
+      "name": "all_scenarios_unexecuted",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "thread_prompts_present",
+      "passed": true,
+      "detail": "11 thread prompts"
+    },
+    {
+      "name": "three_pilots",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "no_fabricated_live_geometries",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "fixture_synthetic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "fixture_graph_references",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:AGENTS.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:START_HERE.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:generalist.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:docs/privacy_threat_model.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:docs/correlation_protocol.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:docs/knowledge_graph.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:contracts/API_RULES.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/04-community-moderation.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/07-consumer-map-experience.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/01-geography-source-registry.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/00-integration-architect.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/02-historical-police-data.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/09-security-privacy.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/06-personalization-alerts.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/10-qa-deployment.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/03-transport-civic-help.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/05-knowledge-graph.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:prompts/08-correlation-analytics.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:research/research_notes.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:research/sources.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:tests/README.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "balanced_fences:config/ENVIRONMENT_NOTES.md",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "all_master_source_refs_known",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "master_scope",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "no_placeholder_web_citations",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "publisher_vs_origin_lineage_explicit",
+      "passed": true,
+      "detail": "Contract and graph specification distinguish dataset family from original claim lineage."
+    }
+  ]
+}

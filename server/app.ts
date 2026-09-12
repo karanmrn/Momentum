@@ -1,0 +1,255 @@
+import express from "express";
+import {
+  createHash,
+  randomBytes,
+  randomUUID,
+  timingSafeEqual,
+} from "node:crypto";
+import {
+  areas,
+  personaSchema,
+  pilotSchema,
+  type Envelope,
+} from "../packages/contracts/index";
+import type { DemoDatabase } from "./database";
+import { createRoutes } from "./routes";
+import { getHelp, getSources } from "../services/index";
+export function createApp(db: DemoDatabase) {
+  const app = express();
+  app.disable("x-powered-by");
+  app.use((_req, res, next) => {
+    res.set({
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "X-Frame-Options": "DENY",
+      "Permissions-Policy": "geolocation=(), camera=(), microphone=()",
+    });
+    next();
+  });
+  if (process.env.VERCEL) {
+    app.use((req, res, next) => {
+      const secret = process.env.DEMO_ACCESS_CODE;
+      if (!secret || secret.length < 16) {
+        res.status(503).send("The invited demonstration is not configured.");
+        return;
+      }
+      const expected = Buffer.from("demo:" + secret);
+      const supplied = Buffer.from(
+        (req.headers.authorization ?? "").replace(/^Basic /, ""),
+        "base64",
+      );
+      if (
+        supplied.length !== expected.length ||
+        !timingSafeEqual(supplied, expected)
+      ) {
+        res
+          .set(
+            "WWW-Authenticate",
+            'Basic realm="Streetwise invited demonstration"',
+          )
+          .status(401)
+          .send("An invitation is required.");
+        return;
+      }
+      next();
+    });
+  }
+  app.use("/api", express.json({ limit: "8kb" }));
+  let sourceCache:
+    { until: number; data: Awaited<ReturnType<typeof getSources>> } | undefined;
+  let sourceRefresh:
+    Promise<Awaited<ReturnType<typeof getSources>>> | undefined;
+  const limits = new Map<string, { count: number; until: number }>();
+  app.use("/api", (req, res, next) => {
+    res.set("Cache-Control", "no-store");
+    if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+      if (req.headers["sec-fetch-site"] === "cross-site") {
+        fail(res, 403, "unauthorised", "This request is not permitted.");
+        return;
+      }
+      const origin = req.headers.origin;
+      if (
+        origin &&
+        origin !==
+          `${process.env.VERCEL ? "https" : req.protocol}://${req.get("host")}`
+      ) {
+        fail(res, 403, "unauthorised", "This request is not permitted.");
+        return;
+      }
+      if (!req.is("application/json")) {
+        fail(res, 415, "invalid_input", "Use a JSON request.");
+        return;
+      }
+    }
+    const key = req.ip ?? "local";
+    const now = Date.now();
+    let budget = limits.get(key);
+    if (!budget || budget.until < now) {
+      budget = { count: 0, until: now + 60000 };
+      limits.set(key, budget);
+    }
+    if (++budget.count > 300) {
+      res.set("Retry-After", "60");
+      fail(res, 429, "rate_limited", "Please wait before trying again.");
+      return;
+    }
+    if (limits.size > 1000)
+      for (const [k, v] of limits) if (v.until < now) limits.delete(k);
+    next();
+  });
+  app.get("/api/health", (_req, res) =>
+    res.json({ status: "ok", mode: "synthetic_demo" }),
+  );
+  app.use("/api", async (req, res, next) => {
+    try {
+      const token = (req.headers.cookie ?? "")
+        .split(";")
+        .map((x) => x.trim())
+        .find((x) => x.startsWith("streetwise_demo="))
+        ?.slice(16);
+      let id =
+        token && /^[a-f0-9]{64}$/.test(token)
+          ? createHash("sha256").update(token).digest("hex")
+          : null;
+      let persona = id ? await db.session(id) : null;
+      if (!id || !persona) {
+        const fresh = randomBytes(32).toString("hex");
+        id = createHash("sha256").update(fresh).digest("hex");
+        await db.create(id);
+        persona = "alex";
+        res.cookie("streetwise_demo", fresh, {
+          httpOnly: true,
+          sameSite: "strict",
+          secure: !!process.env.VERCEL,
+          maxAge: 86400000,
+          path: "/",
+        });
+      }
+      res.locals.sessionId = id;
+      res.locals.persona = persona;
+      next();
+    } catch {
+      fail(
+        res,
+        503,
+        "source_unavailable",
+        "The demonstration database is unavailable.",
+      );
+    }
+  });
+  app.get("/api/session", (_req, res) =>
+    ok(res, {
+      persona: res.locals.persona,
+      synthetic: true,
+      moderatorAreas: areas.map((a) => a.id),
+    }),
+  );
+  app.post("/api/session", async (req, res) => {
+    const parsed = personaSchema.safeParse(req.body?.persona);
+    if (!parsed.success || Object.keys(req.body).length !== 1) {
+      fail(res, 400, "invalid_input", "Choose a demonstration persona.");
+      return;
+    }
+    await db.setPersona(res.locals.sessionId, parsed.data);
+    ok(res, {
+      persona: parsed.data,
+      synthetic: true,
+      moderatorAreas: areas.map((a) => a.id),
+    });
+  });
+  app.get("/api/areas", (_req, res) => ok(res, areas));
+  app.get("/api/sources", async (req, res) => {
+    const area = pilotSchema.safeParse(req.query.area);
+    if (!area.success) {
+      fail(res, 400, "invalid_input", "Choose a pilot area.");
+      return;
+    }
+    if (!sourceCache || sourceCache.until < Date.now()) {
+      sourceRefresh ??= getSources(area.data)
+        .then((data) => {
+          sourceCache = {
+            data,
+            until:
+              Date.now() +
+              (data.some((s) => s.status === "unavailable") ? 60000 : 300000),
+          };
+          return data;
+        })
+        .finally(() => {
+          sourceRefresh = undefined;
+        });
+      await sourceRefresh;
+    }
+    ok(res, sourceCache!.data, false);
+  });
+  app.get("/api/help", async (req, res) => {
+    const area = pilotSchema.safeParse(req.query.area);
+    if (!area.success) {
+      fail(res, 400, "invalid_input", "Choose a pilot area.");
+      return;
+    }
+    ok(res, await getHelp(area.data), false);
+  });
+  app.get("/api/history", (req, res) => {
+    if (!pilotSchema.safeParse(req.query.area).success) {
+      fail(res, 400, "invalid_input", "Choose a pilot area.");
+      return;
+    }
+    ok(
+      res,
+      {
+        status: "insufficient_comparable_data",
+        estimate: null,
+        explanation:
+          "Pilot boundaries are not approved. No comparable community history exists. Monthly police records cannot confirm individual reports.",
+      },
+      false,
+    );
+  });
+  app.use("/api", createRoutes(db));
+  app.use("/api", (_req, res) =>
+    fail(res, 404, "not_found", "This item is not available."),
+  );
+  app.use(
+    (
+      error: unknown,
+      _req: express.Request,
+      res: express.Response,
+      _next: express.NextFunction,
+    ) => {
+      const e = error as { type?: string };
+      if (e.type === "entity.too.large") {
+        fail(res, 413, "invalid_input", "This request is too large.");
+        return;
+      }
+      if (error instanceof SyntaxError) {
+        fail(res, 400, "invalid_input", "Use valid JSON.");
+        return;
+      }
+      fail(res, 500, "internal_error", "This action could not be completed.");
+    },
+  );
+  return app;
+}
+function ok<T>(res: express.Response, data: T, synthetic = true) {
+  const body: Envelope<T> = {
+    schemaVersion: "1.0",
+    synthetic,
+    generatedAt: new Date().toISOString(),
+    data,
+    coverage: [],
+  };
+  res.json(body);
+}
+function fail(
+  res: express.Response,
+  status: number,
+  code: string,
+  message: string,
+) {
+  res.status(status).json({
+    schemaVersion: "1.0",
+    error: { code, message },
+    requestId: randomUUID(),
+  });
+}

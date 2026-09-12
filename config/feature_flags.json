@@ -1,0 +1,14 @@
+{
+  "environment": "development",
+  "PUBLIC_COMMUNITY_INTAKE": false,
+  "PUBLIC_COMMUNITY_PUBLICATION": false,
+  "PARTNER_PUBLISHING": false,
+  "EXTERNAL_PUSH": false,
+  "LIVE_AI_EXTRACTION": false,
+  "PERSONAL_LOCATION_HISTORY": false,
+  "PREDICTIVE_DANGER_SCORE": false,
+  "SUSPECT_IDENTITY_GRAPH": false,
+  "ANALYST_ASSOCIATIONS": false,
+  "DEMO_MODE": true,
+  "rule": "Server-side enforcement; client flags are not authorisation. Historical counts never become immediate danger alerts."
+}
