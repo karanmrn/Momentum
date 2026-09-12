@@ -4,6 +4,10 @@ import { randomUUID } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 import pg from "pg";
 import {
+  settingsSchema,
+  type Settings,
+} from "../packages/personalization/schema.js";
+import {
   accountIdSchema,
   privateReportInputSchema,
   followInputSchema,
@@ -34,15 +38,29 @@ interface Scope {
 const reportSelect = `SELECT id,pilot_id AS "pilotId",title,description,source_basis AS "sourceBasis",client_request_id AS "clientRequestId",to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt" FROM private_accounts.reports WHERE owner=$1 ORDER BY created_at,id LIMIT 100`;
 const inboxSelect = `SELECT id,pilot_id AS "pilotId",notice_id AS "noticeId",to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt",to_char(read_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "readAt" FROM private_accounts.inbox WHERE owner=$1 ORDER BY created_at DESC,id LIMIT 100`;
 const scopeSelect = `SELECT pilot_id AS "pilotId",role,to_char(expires_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "expiresAt" FROM private_accounts.scopes WHERE owner=$1 AND revoked_at IS NULL AND expires_at>now() ORDER BY pilot_id,role LIMIT 6`;
-async function readFollows(sql: Sql, owner: string): Promise<FollowInput> {
-  return (
-    (
-      await sql.query<FollowInput>(
-        `SELECT pilot_ids AS "pilotIds",categories,paused FROM private_accounts.follows WHERE owner=$1`,
-        [owner],
-      )
-    ).rows[0] ?? { pilotIds: [], categories: [], paused: true }
-  );
+type SavedFollows = Omit<FollowInput, "settings" | "expectedRevision"> & {
+  revision: number;
+  settings: Settings | null;
+};
+async function readFollows(sql: Sql, owner: string): Promise<SavedFollows> {
+  const row = (
+    await sql.query<SavedFollows>(
+      `SELECT pilot_ids AS "pilotIds",categories,paused,settings,revision AS revision FROM private_accounts.follows WHERE owner=$1`,
+      [owner],
+    )
+  ).rows[0];
+  if (!row)
+    return {
+      pilotIds: [],
+      categories: [],
+      paused: true,
+      revision: 1,
+      settings: null,
+    };
+  return {
+    ...row,
+    settings: row.settings === null ? null : settingsSchema.parse(row.settings),
+  };
 }
 export async function createPrivateAccountStore(
   options: { connectionString?: string; path?: string } = {},
@@ -75,6 +93,15 @@ export async function createPrivateAccountStore(
           "utf8",
         ),
       );
+    await lite.exec(
+      await readFile(
+        new URL(
+          "../supabase/migrations/20260912171000_account_preferences.sql",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    );
   }
   async function transaction<T>(
     input: string,
@@ -207,11 +234,49 @@ export async function createPrivateAccountStore(
         );
       return transaction(owner, async (sql, id) => {
         const value = parsed.data;
+        const previous = await readFollows(sql, id);
+        if (
+          (value.settings && value.expectedRevision === undefined) ||
+          (value.expectedRevision !== undefined &&
+            value.expectedRevision !== previous.revision)
+        )
+          throw new PrivateAccountError(
+            409,
+            "PREFERENCE_CONFLICT",
+            "Preferences changed. Reload before saving.",
+          );
+        if (previous.revision >= 2147483647)
+          throw new PrivateAccountError(
+            409,
+            "PREFERENCE_LIMIT",
+            "Preference revision limit reached.",
+          );
+        const selected = value.settings ?? previous.settings;
+        const settings = selected
+          ? {
+              ...selected,
+              areas: value.pilotIds,
+              categories: [
+                ...value.categories,
+                ...(selected.categories.includes("access")
+                  ? ["access" as const]
+                  : []),
+              ],
+              paused: value.paused,
+            }
+          : null;
         await sql.query(
-          "INSERT INTO private_accounts.follows(owner,pilot_ids,categories,paused) VALUES($1,$2,$3,$4) ON CONFLICT(owner) DO UPDATE SET pilot_ids=excluded.pilot_ids,categories=excluded.categories,paused=excluded.paused",
-          [id, value.pilotIds, value.categories, value.paused],
+          "INSERT INTO private_accounts.follows(owner,pilot_ids,categories,paused,settings,revision) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(owner) DO UPDATE SET pilot_ids=excluded.pilot_ids,categories=excluded.categories,paused=excluded.paused,settings=excluded.settings,revision=excluded.revision",
+          [
+            id,
+            value.pilotIds,
+            value.categories,
+            value.paused,
+            settings ? JSON.stringify(settings) : null,
+            previous.revision + 1,
+          ],
         );
-        return value;
+        return readFollows(sql, id);
       });
     },
     inbox(owner: string) {

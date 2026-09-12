@@ -37,3 +37,28 @@ It uses local records only. Help availability remains unconfirmed; station opera
 The Safety Bus preserves the dated KOKO location exception. It receives no invented coordinates.
 Directory coordinates identify listed places. Station identities do not establish exact entrances.
 Other detailed acquired datasets remain coverage records until a reviewed source projection exists.
+
+## Dated enrichment projection
+
+`enrichment.ts` projects validated source artifacts with `enrichment-projection/1` qualifications.
+The public graph includes the latest acquired MPS month for each pilot's containing borough.
+The seven source categories stay separate. Missing values stay null.
+These counts are not pilot totals or independent confirmation of Police.uk records.
+
+Verified ONS observations retain whole statistical-area population and Census dates.
+The research anchor relation does not approve the pilot boundary or provide a crime-rate denominator.
+LSOA and MSOA populations overlap and must not be added.
+
+Camden outcomes join the selected police records by exact persistent ID, category, and recorded month.
+Outcome month is not an exact transition date. No person identity enters this projection.
+Immutable snapshot hashes identify the source versions. A rebuild selects the current imported artifact.
+The model does not claim a retained revision archive or an automatic source-refresh service.
+
+`AvailabilityAssertion` nodes separate directory schedules from current operation.
+Their versioned assertions retain source time, precision, visibility, and unknown independence.
+Availability stays unknown or unconfirmed. These assertions cannot trigger alerts.
+No operator feed or general asset inventory is fabricated.
+
+Graphify exports preserve these qualified assertions. Runtime validation rejects changed source counts, joins, hashes, or qualifications.
+Broad enrichment is omitted from notice-scoped graph requests. Existing graph limits still apply.
+Police priorities remain gated because the acquisition manifest does not permit publication.

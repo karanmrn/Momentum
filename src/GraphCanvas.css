@@ -1,0 +1,342 @@
+.graph-canvas {
+  min-width: 0;
+  width: 100%;
+  color: #d8e5dc;
+}
+.graph-canvas * {
+  box-sizing: border-box;
+}
+.gc-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  padding: 0 0 16px;
+  font-size: 12px;
+  color: #496258;
+}
+.gc-key > span {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+}
+.gc-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--gc-fill);
+  border: 1px solid var(--gc-stroke);
+}
+.gc-area {
+  --gc-fill: #72ddbd;
+  --gc-stroke: #a8f5df;
+  --gc-core: #153c32;
+}
+.gc-history {
+  --gc-fill: #c6d974;
+  --gc-stroke: #e7efac;
+  --gc-core: #5a6230;
+}
+.gc-community {
+  --gc-fill: #c99ceb;
+  --gc-stroke: #dfbdf9;
+  --gc-core: #58326f;
+}
+.gc-place {
+  --gc-fill: #999ee1;
+  --gc-stroke: #c6c9f2;
+  --gc-core: #434668;
+}
+.gc-source {
+  --gc-fill: #8cae9e;
+  --gc-stroke: #bdd4c9;
+  --gc-core: #28483b;
+}
+.gc-coverage {
+  --gc-fill: #c99187;
+  --gc-stroke: #e8b8b0;
+  --gc-core: #603f3a;
+}
+.gc-dot.gc-fiction-key {
+  background: #fff5e9;
+  border: 2px solid #d97536;
+}
+.gc-viewport {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #34443e;
+  border-radius: 18px;
+  background: radial-gradient(ellipse at 48% 44%, #252d2c 5%, #191f20 100%);
+}
+.gc-viewport > svg {
+  display: block;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.gc-dragging > svg {
+  cursor: grabbing;
+}
+.gc-edge {
+  cursor: pointer;
+  outline: none;
+}
+.gc-edge-hit {
+  fill: none;
+  stroke: transparent;
+  pointer-events: stroke;
+}
+.gc-edge-line {
+  fill: none;
+  stroke: #647b73;
+  stroke-width: 1;
+  opacity: 0.45;
+  pointer-events: none;
+}
+.gc-edge-active .gc-edge-line {
+  stroke: #e9b170;
+  stroke-width: 2.5;
+  opacity: 1;
+}
+.gc-edge:focus-visible .gc-edge-line,
+.gc-edge:hover .gc-edge-line {
+  stroke: #f4ca94;
+  stroke-width: 3;
+  opacity: 1;
+}
+.gc-node {
+  cursor: pointer;
+  outline: none;
+}
+.gc-node-hit {
+  fill: transparent;
+}
+.gc-node-halo {
+  fill: #f2be7d;
+  opacity: 0;
+  pointer-events: none;
+}
+.gc-node-shape {
+  fill: var(--gc-fill);
+  stroke: var(--gc-stroke);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 5px #99d6ba30);
+}
+.gc-node-core {
+  fill: var(--gc-core);
+  pointer-events: none;
+}
+.gc-fiction .gc-node-shape {
+  stroke: #d97536;
+  stroke-width: 3;
+}
+.gc-node:hover .gc-node-halo,
+.gc-node:focus-visible .gc-node-halo,
+.gc-selected .gc-node-halo {
+  opacity: 0.25;
+}
+.gc-node:focus-visible .gc-node-shape,
+.gc-selected .gc-node-shape {
+  stroke: #ffe0b6;
+  stroke-width: 3;
+}
+.gc-node-label {
+  font:
+    600 11px/1.2 Inter,
+    system-ui,
+    sans-serif;
+  fill: #d8e5dc;
+  paint-order: stroke;
+  stroke: #202828;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.gc-selected .gc-node-label {
+  font-weight: 750;
+}
+.gc-muted {
+  opacity: 0.18;
+}
+.gc-muted:hover,
+.gc-muted:focus-visible {
+  opacity: 1;
+}
+.gc-controls {
+  position: absolute;
+  z-index: 2;
+  right: 14px;
+  top: 14px;
+  display: grid;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #4b5a53;
+  background: #29332f;
+  box-shadow: 0 4px 12px #183e3310;
+}
+.gc-controls button {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  min-height: 46px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #d8e5dc;
+  cursor: pointer;
+}
+.gc-controls button + button {
+  border-top: 1px solid #47554e;
+}
+.gc-controls button:hover {
+  background: #37473d;
+}
+.gc-controls button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.gc-controls button:focus-visible {
+  outline: 3px solid #d97536;
+  outline-offset: -4px;
+}
+.gc-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  font-size: 11px;
+  color: #567064;
+  background: linear-gradient(transparent, #191f20 38%);
+  pointer-events: none;
+}
+.gc-caption output {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.gc-footnote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 12px 2px 0;
+  font-size: 11px;
+  color: #567064;
+}
+.gc-footnote > span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.gc-footnote > span:last-child {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.gc-footnote i {
+  display: inline-block;
+  width: 18px;
+  border-top: 1px solid #6e8d7d;
+}
+.gc-footnote .gc-context-line {
+  border-top-style: dashed;
+}
+.gc-empty {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  padding: 24px;
+}
+.gc-empty > span {
+  font:
+    80px/1 Georgia,
+    serif;
+  color: #75ad95;
+  margin-bottom: 16px;
+}
+.gc-empty strong {
+  font:
+    600 20px/1.3 Georgia,
+    serif;
+}
+.gc-empty p {
+  max-width: 240px;
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #567064;
+}
+@media (max-width: 540px) {
+  .gc-key {
+    gap: 9px 12px;
+    font-size: 11px;
+  }
+  .gc-viewport {
+    border-radius: 12px;
+  }
+  .gc-controls {
+    right: 8px;
+    top: 8px;
+  }
+  .gc-controls button {
+    width: 44px;
+    min-height: 44px;
+  }
+  .gc-caption {
+    padding: 14px 12px;
+    font-size: 10px;
+  }
+  .gc-footnote {
+    gap: 8px 12px;
+  }
+  .gc-footnote > span:last-child {
+    margin-left: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .graph-canvas *,
+  .graph-canvas *::before,
+  .graph-canvas *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.gc-caption,
+.gc-empty p {
+  color: #a4b9ad;
+}
+.gc-empty strong {
+  color: #e3eee6;
+}
+.graph-canvas {
+  color: #183e33;
+}
+
+.graph-canvas {
+  background: #1c2225;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.gc-key {
+  color: #b8cac0;
+  padding: 14px 16px;
+}
+.gc-footnote {
+  color: #b8cac0;
+  padding: 12px 16px;
+}
+.gc-viewport > svg:focus-visible {
+  outline: 2px solid #f2be7d;
+  outline-offset: -3px;
+}

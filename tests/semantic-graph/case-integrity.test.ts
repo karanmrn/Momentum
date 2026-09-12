@@ -99,7 +99,8 @@ describe("Case qualification cannot be weakened in an exported graph", () => {
     const bridges = graph.assertions.filter(
       (edge) =>
         edge.predicate === "CONTEXTUAL_AREA_ONLY" &&
-        edge.objectId === "area:camden_town",
+        edge.objectId === "area:camden_town" &&
+        !edge.subjectId.startsWith("aggregate:"),
     );
     expect(bridges.length).toBeGreaterThan(1);
     expect(

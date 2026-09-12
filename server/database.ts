@@ -45,19 +45,51 @@ export async function createDatabase(
   if (!pool && !dataPath.startsWith("memory://"))
     await mkdir(dirname(dataPath), { recursive: true });
   const lite = pool ? null : new PGlite(dataPath);
-  if (lite)
+  if (lite) {
+    // Adopt migrations from local databases created before the ledger existed.
+    const legacy = await lite.query<{ name: string }>(`
+      SELECT '001_demo_sessions.sql' AS name WHERE to_regclass('public.streetwise_demo_sessions') IS NOT NULL
+      UNION ALL SELECT '002_semantic_graph.sql' WHERE to_regclass('public.streetwise_semantic_snapshots') IS NOT NULL
+      UNION ALL SELECT '003_camden_graph.sql' WHERE EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('public.streetwise_semantic_nodes')
+        AND conname = 'streetwise_semantic_nodes_node_type_check' AND pg_get_constraintdef(oid) LIKE '%HelpLocation%')
+      UNION ALL SELECT '004_reviewed_relations.sql' WHERE EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('public.streetwise_semantic_assertions')
+        AND conname = 'streetwise_semantic_assertion_pairs' AND pg_get_constraintdef(oid) LIKE '%SAME_OPERATIONAL_ISSUE_AS%')
+    `);
+    await lite.exec(
+      "CREATE TABLE IF NOT EXISTS public.streetwise_local_migrations (name text PRIMARY KEY)",
+    );
+    for (const row of legacy.rows)
+      await lite.query(
+        "INSERT INTO public.streetwise_local_migrations(name) VALUES ($1) ON CONFLICT DO NOTHING",
+        [row.name],
+      );
     for (const migration of [
       "001_demo_sessions.sql",
       "002_semantic_graph.sql",
       "003_camden_graph.sql",
       "004_reviewed_relations.sql",
-    ])
-      await lite.exec(
-        await readFile(
-          new URL(`../supabase/migrations/${migration}`, import.meta.url),
-          "utf8",
-        ),
+      "20260912171500_graph_enrichment.sql",
+    ]) {
+      const applied = await lite.query(
+        "SELECT name FROM public.streetwise_local_migrations WHERE name=$1",
+        [migration],
       );
+      if (applied.rows.length) continue;
+      const sql = await readFile(
+        new URL(`../supabase/migrations/${migration}`, import.meta.url),
+        "utf8",
+      );
+      await lite.transaction(async (tx) => {
+        await tx.exec(sql);
+        await tx.query(
+          "INSERT INTO public.streetwise_local_migrations(name) VALUES ($1)",
+          [migration],
+        );
+      });
+    }
+  }
   async function pruneExpired() {
     const sql =
       "DELETE FROM public.streetwise_demo_sessions WHERE id IN (SELECT id FROM public.streetwise_demo_sessions WHERE expires_at <= now() ORDER BY expires_at LIMIT 100)";

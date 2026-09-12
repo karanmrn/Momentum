@@ -18,7 +18,7 @@ const vite = await createServer({
 });
 app.use(vite.middlewares);
 const server = app.listen(port, "127.0.0.1", () =>
-  console.log(`Streetwise demonstration: http://127.0.0.1:${port}`),
+  console.log(`Momentum demonstration: http://127.0.0.1:${port}`),
 );
 async function close() {
   server.close();

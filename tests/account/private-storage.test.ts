@@ -82,6 +82,8 @@ describe("private account store", () => {
     expect(exported.reports).toHaveLength(1);
     expect(exported.scopes).toEqual([]);
     expect(await store.follows(b)).toEqual({
+      revision: 1,
+      settings: null,
       pilotIds: [],
       categories: [],
       paused: true,

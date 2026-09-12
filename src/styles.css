@@ -126,6 +126,7 @@ textarea:focus-visible {
 }
 .topbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 14px;
   align-items: center;
@@ -855,13 +856,18 @@ textarea {
     grid-template-columns: minmax(0, 1fr) max-content;
     grid-template-areas:
       "account auxiliary"
-      "area area";
+      "area area"
+      "graph graph";
     align-items: center;
     gap: 12px;
     min-height: 0;
   }
-  .topbar > .button.secondary {
+  .topbar > button.button.secondary {
     grid-area: account;
+    justify-self: start;
+  }
+  .topbar .graph-view-entry {
+    grid-area: graph;
     justify-self: start;
   }
   .topbar .area-control {
@@ -939,12 +945,17 @@ textarea {
     gap: 8px;
     align-items: center;
   }
-  .topbar > .button.secondary {
+  .topbar > button.button.secondary {
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
     min-width: 0;
     padding-inline: 10px;
+  }
+  .topbar .graph-view-entry {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    justify-self: start;
   }
   .area-control select {
     width: 100%;
@@ -1185,4 +1196,18 @@ textarea {
     min-height: 0;
     height: auto;
   }
+}
+
+.nav .graph-nav-link {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 48px;
+  padding: 12px;
+  border: 1px solid #c3cebf;
+  border-radius: 8px;
+  color: #183e33;
+  text-decoration: none;
+  font-weight: 650;
+  margin-top: 8px;
 }

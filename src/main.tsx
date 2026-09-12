@@ -2,7 +2,6 @@ import { WorkflowLinks } from "./WorkflowLinks";
 import { ReportEditor } from "./ReportEditor";
 import { ScenarioPicker, type ScenarioDraft } from "./ScenarioPicker";
 import { DatasetCoverage } from "./DatasetCoverage";
-import { SemanticGraph } from "./SemanticGraph";
 import { AreaShare } from "./AreaShare";
 import { entryArea, publicBrowse, rememberArea } from "./entry";
 import { ResearchPanel } from "../packages/recruitment/ResearchPanel";
@@ -21,6 +20,7 @@ import { LocalMap } from "./LocalMap";
 import { TransportPanel, useLocalTransport } from "./TransportPanel";
 import {
   Bell,
+  Network,
   ChevronRight,
   CircleAlert,
   ClipboardList,
@@ -48,10 +48,36 @@ import type {
 import { areas as pilotAreas } from "../packages/contracts";
 import { api, ApiError } from "./api";
 import "./styles.css";
+const SemanticGraph = lazy(() =>
+  import("./SemanticGraph").then((module) => ({
+    default: module.SemanticGraph,
+  })),
+);
 
 type Tab = "now" | "community" | "help" | "history";
 type View =
   "dashboard" | "reports" | "moderation" | "inbox" | "preferences" | "research";
+function entryView(): View {
+  if (publicBrowse) return "dashboard";
+  const value = new URLSearchParams(window.location.search).get("view");
+  return ["reports", "moderation", "inbox", "preferences", "research"].includes(
+    value ?? "",
+  )
+    ? (value as View)
+    : "dashboard";
+}
+function entryTab(): Tab {
+  const value = new URLSearchParams(window.location.search).get("tab");
+  return ["community", "help", "history"].includes(value ?? "")
+    ? (value as Tab)
+    : "now";
+}
+function rememberView(key: "view" | "tab" | "area", value: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.set(key, value);
+  if (url.href !== window.location.href)
+    window.history.pushState(null, "", url);
+}
 type AreaData = {
   notices: Notice[];
   help: HelpCard[];
@@ -62,9 +88,9 @@ type AreaData = {
 type MemberPersona = Exclude<Persona, "moderator">;
 const tabs: Array<[Tab, string]> = [
   ["now", "Now"],
-  ["community", "Community"],
+  ["community", "Community reports"],
   ["help", "Get help"],
-  ["history", "Historical context"],
+  ["history", "Police records"],
 ];
 const memberNav: Array<{ id: View; label: string; icon: typeof MapIcon }> = [
   { id: "dashboard", label: "Explore", icon: MapIcon },
@@ -1109,7 +1135,9 @@ function Dashboard({
                 </a>
               )}
             </div>
-            <SemanticGraph area={area.id} isPublic={isPublic} />
+            <Suspense fallback={<p role="status">Loading evidence graph...</p>}>
+              <SemanticGraph area={area.id} isPublic={isPublic} />
+            </Suspense>
           </section>
         )}
       </div>
@@ -1676,13 +1704,41 @@ function App() {
   const [invalidArea, setInvalidArea] = useState(
     () => publicBrowse && currentEntryArea().invalid,
   );
-  const [tab, setTab] = useState<Tab>("now");
-  const [view, setView] = useState<View>(() =>
-    !publicBrowse &&
-    new URLSearchParams(window.location.search).get("view") === "reports"
-      ? "reports"
-      : "dashboard",
-  );
+  const [tab, setTabState] = useState<Tab>(entryTab);
+  const [view, setViewState] = useState<View>(entryView);
+  const setTab = (next: Tab) => {
+    rememberView("tab", next);
+    setTabState(next);
+  };
+  const setView = (next: View | ((current: View) => View)) => {
+    const value = typeof next === "function" ? next(view) : next;
+    rememberView("view", value);
+    setViewState(value);
+  };
+  useEffect(() => {
+    const restore = () => {
+      setViewState(entryView());
+      setTabState(entryTab());
+      const area = currentEntryArea();
+      setAreaId(area.areaId);
+      setInvalidArea(publicBrowse && area.invalid);
+    };
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, []);
+  useEffect(() => {
+    if (!session || publicBrowse) return;
+    const denied =
+      session.persona === "moderator"
+        ? ["reports", "inbox", "preferences"].includes(view)
+        : view === "moderation";
+    if (denied) {
+      setViewState("dashboard");
+      const url = new URL(window.location.href);
+      url.searchParams.set("view", "dashboard");
+      window.history.replaceState(null, "", url);
+    }
+  }, [session?.persona, view]);
   const [mapOpen, setMapOpen] = useState(false);
   const [data, setData] = useState<AreaData>(emptyAreaData);
   const [reports, setReports] = useState<Report[]>([]);
@@ -1698,6 +1754,7 @@ function App() {
   const [moderation, setModeration] = useState<Report[]>([]);
   const selected = areas.find((area) => area.id === areaId) || areas[0];
   const chooseArea = (id: Area["id"]) => {
+    rememberView("area", id);
     setAreaId(id);
     setInvalidArea(false);
     if (publicBrowse) rememberArea(id);
@@ -1939,6 +1996,13 @@ function App() {
               </button>
             );
           })}
+          <a
+            className="graph-nav-link"
+            href={`/?workspace=graph&area=${areaId}${publicBrowse ? "&public=1" : "&demo=1"}`}
+          >
+            <Network size={18} />
+            Graph view
+          </a>
         </nav>
         {!publicBrowse && (
           <div className="side-note">
@@ -1964,6 +2028,13 @@ function App() {
             Account
           </button>
           <div className="mobile-brand">Momentum</div>
+          <a
+            className="button secondary graph-view-entry"
+            href={`/?workspace=graph&area=${areaId}${publicBrowse ? "&public=1" : "&demo=1"}`}
+          >
+            <Network size={17} />
+            Graph view
+          </a>
           <div className="area-control">
             <span className="eyebrow">Pilot area</span>
             <select
@@ -2015,9 +2086,12 @@ function App() {
               />
               <a
                 className="button secondary presentation-entry"
-                href={`/?presentation=1&area=${selected.id}${import.meta.env.DEV ? "&public=1" : ""}`}
+                href={`/?presentation=1&area=${selected.id}&public=1&slide=${Math.min(10, Math.max(1, Number(new URLSearchParams(window.location.search).get("slide")) || 1))}`}
               >
-                Presentation
+                {new URLSearchParams(window.location.search).get("returnTo") ===
+                "presentation"
+                  ? "Back to presentation"
+                  : "Presentation"}
               </a>
               {import.meta.env.VITE_DEMO_ENABLED === "true" && (
                 <a
@@ -2046,7 +2120,7 @@ function App() {
             </div>
           )}
         </header>
-        {!publicBrowse && <WorkflowLinks area={areaId} />}
+        {!publicBrowse && <WorkflowLinks area={areaId} includeGraph={false} />}
         {error && (
           <div className="error" role="alert">
             {error}{" "}
@@ -2294,9 +2368,29 @@ const PersonalizationWorkspace = lazy(() =>
     default: m.PersonalizationWorkspace,
   })),
 );
+const GraphExplorer = lazy(() =>
+  import("./GraphExplorer").then((m) => ({ default: m.GraphExplorer })),
+);
 function Entry() {
   const query = new URLSearchParams(window.location.search);
   const entry = entryArea(window.location.search);
+  if (query.get("workspace") === "graph" && !entry.invalid)
+    return (
+      <Suspense
+        fallback={<main className="map-fallback">Loading area graph...</main>}
+      >
+        <GraphExplorer
+          initialArea={entry.areaId}
+          onExit={(area) => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("workspace");
+            url.searchParams.delete("examples");
+            url.searchParams.set("area", area);
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
   if (query.get("workspace") === "preferences")
     return (
       <Suspense fallback={<main>Loading personal preferences...</main>}>

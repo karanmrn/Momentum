@@ -1,17 +1,15 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { areas, type Persona, type PilotId } from "../contracts";
 import {
-  createRecruitmentDemo,
   listRecruitmentDirectory,
   landmarkOptions,
-  submitResearchObservation,
-  withdrawResearchObservation,
-  observationsForOwner,
-  compareResearchCoverage,
   comfortFactors,
   behaviors,
   timeWindows,
-  RecruitmentError,
+  researchPolicy,
+  researchSnapshotSchema,
+  type ResearchObservation,
+  type CoverageComparison,
 } from "./index";
 
 const words = (value: string) => value.replaceAll("_", " ");
@@ -23,51 +21,110 @@ export function ResearchPanel({
   actor: Persona;
   pilotId: PilotId;
 }) {
-  const [state, setState] = useState(createRecruitmentDemo);
+  const [own, setOwn] = useState<ResearchObservation[]>([]);
+  const [coverage, setCoverage] = useState<CoverageComparison[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
+  const generation = useRef(0);
+  const pendingKey = useRef<string | null>(null);
+  async function request(path = "", body?: unknown) {
+    const response = await fetch(`/api/research-consent${path}`, {
+      method: body === undefined ? "GET" : "POST",
+      headers: body === undefined ? {} : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const payload = await response.json();
+    if (!response.ok)
+      throw new Error(
+        payload.error?.message ?? "Research storage is unavailable.",
+      );
+    if (payload.synthetic !== true)
+      throw new Error("Research storage returned invalid data.");
+    return researchSnapshotSchema.parse(payload.data);
+  }
+  async function load() {
+    const current = ++generation.current;
+    setReady(false);
+    setOwn([]);
+    setCoverage([]);
+    setError("");
+    setMessage("");
+    pendingKey.current = null;
+    if (actor === "moderator") {
+      setBusy(false);
+      return;
+    }
+    setBusy(true);
+    try {
+      const data = await request();
+      if (current !== generation.current) return;
+      setOwn(data.observations);
+      setCoverage(data.coverage);
+      setReady(true);
+    } catch (failure) {
+      if (current === generation.current)
+        setError(
+          failure instanceof Error
+            ? failure.message
+            : "Research storage is unavailable.",
+        );
+    } finally {
+      if (current === generation.current) setBusy(false);
+    }
+  }
+  useEffect(() => {
+    void load();
+    return () => {
+      generation.current++;
+    };
+  }, [actor]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const now = new Date().toISOString();
   const entries = listRecruitmentDirectory(pilotId, now);
-  const own = actor === "moderator" ? [] : observationsForOwner(state, actor);
-  const coverage = compareResearchCoverage(state, now);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
+    if (!ready || busy) return;
+    const current = generation.current;
+    setBusy(true);
     try {
-      const next = submitResearchObservation(
-        state,
-        actor,
-        {
-          pilotId,
-          landmarkId: String(data.get("landmarkId")),
-          observedDate: String(data.get("observedDate")),
-          recruitmentEntryId: String(data.get("recruitmentEntryId")),
-          comfortFactors: data.getAll("comfortFactors"),
-          behavior: String(data.get("behavior")),
-          timeWindow: String(data.get("timeWindow")),
-          fictional: data.get("fictional") === "on",
-          consent: {
-            version: "research-demo-v1",
-            participation: data.get("participation") === "on",
-            aggregate: data.get("aggregate") === "on",
-          },
-          idempotencyKey: crypto.randomUUID(),
+      pendingKey.current ??= crypto.randomUUID();
+      const next = await request("/observations", {
+        pilotId,
+        landmarkId: String(data.get("landmarkId")),
+        observedDate: String(data.get("observedDate")),
+        recruitmentEntryId: String(data.get("recruitmentEntryId")),
+        comfortFactors: data.getAll("comfortFactors"),
+        behavior: String(data.get("behavior")),
+        timeWindow: String(data.get("timeWindow")),
+        fictional: data.get("fictional") === "on",
+        consent: {
+          version: "research-demo-v1",
+          participation: data.get("participation") === "on",
+          aggregate: data.get("aggregate") === "on",
         },
-        { id: crypto.randomUUID(), now: new Date().toISOString() },
-      );
-      setState(next);
+        idempotencyKey: pendingKey.current,
+      });
+      if (current !== generation.current) return;
+      setOwn(next.observations);
+      setCoverage(next.coverage);
+      pendingKey.current = null;
       setError("");
-      setMessage("Fictional observation saved in this view.");
+      setMessage("Fictional observation saved for this private demo session.");
       form.reset();
     } catch (failure) {
+      if (current !== generation.current) return;
       setError(
-        failure instanceof RecruitmentError
+        failure instanceof Error
           ? failure.message
           : "Select a comfort factor, a valid date, and confirm fictional participation.",
       );
       setMessage("");
+    } finally {
+      if (current === generation.current) setBusy(false);
     }
   }
 
@@ -78,9 +135,18 @@ export function ResearchPanel({
         <span className="tag orange">Fictional exercise</span>
       </div>
       <p className="synthetic">
-        Temporary exercise. Leaving this view, changing persona, or reloading
-        clears all research observations.
+        Fictional answers are available in this private demo session for up to
+        24 hours. Withdrawal removes answers and excludes them from coverage.
       </p>
+      <p>
+        {researchPolicy.purpose} Consent version: {researchPolicy.version}.
+      </p>
+      {busy && <p role="status">Loading research...</p>}
+      {!ready && actor !== "moderator" && !busy && (
+        <button className="button secondary" onClick={() => void load()}>
+          Retry research storage
+        </button>
+      )}
       {error && (
         <p role="alert" className="error">
           {error}
@@ -136,7 +202,14 @@ export function ResearchPanel({
         {actor === "moderator" ? (
           <p>Select Alex or Sam to try the fictional form.</p>
         ) : (
-          <form key={pilotId} className="form-grid" onSubmit={submit}>
+          <form
+            key={pilotId}
+            className="form-grid"
+            onSubmit={submit}
+            onChange={() => {
+              pendingKey.current = null;
+            }}
+          >
             <label>
               Recruitment source
               <select name="recruitmentEntryId">
@@ -214,7 +287,7 @@ export function ResearchPanel({
               <input type="checkbox" name="aggregate" />
               Include this observation in fictional aggregate coverage.
             </label>
-            <button className="button" type="submit">
+            <button className="button" type="submit" disabled={!ready || busy}>
               Save fictional observation
             </button>
           </form>
@@ -251,29 +324,39 @@ export function ResearchPanel({
                   </p>
                   <p>{item.comfortFactors.map(words).join(", ")}</p>
                   <p>
+                    Access expires: {new Date(item.expiresAt).toLocaleString()}
+                  </p>
+                  <p>
                     Aggregate consent: {item.consent.aggregate ? "yes" : "no"} ·{" "}
                     {item.consent.version}
                   </p>
                   <button
                     className="button secondary"
-                    onClick={() => {
+                    disabled={busy || !ready}
+                    onClick={async () => {
+                      const current = generation.current;
+                      setBusy(true);
                       try {
-                        setState(
-                          withdrawResearchObservation(
-                            state,
-                            actor,
-                            { id: item.id, expectedRevision: item.revision },
-                            new Date().toISOString(),
-                          ),
-                        );
+                        const next = await request("/withdraw", {
+                          id: item.id,
+                          expectedRevision: item.revision,
+                        });
+                        if (current !== generation.current) return;
+                        setOwn(next.observations);
+                        setCoverage(next.coverage);
                         setError("");
                         setMessage(
                           "Observation withdrawn. Its content is removed from this exercise.",
                         );
-                      } catch {
-                        setError(
-                          "The observation changed. Check its current revision.",
-                        );
+                      } catch (failure) {
+                        if (current === generation.current)
+                          setError(
+                            failure instanceof Error
+                              ? failure.message
+                              : "Withdrawal failed. Try again.",
+                          );
+                      } finally {
+                        if (current === generation.current) setBusy(false);
                       }
                     }}
                   >

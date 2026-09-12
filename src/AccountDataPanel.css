@@ -37,3 +37,19 @@
 .account-data > .button {
   width: 100%;
 }
+
+.account-advanced {
+  margin-top: 24px;
+  display: grid;
+  gap: 12px;
+}
+.account-advanced select,
+.account-advanced textarea,
+.account-advanced input[type="time"] {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.account-advanced label {
+  overflow-wrap: anywhere;
+}

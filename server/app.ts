@@ -1,4 +1,6 @@
 import { createPersonalizationRoutes } from "./personalization.js";
+import { createResearchConsentRoutes } from "./research-consent.js";
+import { createGraphResearchRouter } from "./graph-research.js";
 import { createCommunityWorkflowRoutes } from "./community-workflow.js";
 import { createRelationReviewRoutes } from "./relation-review.js";
 import { createAnalyticsRoutes } from "./analytics.js";
@@ -302,6 +304,7 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
     }
     ok(res, getDatasetCoverage(area.data), false);
   });
+  app.use("/api/graph/research", createGraphResearchRouter());
   app.use(
     "/api/graph",
     createSemanticRoutes({
@@ -309,6 +312,7 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
     }),
   );
   app.use("/api/personalization", createPersonalizationRoutes(store));
+  app.use("/api/research-consent", createResearchConsentRoutes(store));
   app.use("/api/community-workflow", createCommunityWorkflowRoutes(store));
   app.use("/api/relation-review", createRelationReviewRoutes(store));
   app.use("/api/analytics", createAnalyticsRoutes(store));

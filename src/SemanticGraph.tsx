@@ -14,6 +14,9 @@ const predicateLabels: Record<string, string> = {
   CONTEXTUAL_HISTORY_FOR: "Historical source coverage",
   DERIVED_FROM: "Derived from source",
   CONTEXTUAL_AREA_ONLY: "Area context only",
+  EXTRACTED_FROM: "Extracted from dated source",
+  OUTCOME_FOR: "Published outcome for police record",
+  AVAILABILITY_FOR: "Published availability context",
 };
 
 const readable = (value: string) => value.replaceAll("_", " ");
@@ -33,6 +36,12 @@ function nodeDetails(
     details.push(["Published schedule", meta.schedule ?? "Not supplied"]);
   if (meta.address) details.push(["Listed address", meta.address]);
   if (meta.summary) details.push(["Summary", meta.summary]);
+  if (meta.value !== undefined)
+    details.push([
+      "Source value",
+      meta.value === null ? "Not supplied" : String(meta.value),
+    ]);
+  if (meta.period) details.push(["Source period", meta.period]);
   if (meta.precision) details.push(["Precision", readable(meta.precision)]);
   if (meta.revision !== undefined)
     details.push(["Revision", String(meta.revision)]);
@@ -197,6 +206,7 @@ export function SemanticGraph({
               type: node.type,
               synthetic: node.synthetic,
               sourceUrl: node.provenance?.sourceUrl,
+              sourceFamily: node.provenance?.sourceFamilyId,
               details: nodeDetails(node),
             }))}
             edges={graph.assertions.map((edge) => ({

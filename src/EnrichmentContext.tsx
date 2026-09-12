@@ -15,8 +15,8 @@ import {
 } from "../packages/enrichment/community.js";
 import { onsGeographySchema } from "../packages/enrichment/ons-geography.js";
 import { mpsContextSchema } from "../packages/enrichment/mps-context.js";
-import onsSnapshot from "../research/enrichment/ons-geography.json";
-import mpsSnapshot from "../research/enrichment/mps-context.json";
+import onsSnapshot from "../research/enrichment/ons-geography.json" with { type: "json" };
+import mpsSnapshot from "../research/enrichment/mps-context.json" with { type: "json" };
 import "./enrichment-context.css";
 import { getCamdenHelpCacheTtl } from "../services/data/camden-help.js";
 

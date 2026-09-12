@@ -206,6 +206,14 @@ export function Presentation({
             <a href={journeyUrl("now")}>Town updates</a>
             <a href={journeyUrl("history")}>Police records</a>
             <a href={journeyUrl("community")}>Community reports</a>
+            {(import.meta.env.DEV ||
+              import.meta.env.VITE_DEMO_ENABLED === "true") && (
+              <a
+                href={`/?demo=1&workspace=community&presentation=1&area=${areaId}&slide=${index + 1}`}
+              >
+                Report trial
+              </a>
+            )}
           </nav>
           <h2>Scan for {area?.shortName ?? "your area"}</h2>
           {!url ? (

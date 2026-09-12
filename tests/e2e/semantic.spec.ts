@@ -16,9 +16,7 @@ test("public evidence shows source coverage and recovers after an invalid respon
     else await route.continue();
   });
   await page.goto("/?public=1&area=camden_town");
-  await page
-    .getByRole("tab", { name: "Historical context", exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Police records", exact: true }).click();
   const graph = page.getByRole("region", {
     name: "Evidence graph",
     exact: true,
@@ -47,9 +45,7 @@ test("demo evidence links retain context meaning and fit a narrow screen", async
 }) => {
   await page.setViewportSize({ width: 320, height: 850 });
   await page.goto("/?demo=1&area=hounslow_town_centre");
-  await page
-    .getByRole("tab", { name: "Historical context", exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Police records", exact: true }).click();
   const graph = page.getByRole("region", {
     name: "Evidence graph",
     exact: true,

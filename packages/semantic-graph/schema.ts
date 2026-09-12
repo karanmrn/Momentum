@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { enrichmentProjectionError } from "./enrichment.js";
 import { caseProjectionError } from "./case-validation.js";
 import { pilotSchema } from "../contracts/index.js";
 
@@ -8,6 +9,7 @@ const nodeTypes = [
   "Source",
   "PublishedNotice",
   "DatasetCoverage",
+  "DatasetRecord",
   "HelpLocation",
   "SourceSnapshot",
   "PoliceRecord",
@@ -15,6 +17,10 @@ const nodeTypes = [
   "AreaContext",
   "FictionalObservation",
   "FictionalSummary",
+  "EnrichmentSnapshot",
+  "HistoricalAggregate",
+  "PoliceOutcome",
+  "AvailabilityAssertion",
 ] as const;
 const predicates = [
   "WITHIN_AREA",
@@ -24,7 +30,54 @@ const predicates = [
   "DERIVED_FROM",
   "CONTEXTUAL_AREA_ONLY",
   "SAME_OPERATIONAL_ISSUE_AS",
+  "EXTRACTED_FROM",
+  "OUTCOME_FOR",
+  "AVAILABILITY_FOR",
 ] as const;
+type NodeType = (typeof nodeTypes)[number];
+const allowedPairs: Record<
+  (typeof predicates)[number],
+  readonly (readonly [NodeType, NodeType])[]
+> = {
+  EXTRACTED_FROM: [
+    ["HistoricalAggregate", "EnrichmentSnapshot"],
+    ["PoliceOutcome", "EnrichmentSnapshot"],
+  ],
+  OUTCOME_FOR: [["PoliceOutcome", "PoliceRecord"]],
+  AVAILABILITY_FOR: [
+    ["AvailabilityAssertion", "HelpLocation"],
+    ["AvailabilityAssertion", "Place"],
+  ],
+  WITHIN_AREA: [
+    ["Place", "Area"],
+    ["DatasetCoverage", "Area"],
+  ],
+  AFFECTS_PLACE: [["PublishedNotice", "Place"]],
+  ISSUED_BY: [
+    ["DatasetRecord", "Source"],
+    ["PublishedNotice", "Source"],
+    ["DatasetCoverage", "Source"],
+    ["HelpLocation", "Source"],
+    ["Place", "Source"],
+  ],
+  CONTEXTUAL_HISTORY_FOR: [["DatasetCoverage", "PublishedNotice"]],
+  SAME_OPERATIONAL_ISSUE_AS: [["PublishedNotice", "PublishedNotice"]],
+  DERIVED_FROM: [
+    ["PoliceRecord", "SourceSnapshot"],
+    ["FictionalSummary", "FictionalObservation"],
+  ],
+  CONTEXTUAL_AREA_ONLY: [
+    ["DatasetRecord", "Area"],
+    ["PoliceRecord", "ResearchArea"],
+    ["HistoricalAggregate", "ResearchArea"],
+    ["AreaContext", "ResearchArea"],
+    ["FictionalObservation", "ResearchArea"],
+    ["ResearchArea", "Area"],
+    ["HelpLocation", "Area"],
+    ["Place", "Area"],
+    ["HistoricalAggregate", "Area"],
+  ],
+};
 export const semanticOntology = {
   version: "1.0",
   nodeTypes,
@@ -67,6 +120,12 @@ const nodeSchema = z
     metadata: z
       .object({
         revision: z.number().int().positive().optional(),
+        value: z.number().int().nonnegative().nullable().optional(),
+        sourceRowIndex: z.number().int().nonnegative().optional(),
+        sourceColumn: text.optional(),
+        period: text.optional(),
+        alertEligible: z.literal(false).optional(),
+        boundaryEvidence: z.array(provenanceSchema).min(1).max(5).optional(),
         summary: text.optional(),
         precision: text.optional(),
         sourceRecordKey: text.optional(),
@@ -118,7 +177,26 @@ const assertionSchema = z
       "1.0",
       "camden-case-study/1",
       "fictional-relations/1",
+      "enrichment-projection/1",
+      "availability-projection/1",
     ]),
+    sourceQualification: z
+      .object({
+        sourceFamilyId: text,
+        snapshotSha256: z
+          .string()
+          .regex(/^[a-f0-9]{64}$/)
+          .nullable(),
+        recordedAt: timestamp.nullable(),
+        observedPeriod: text.nullable(),
+        precision: text,
+        visibility: z.literal("public_context"),
+        lifecycle: z.literal("dated_source_snapshot"),
+        independence: z.literal("unknown"),
+        alertEligible: z.literal(false),
+      })
+      .strict()
+      .optional(),
     qualification: z
       .object({
         reviewedAt: timestamp,
@@ -181,16 +259,41 @@ export const semanticGraphSchema = z
         message: "Graph identifiers must be unique.",
       });
     }
+    if (enrichmentProjectionError(graph))
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Enrichment must preserve its validated source snapshot, value, and qualification.",
+      });
     const caseError = caseProjectionError(graph);
     if (caseError) ctx.addIssue({ code: "custom", message: caseError });
     for (const node of graph.nodes) {
+      if (
+        node.type === "AvailabilityAssertion" &&
+        (node.synthetic ||
+          !node.provenance ||
+          node.metadata.availability === undefined ||
+          node.metadata.alertEligible !== false ||
+          node.metadata.precision !==
+            "dated_directory_not_live_operator_status")
+      )
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "Availability requires a dated source and an unconfirmed status.",
+        });
       if (node.type.startsWith("Fictional") && !node.synthetic)
         ctx.addIssue({
           code: "custom",
           message: "Fictional nodes must be labelled.",
         });
       if (
-        ["PoliceRecord", "SourceSnapshot", "AreaContext"].includes(node.type) &&
+        [
+          "PoliceRecord",
+          "SourceSnapshot",
+          "AreaContext",
+          "DatasetRecord",
+        ].includes(node.type) &&
         (node.synthetic || !node.provenance)
       )
         ctx.addIssue({
@@ -202,40 +305,64 @@ export const semanticGraphSchema = z
       const subject = nodes.get(edge.subjectId),
         object = nodes.get(edge.objectId);
       const validPair =
-        edge.predicate === "WITHIN_AREA"
-          ? ["Place", "DatasetCoverage"].includes(subject?.type ?? "") &&
-            object?.type === "Area"
-          : edge.predicate === "AFFECTS_PLACE"
-            ? subject?.type === "PublishedNotice" && object?.type === "Place"
-            : edge.predicate === "ISSUED_BY"
-              ? [
-                  "PublishedNotice",
-                  "DatasetCoverage",
-                  "HelpLocation",
-                  "Place",
-                ].includes(subject?.type ?? "") && object?.type === "Source"
-              : edge.predicate === "CONTEXTUAL_HISTORY_FOR"
-                ? subject?.type === "DatasetCoverage" &&
-                  object?.type === "PublishedNotice"
-                : edge.predicate === "SAME_OPERATIONAL_ISSUE_AS"
-                  ? subject?.type === "PublishedNotice" &&
-                    object?.type === "PublishedNotice" &&
-                    subject.id !== object.id
-                  : edge.predicate === "DERIVED_FROM"
-                    ? (subject?.type === "PoliceRecord" &&
-                        object?.type === "SourceSnapshot") ||
-                      (subject?.type === "FictionalSummary" &&
-                        object?.type === "FictionalObservation")
-                    : ([
-                        "PoliceRecord",
-                        "AreaContext",
-                        "FictionalObservation",
-                      ].includes(subject?.type ?? "") &&
-                        object?.type === "ResearchArea") ||
-                      (["ResearchArea", "HelpLocation", "Place"].includes(
-                        subject?.type ?? "",
-                      ) &&
-                        object?.type === "Area");
+        subject !== undefined &&
+        object !== undefined &&
+        allowedPairs[edge.predicate].some(
+          ([from, to]) => subject.type === from && object.type === to,
+        ) &&
+        (edge.predicate !== "SAME_OPERATIONAL_ISSUE_AS" ||
+          subject.id !== object.id);
+      if (
+        ["EXTRACTED_FROM", "OUTCOME_FOR"].includes(edge.predicate) &&
+        (edge.methodVersion !== "enrichment-projection/1" || edge.synthetic)
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: "Enrichment requires dated real source lineage.",
+        });
+      if (
+        edge.predicate === "AVAILABILITY_FOR" &&
+        (edge.methodVersion !== "availability-projection/1" ||
+          edge.synthetic ||
+          subject?.metadata.availability === undefined ||
+          !subject.provenance ||
+          subject.metadata.availability !== object?.metadata.availability ||
+          subject.metadata.schedule !== (object?.metadata.schedule ?? null) ||
+          subject.metadata.alertEligible !== false ||
+          subject.provenance.sourceUrl !== object?.provenance?.sourceUrl ||
+          subject.provenance.fetchedAt !== object?.provenance?.fetchedAt)
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: "Availability must preserve its dated directory source.",
+        });
+      if (
+        ["enrichment-projection/1", "availability-projection/1"].includes(
+          edge.methodVersion,
+        )
+      ) {
+        const source = subject?.provenance;
+        const qualification = edge.sourceQualification;
+        if (
+          !source ||
+          !qualification ||
+          qualification.sourceFamilyId !== source.sourceFamilyId ||
+          qualification.recordedAt !== source.fetchedAt ||
+          qualification.snapshotSha256 !== (source.snapshotSha256 ?? null) ||
+          qualification.precision !== subject?.metadata.precision ||
+          qualification.observedPeriod !== (subject?.metadata.period ?? null)
+        )
+          ctx.addIssue({
+            code: "custom",
+            message: "Source qualification must match the dated record.",
+          });
+      } else if (edge.sourceQualification) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "Source qualification requires its versioned projection method.",
+        });
+      }
       if (edge.predicate === "SAME_OPERATIONAL_ISSUE_AS") {
         if (
           !edge.synthetic ||

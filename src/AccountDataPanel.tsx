@@ -3,12 +3,19 @@ import { z } from "zod";
 import { areas, pilotSchema } from "../packages/contracts";
 import type { AccountClient } from "./AccountPanel";
 import "./AccountDataPanel.css";
+import {
+  settingsSchema,
+  type Settings,
+} from "../packages/personalization/schema";
+import { followCatalog } from "../packages/personalization/catalog";
 
 const categories = ["infrastructure", "community", "transport"] as const;
 const followsSchema = z.object({
   pilotIds: z.array(pilotSchema).max(3),
   categories: z.array(z.enum(categories)).max(3),
   paused: z.boolean(),
+  revision: z.number().int().positive().optional(),
+  settings: settingsSchema.nullish(),
 });
 const inboxSchema = z
   .array(
@@ -33,6 +40,25 @@ const scopesSchema = z
 type Follows = z.infer<typeof followsSchema>;
 type Inbox = z.infer<typeof inboxSchema>;
 type Scopes = z.infer<typeof scopesSchema>;
+function advanced(follows: Follows): Settings {
+  return (
+    follows.settings ?? {
+      areas: follows.pilotIds,
+      categories: follows.categories,
+      paused: follows.paused,
+      follows: [],
+      access: [],
+      transportModes: [],
+      language: "en",
+      timeZone: "Europe/London",
+      travelWindow: null,
+      quietHours: null,
+      mutedNoticeIds: [],
+      inAppEnabled: false,
+      historicalDigest: false,
+    }
+  );
+}
 export function AccountDataPanel({
   client,
   accountId,
@@ -43,6 +69,7 @@ export function AccountDataPanel({
   onDeleted: () => Promise<void>;
 }) {
   const [follows, setFollows] = useState<Follows>();
+  const [mutedText, setMutedText] = useState("");
   const [inbox, setInbox] = useState<Inbox>([]);
   const [scopes, setScopes] = useState<Scopes>([]);
   const [busy, setBusy] = useState(false);
@@ -63,6 +90,7 @@ export function AccountDataPanel({
   useEffect(() => {
     const version = ++generation.current;
     setFollows(undefined);
+    setMutedText("");
     setInbox([]);
     setScopes([]);
     setError("");
@@ -78,6 +106,7 @@ export function AccountDataPanel({
         };
         if (generation.current === version) {
           setFollows(next.follows);
+          setMutedText(advanced(next.follows).mutedNoticeIds.join("\n"));
           setInbox(next.inbox);
           setScopes(next.scopes);
         }
@@ -198,7 +227,17 @@ export function AccountDataPanel({
               void act(async () => {
                 setFollows(
                   followsSchema.parse(
-                    await request("/follows", "PUT", follows),
+                    await request("/follows", "PUT", {
+                      pilotIds: follows.pilotIds,
+                      categories: follows.categories,
+                      paused: follows.paused,
+                      ...(follows.revision
+                        ? {
+                            expectedRevision: follows.revision,
+                            settings: advanced(follows),
+                          }
+                        : {}),
+                    }),
                   ),
                 );
                 setMessage("Account follows saved.");
@@ -262,6 +301,288 @@ export function AccountDataPanel({
               Save account follows
             </button>
           </form>
+          {follows.revision && (
+            <fieldset disabled={busy} className="account-advanced">
+              <legend>Personal preferences</legend>
+              <p>Saved preferences do not activate external notifications.</p>
+              <label>
+                Content language
+                <select
+                  value={advanced(follows).language}
+                  onChange={(e) =>
+                    setFollows({
+                      ...follows,
+                      settings: {
+                        ...advanced(follows),
+                        language: e.target.value as Settings["language"],
+                      },
+                    })
+                  }
+                >
+                  {Object.entries({
+                    en: "English",
+                    fr: "French",
+                    es: "Spanish",
+                    pl: "Polish",
+                    pa: "Punjabi",
+                    hi: "Hindi",
+                    ur: "Urdu",
+                    other: "Other",
+                  }).map(([code, label]) => (
+                    <option key={code} value={code}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <fieldset>
+                <legend>Follow places and stations</legend>
+                {followCatalog.map((target) => (
+                  <label className="account-check" key={target.id}>
+                    <input
+                      type="checkbox"
+                      checked={advanced(follows).follows.includes(target.id)}
+                      onChange={(e) =>
+                        setFollows({
+                          ...follows,
+                          settings: {
+                            ...advanced(follows),
+                            follows: e.target.checked
+                              ? [...advanced(follows).follows, target.id]
+                              : advanced(follows).follows.filter(
+                                  (id) => id !== target.id,
+                                ),
+                          },
+                        })
+                      }
+                    />
+                    {target.label}
+                  </label>
+                ))}
+              </fieldset>
+              <fieldset>
+                <legend>Access preferences</legend>
+                {(
+                  [
+                    "step_free",
+                    "lighting",
+                    "wayfinding",
+                    "accessible_facilities",
+                  ] as const
+                ).map((value) => (
+                  <label className="account-check" key={value}>
+                    <input
+                      type="checkbox"
+                      checked={advanced(follows).access.includes(value)}
+                      onChange={(e) =>
+                        setFollows({
+                          ...follows,
+                          settings: {
+                            ...advanced(follows),
+                            access: e.target.checked
+                              ? [...advanced(follows).access, value]
+                              : advanced(follows).access.filter(
+                                  (id) => id !== value,
+                                ),
+                          },
+                        })
+                      }
+                    />
+                    {value.replaceAll("_", " ")}
+                  </label>
+                ))}
+              </fieldset>
+              <fieldset>
+                <legend>Transport preferences</legend>
+                {(
+                  ["walking", "bus", "rail", "tube", "tram", "cycling"] as const
+                ).map((value) => (
+                  <label className="account-check" key={value}>
+                    <input
+                      type="checkbox"
+                      checked={advanced(follows).transportModes.includes(value)}
+                      onChange={(e) =>
+                        setFollows({
+                          ...follows,
+                          settings: {
+                            ...advanced(follows),
+                            transportModes: e.target.checked
+                              ? [...advanced(follows).transportModes, value]
+                              : advanced(follows).transportModes.filter(
+                                  (id) => id !== value,
+                                ),
+                          },
+                        })
+                      }
+                    />
+                    {value}
+                  </label>
+                ))}
+              </fieldset>
+              {(["travelWindow", "quietHours"] as const).map((key) => (
+                <fieldset key={key}>
+                  <legend>
+                    {key === "quietHours" ? "Quiet hours" : "Travel window"}{" "}
+                    (London time)
+                  </legend>
+                  <label className="account-check">
+                    <input
+                      type="checkbox"
+                      checked={advanced(follows)[key] !== null}
+                      onChange={(e) =>
+                        setFollows({
+                          ...follows,
+                          settings: {
+                            ...advanced(follows),
+                            [key]: e.target.checked
+                              ? {
+                                  days: [0, 1, 2, 3, 4, 5, 6],
+                                  start: "22:00",
+                                  end: "07:00",
+                                }
+                              : null,
+                          },
+                        })
+                      }
+                    />
+                    Enable{" "}
+                    {key === "quietHours" ? "quiet hours" : "travel window"}
+                  </label>
+                  {advanced(follows)[key] && (
+                    <>
+                      {(["start", "end"] as const).map((edge) => (
+                        <label key={edge}>
+                          {key} {edge}
+                          <input
+                            type="time"
+                            value={advanced(follows)[key]![edge]}
+                            onChange={(e) =>
+                              setFollows({
+                                ...follows,
+                                settings: {
+                                  ...advanced(follows),
+                                  [key]: {
+                                    ...advanced(follows)[key]!,
+                                    [edge]: e.target.value,
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        </label>
+                      ))}
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                        (day, index) => (
+                          <label className="account-check" key={day}>
+                            <input
+                              type="checkbox"
+                              checked={advanced(follows)[key]!.days.includes(
+                                index,
+                              )}
+                              onChange={(e) =>
+                                setFollows({
+                                  ...follows,
+                                  settings: {
+                                    ...advanced(follows),
+                                    [key]: {
+                                      ...advanced(follows)[key]!,
+                                      days: e.target.checked
+                                        ? [
+                                            ...advanced(follows)[key]!.days,
+                                            index,
+                                          ]
+                                        : advanced(follows)[key]!.days.filter(
+                                            (d) => d !== index,
+                                          ),
+                                    },
+                                  },
+                                })
+                              }
+                            />
+                            {day}
+                          </label>
+                        ),
+                      )}
+                    </>
+                  )}
+                </fieldset>
+              ))}
+              {(["inAppEnabled", "historicalDigest"] as const).map((key) => (
+                <label className="account-check" key={key}>
+                  <input
+                    type="checkbox"
+                    checked={advanced(follows)[key]}
+                    onChange={(e) =>
+                      setFollows({
+                        ...follows,
+                        settings: {
+                          ...advanced(follows),
+                          [key]: e.target.checked,
+                        },
+                      })
+                    }
+                  />
+                  {key === "inAppEnabled"
+                    ? "Allow in-app updates"
+                    : "Include historical digests"}
+                </label>
+              ))}
+              <label>
+                Muted notice IDs (one per line)
+                <textarea
+                  value={mutedText}
+                  onChange={(e) => {
+                    setMutedText(e.target.value);
+                    setFollows({
+                      ...follows,
+                      settings: {
+                        ...advanced(follows),
+                        mutedNoticeIds: e.target.value
+                          .split(/\s+/)
+                          .filter(Boolean),
+                      },
+                    });
+                  }}
+                />
+              </label>
+              <button
+                className="button"
+                type="button"
+                onClick={() =>
+                  void act(async () => {
+                    const settings = settingsSchema.safeParse(
+                      advanced(follows),
+                    );
+                    if (!settings.success)
+                      throw new Error(
+                        "Check preference times, days, and notice IDs.",
+                      );
+                    setFollows(
+                      followsSchema.parse(
+                        await request("/follows", "PUT", {
+                          pilotIds: follows.pilotIds,
+                          categories: follows.categories,
+                          paused: follows.paused,
+                          settings: settings.data,
+                          expectedRevision: follows.revision,
+                        }),
+                      ),
+                    );
+                    setMessage("Personal preferences saved.");
+                  })
+                }
+              >
+                Save personal preferences
+              </button>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setAttempt(attempt + 1)}
+              >
+                Reload saved preferences
+              </button>
+            </fieldset>
+          )}
           <h3>Private inbox</h3>
           {inbox.length === 0 ? (
             <p>No account updates.</p>

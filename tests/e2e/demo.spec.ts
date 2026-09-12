@@ -118,9 +118,7 @@ test("all pilot areas, help, history and preferences remain usable on mobile", a
   await expect(
     page.getByRole("heading", { name: "Help directory" }),
   ).toBeVisible();
-  await page
-    .getByRole("tab", { name: "Historical context", exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Police records", exact: true }).click();
   await expect(page.locator("body")).toContainText(/Area totals:.*Unavailable/);
   await nav(page, "Preferences");
   await page
@@ -363,9 +361,7 @@ test("dataset acquisition is visible for every area and failures never become ze
 }) => {
   await page.goto("/");
   await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
-  await page
-    .getByRole("tab", { name: "Historical context", exact: true })
-    .click();
+  await page.getByRole("tab", { name: "Police records", exact: true }).click();
   for (const area of ["hounslow_town_centre", "camden_town", "west_croydon"]) {
     await page.getByLabel("Choose pilot area").selectOption(area);
     await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
@@ -412,7 +408,7 @@ test("area tabs support keyboard navigation and failed resources stay explicit",
   await now.focus();
   await page.keyboard.press("ArrowRight");
   const community = page.getByRole("tab", {
-    name: "Community",
+    name: "Community reports",
     exact: true,
   });
   await expect(community).toBeFocused();
@@ -478,7 +474,7 @@ test("public browsing uses public area data and no private member routes", async
   ).toHaveCount(0);
   await expect(
     page.getByRole("navigation", { name: "Mobile navigation", exact: true }),
-  ).toContainText("Historical context");
+  ).toContainText("Police records");
   expect(apiPaths.length).toBeGreaterThan(0);
   expect(apiPaths.every((path) => path.startsWith("/api/public/"))).toBe(true);
 });
@@ -488,9 +484,7 @@ test("desktop presentation shares the public area and exits to that area", async
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/?public=1&presentation=1&area=camden_town");
-  await expect(
-    page.getByRole("heading", { name: "A report should have a next step." }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Pitch deck" })).toBeVisible();
   await expect(
     page.getByRole("img", {
       name: "QR code to open Camden Town centre on the mobile website",
@@ -505,13 +499,9 @@ test("desktop presentation shares the public area and exits to that area", async
     "https://streetwise-safety.vercel.app/?area=camden_town",
   );
   await page.keyboard.press("ArrowRight");
-  await expect(
-    page.getByRole("heading", { name: "Start with local sources." }),
-  ).toBeVisible();
+  await expect(page.getByText("Slide 2 of 10", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Next slide" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Follow the report through review." }),
-  ).toBeVisible();
+  await expect(page.getByText("Slide 3 of 10", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Exit presentation" }).click();
   await expect(page).not.toHaveURL(/presentation=/);
   await expect(

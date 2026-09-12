@@ -8,6 +8,7 @@ export interface NetworkNode {
   synthetic: boolean;
   details?: Array<[string, string]>;
   sourceUrl?: string | null;
+  sourceFamily?: string;
 }
 export interface NetworkEdge {
   id: string;
@@ -37,6 +38,24 @@ export function EvidenceNetwork({
   } | null>(null);
   const [view, setView] = useState<"network" | "records">("network");
   const [query, setQuery] = useState("");
+  const [recordType, setRecordType] = useState("");
+  const [sourceFamily, setSourceFamily] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const familyOf = (node: NetworkNode) =>
+    node.sourceFamily ??
+    node.details?.find(([label]) => label === "Source family")?.[1] ??
+    "Unspecified";
+  const types = [...new Set(nodes.map((node) => node.type))].sort();
+  const families = [...new Set(nodes.map(familyOf))].sort();
+  const visibleNodes = nodes.filter(
+    (node) =>
+      (!recordType || node.type === recordType) &&
+      (!sourceFamily || familyOf(node) === sourceFamily),
+  );
+  const visibleIds = new Set(visibleNodes.map((node) => node.id));
+  const visibleEdges = edges.filter(
+    (edge) => visibleIds.has(edge.from) && visibleIds.has(edge.to),
+  );
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
@@ -66,7 +85,7 @@ export function EvidenceNetwork({
     : Math.max(100, (width - gap * 4) / 3);
   const rows = [0, 0, 0];
   const points = new Map<string, { x: number; y: number }>();
-  nodes.forEach((node) => {
+  visibleNodes.forEach((node) => {
     const lane = narrow
       ? 0
       : node.synthetic
@@ -81,7 +100,7 @@ export function EvidenceNetwork({
     });
   });
   const height = Math.max(180, Math.max(...rows) * 116 + 32);
-  const matched = nodes.filter((node) =>
+  const matched = visibleNodes.filter((node) =>
     `${node.label} ${node.type}`.toLowerCase().includes(query.toLowerCase()),
   );
   const matchIds = new Set(matched.map((node) => node.id));
@@ -126,6 +145,82 @@ export function EvidenceNetwork({
           placeholder="Name or record type"
         />
       </label>
+      <div className="en-filters">
+        <label>
+          Record type
+          <select
+            value={recordType}
+            onChange={(event) => setRecordType(event.target.value)}
+          >
+            <option value="">All types</option>
+            {types.map((type) => (
+              <option key={type} value={type}>
+                {type.replaceAll(/([a-z])([A-Z])/g, "$1 $2")}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Source family
+          <select
+            value={sourceFamily}
+            onChange={(event) => setSourceFamily(event.target.value)}
+          >
+            <option value="">All sources</option>
+            {families.map((family) => (
+              <option key={family} value={family}>
+                {family}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={() => {
+            setRecordType("");
+            setSourceFamily("");
+            setQuery("");
+          }}
+        >
+          Clear filters
+        </button>
+      </div>
+      {(recordType || sourceFamily) && (
+        <p role="status">
+          {visibleNodes.length} of {nodes.length} records ·{" "}
+          {visibleEdges.length} relationships shown
+        </p>
+      )}
+      {view === "network" && (
+        <div className="en-zoom" role="group" aria-label="Graph zoom controls">
+          <button
+            type="button"
+            onClick={() => setZoom((value) => Math.max(0.75, value - 0.25))}
+            disabled={zoom === 0.75}
+          >
+            Zoom out
+          </button>
+          <span role="status" aria-label="Graph zoom">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            type="button"
+            onClick={() => setZoom((value) => Math.min(2, value + 0.25))}
+            disabled={zoom === 2}
+          >
+            Zoom in
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setZoom(1);
+              ref.current?.scrollTo({ top: 0, left: 0 });
+            }}
+          >
+            Reset zoom
+          </button>
+        </div>
+      )}
       {query && (
         <p role="status">
           {matched.length} matching records. Other graph records remain visible.
@@ -133,85 +228,95 @@ export function EvidenceNetwork({
       )}
       <div ref={ref} className="en-canvas-container">
         {view === "network" ? (
-          <div className="en-canvas" style={{ height }}>
-            <svg
-              width="100%"
-              height={height}
-              aria-label="Connections between evidence records"
-              role="img"
+          <div style={{ width: width * zoom, height: height * zoom }}>
+            <div
+              className="en-canvas"
+              style={{
+                width,
+                height,
+                transform: `scale(${zoom})`,
+                transformOrigin: "top left",
+              }}
             >
-              <title>Connections between evidence records</title>
-              <defs>
-                <marker
-                  id={`${prefix}-arrow`}
-                  markerWidth="7"
-                  markerHeight="7"
-                  refX="6"
-                  refY="3.5"
-                  orient="auto"
-                >
-                  <path d="M0,0 L7,3.5 L0,7" fill="#718779" />
-                </marker>
-              </defs>
-              {edges.map((edge) => {
-                const from = points.get(edge.from),
-                  to = points.get(edge.to);
-                if (!from || !to) return null;
-                const sameLane = from.x === to.x;
-                const startX = sameLane
-                  ? from.x
-                  : from.x + (from.x < to.x ? nodeWidth : 0);
-                const endX = sameLane
-                  ? to.x
-                  : to.x + (from.x < to.x ? 0 : nodeWidth);
-                const startY = from.y + 40,
-                  endY = to.y + 40;
-                const bend = sameLane
-                  ? Math.max(4, from.x - 23)
-                  : (startX + endX) / 2;
-                const path = `M ${startX} ${startY} C ${bend} ${startY}, ${bend} ${endY}, ${endX} ${endY}`;
-                return (
-                  <path
-                    key={edge.id}
-                    d={path}
-                    fill="none"
-                    stroke={
-                      selectedEdge?.id === edge.id ? "#a45c30" : "#718779"
-                    }
-                    strokeWidth={selectedEdge?.id === edge.id ? 3 : 1.6}
-                    strokeDasharray={
-                      /context|area/i.test(edge.label) ? "5 4" : undefined
-                    }
-                    markerEnd={`url(#${prefix}-arrow)`}
+              <svg
+                width="100%"
+                height={height}
+                aria-label="Connections between evidence records"
+                role="img"
+              >
+                <title>Connections between evidence records</title>
+                <defs>
+                  <marker
+                    id={`${prefix}-arrow`}
+                    markerWidth="7"
+                    markerHeight="7"
+                    refX="6"
+                    refY="3.5"
+                    orient="auto"
                   >
-                    <title>
-                      {labels.get(edge.from)}: {edge.label}:{" "}
-                      {labels.get(edge.to)}
-                    </title>
-                  </path>
+                    <path d="M0,0 L7,3.5 L0,7" fill="#718779" />
+                  </marker>
+                </defs>
+                {visibleEdges.map((edge) => {
+                  const from = points.get(edge.from),
+                    to = points.get(edge.to);
+                  if (!from || !to) return null;
+                  const sameLane = from.x === to.x;
+                  const startX = sameLane
+                    ? from.x
+                    : from.x + (from.x < to.x ? nodeWidth : 0);
+                  const endX = sameLane
+                    ? to.x
+                    : to.x + (from.x < to.x ? 0 : nodeWidth);
+                  const startY = from.y + 40,
+                    endY = to.y + 40;
+                  const bend = sameLane
+                    ? Math.max(4, from.x - 23)
+                    : (startX + endX) / 2;
+                  const path = `M ${startX} ${startY} C ${bend} ${startY}, ${bend} ${endY}, ${endX} ${endY}`;
+                  return (
+                    <path
+                      key={edge.id}
+                      d={path}
+                      fill="none"
+                      stroke={
+                        selectedEdge?.id === edge.id ? "#a45c30" : "#718779"
+                      }
+                      strokeWidth={selectedEdge?.id === edge.id ? 3 : 1.6}
+                      strokeDasharray={
+                        /context|area/i.test(edge.label) ? "5 4" : undefined
+                      }
+                      markerEnd={`url(#${prefix}-arrow)`}
+                    >
+                      <title>
+                        {labels.get(edge.from)}: {edge.label}:{" "}
+                        {labels.get(edge.to)}
+                      </title>
+                    </path>
+                  );
+                })}
+              </svg>
+              {visibleNodes.map((node) => {
+                const point = points.get(node.id)!;
+                return (
+                  <button
+                    type="button"
+                    key={node.id}
+                    className={`en-node ${node.synthetic ? "en-fiction" : ""} ${query && !matchIds.has(node.id) ? "en-muted" : ""}`}
+                    style={{ left: point.x, top: point.y, width: nodeWidth }}
+                    aria-label={`Inspect ${node.label}`}
+                    aria-pressed={selectedNode?.id === node.id}
+                    onClick={() => setSelection({ kind: "node", id: node.id })}
+                  >
+                    <span>
+                      {node.type.replaceAll(/([a-z])([A-Z])/g, "$1 $2")}
+                      {node.synthetic ? " · Fictional" : ""}
+                    </span>
+                    <strong>{node.label}</strong>
+                  </button>
                 );
               })}
-            </svg>
-            {nodes.map((node) => {
-              const point = points.get(node.id)!;
-              return (
-                <button
-                  type="button"
-                  key={node.id}
-                  className={`en-node ${node.synthetic ? "en-fiction" : ""} ${query && !matchIds.has(node.id) ? "en-muted" : ""}`}
-                  style={{ left: point.x, top: point.y, width: nodeWidth }}
-                  aria-label={`Inspect ${node.label}`}
-                  aria-pressed={selectedNode?.id === node.id}
-                  onClick={() => setSelection({ kind: "node", id: node.id })}
-                >
-                  <span>
-                    {node.type.replaceAll(/([a-z])([A-Z])/g, "$1 $2")}
-                    {node.synthetic ? " · Fictional" : ""}
-                  </span>
-                  <strong>{node.label}</strong>
-                </button>
-              );
-            })}
+            </div>
           </div>
         ) : (
           <ul className="en-records">
@@ -245,7 +350,10 @@ export function EvidenceNetwork({
           }
         >
           <option value="">Choose a relationship</option>
-          {edges.map((edge) => (
+          {(selectedEdge && !visibleEdges.includes(selectedEdge)
+            ? [selectedEdge, ...visibleEdges]
+            : visibleEdges
+          ).map((edge) => (
             <option key={edge.id} value={edge.id}>
               {labels.get(edge.from)} - {edge.label} - {labels.get(edge.to)}
             </option>
@@ -290,7 +398,7 @@ export function EvidenceNetwork({
           Select a node or relationship to inspect its source and limits.
         </p>
       )}
-      {!nodes.length && <p>No records are available in this projection.</p>}
+      {!visibleNodes.length && <p>No records match these filters.</p>}
     </section>
   );
 }

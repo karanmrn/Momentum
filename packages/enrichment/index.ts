@@ -1,6 +1,6 @@
-import outcomeSnapshot from "../../research/enrichment/police-outcomes.json";
-import onsSnapshot from "../../research/enrichment/ons-geography.json";
-import mpsSnapshot from "../../research/enrichment/mps-context.json";
+import outcomeSnapshot from "../../research/enrichment/police-outcomes.json" with { type: "json" };
+import onsSnapshot from "../../research/enrichment/ons-geography.json" with { type: "json" };
+import mpsSnapshot from "../../research/enrichment/mps-context.json" with { type: "json" };
 import { policeSelection } from "../camden-evidence/index.js";
 import { type PilotId, pilotSchema } from "../contracts/index.js";
 import { getDatasetCoverage } from "../datasets/src/coverage.js";

@@ -273,3 +273,46 @@
     max-width: 224px;
   }
 }
+
+@media (min-width: 1000px) {
+  .streetwise-presentation {
+    padding: 24px;
+    gap: 16px;
+  }
+  .presentation-header {
+    padding-bottom: 12px;
+  }
+  .presentation-slide {
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  .presentation-deck-image {
+    max-height: max(240px, calc(100dvh - 460px));
+    object-fit: contain;
+    background: #fffef9;
+  }
+  .presentation-scan h2 {
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+  .presentation-journey {
+    margin-bottom: 16px;
+  }
+  .presentation-journey h2 {
+    margin-bottom: 0;
+  }
+  .presentation-qr {
+    max-width: 180px;
+    margin-bottom: 8px;
+  }
+  .presentation-url {
+    font-size: 13px;
+    line-height: 1.4;
+    margin-top: 8px;
+    padding: 8px 0;
+  }
+  .presentation-footer {
+    padding-top: 4px;
+    font-size: 14px;
+  }
+}

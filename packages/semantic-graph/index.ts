@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { enrichmentGraph } from "./enrichment.js";
 import { approvedOperationalRelations } from "../relation-review/index.js";
 import { localContextGraph } from "./local-context.js";
 import { buildCaseGraph } from "../camden-evidence/index.js";
@@ -438,6 +439,19 @@ export function projectSemanticGraph(
         );
       }
     }
+  }
+  if (noticeId === undefined) {
+    for (const group of enrichmentGraph(pilotId)) {
+      const availableIds = new Set(
+        [...graph.nodes, ...group.nodes].map((node) => node.id),
+      );
+      if (group.assertions.some((edge) => !availableIds.has(edge.objectId)))
+        continue;
+      if (!add(group.nodes, group.assertions)) break;
+    }
+    graph.limitations.push(
+      "Enrichment shows the latest acquired MPS month and selected ONS areas. These are not pilot totals or independent police corroboration.",
+    );
   }
   graph.limitations = [...new Set(graph.limitations)].slice(0, 100);
   return semanticGraphSchema.parse(graph);
