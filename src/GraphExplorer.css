@@ -686,3 +686,19 @@
     width: 70px;
   }
 }
+
+.gx-private-report {
+  margin: 12px 0;
+  padding: 16px;
+  border: 1px solid #997340;
+  border-radius: 12px;
+  background: #fff8ed;
+}
+.gx-private-report p {
+  margin: 8px 0;
+}
+.gx-private-report a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+}

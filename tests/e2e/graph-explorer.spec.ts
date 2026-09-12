@@ -268,7 +268,11 @@ test("Keyboard inspection and search work on the graph and equivalent records", 
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/?workspace=graph&public=1&area=camden_town");
   await loaded(page);
-  const node = page.locator(".gc-node").first();
+  const nodeName = await page
+    .locator(".gc-node")
+    .first()
+    .getAttribute("aria-label");
+  const node = page.getByRole("button", { name: nodeName!, exact: true });
   await node.focus();
   await page.keyboard.press("Enter");
   await expect(node).toHaveAttribute("aria-pressed", "true");

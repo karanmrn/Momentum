@@ -129,6 +129,17 @@ function IntakeForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const pending = useRef(false);
+  const reviewHeading = useRef<HTMLHeadingElement>(null);
+  const narrativeField = useRef<HTMLTextAreaElement>(null);
+  const reviewedBefore = useRef(false);
+  useEffect(() => {
+    if (review) {
+      reviewedBefore.current = true;
+      reviewHeading.current?.focus();
+    } else if (reviewedBefore.current) {
+      narrativeField.current?.focus();
+    }
+  }, [review]);
   const set = <K extends keyof Intake>(key: K, value: Intake[K]) =>
     setDraft((old) => ({ ...old, [key]: value }));
   const valid = () => {
@@ -167,7 +178,7 @@ function IntakeForm({
     }
   }
   return (
-    <section className="cw-panel">
+    <section className="cw-panel cw-composer">
       <h2>{initial ? "Correct observation" : "Share an observation"}</h2>
       {error && (
         <p className="cw-error" role="alert">
@@ -176,8 +187,12 @@ function IntakeForm({
       )}
       {review ? (
         <div className="cw-review">
-          <h3>Review before saving</h3>
+          <h3 ref={reviewHeading} tabIndex={-1}>
+            Review before saving
+          </h3>
           <dl>
+            <dt>Category</dt>
+            <dd>{labels(draft.category)}</dd>
             <dt>Title</dt>
             <dd>{draft.title}</dd>
             <dt>Approximate place</dt>
@@ -219,20 +234,41 @@ function IntakeForm({
         </div>
       ) : (
         <form className="cw-form" onSubmit={prepare}>
+          <fieldset className="cw-incident-types">
+            <legend>What are you reporting?</legend>
+            {(
+              [
+                ["infrastructure", "Lighting or street damage"],
+                ["transport", "Transport issue"],
+                ["access", "Access barrier"],
+                ["community", "Community concern"],
+              ] as const
+            ).map(([value, label]) => (
+              <label
+                key={value}
+                className={
+                  draft.category === value ? "cw-incident-selected" : ""
+                }
+              >
+                <input
+                  type="radio"
+                  name="incident-type"
+                  value={value}
+                  checked={draft.category === value}
+                  onChange={() => set("category", value)}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </fieldset>
           <label>
-            Category
-            <select
-              value={draft.category}
-              onChange={(e) =>
-                set("category", e.target.value as Intake["category"])
-              }
-            >
-              {["infrastructure", "transport", "access", "community"].map(
-                (value) => (
-                  <option key={value}>{value}</option>
-                ),
-              )}
-            </select>
+            Factual narrative (optional)
+            <textarea
+              ref={narrativeField}
+              maxLength={600}
+              value={draft.narrative}
+              onChange={(e) => set("narrative", e.target.value)}
+            />
           </label>
           <label>
             Short title
@@ -315,14 +351,6 @@ function IntakeForm({
               />
             </label>
           )}
-          <label>
-            Factual narrative (optional)
-            <textarea
-              maxLength={600}
-              value={draft.narrative}
-              onChange={(e) => set("narrative", e.target.value)}
-            />
-          </label>
           <label>
             Publication preference
             <select
@@ -644,6 +672,10 @@ export function CommunityWorkspace({
   const [tab, setTab] = useState("reports");
   const [selected, setSelected] = useState<string | null>(null);
   const [correcting, setCorrecting] = useState(false);
+  const [receiptView, setReceiptView] = useState<
+    "report" | "evidence" | "changes"
+  >("report");
+  useEffect(() => setReceiptView("report"), [selected, pilotId, persona]);
   const [busy, setBusy] = useState(false);
   const [share, setShare] = useState<{ id: string; path: string } | null>(null);
   const keys = useRef(new Map<string, string>());
@@ -673,6 +705,36 @@ export function CommunityWorkspace({
         : "reports",
     );
     load()
+      .then((next) => {
+        if (active.current !== controller) return;
+        try {
+          const context = z
+            .object({
+              version: z.literal(1),
+              reportId: z.string().uuid(),
+              pilotId: z.string(),
+              persona: z.string(),
+            })
+            .safeParse(
+              JSON.parse(
+                sessionStorage.getItem("momentum:report-graph-context") ??
+                  "null",
+              ),
+            );
+          if (
+            context.success &&
+            context.data.pilotId === pilotId &&
+            context.data.persona === persona
+          ) {
+            const own = next.reports.find(
+              (item) => item.report.id === context.data.reportId,
+            );
+            if (own) setSelected(own.id);
+          }
+        } catch {
+          /* The receipt list remains usable when session storage is unavailable. */
+        }
+      })
       .catch((failure) => {
         if (active.current === controller)
           setError(
@@ -976,59 +1038,168 @@ export function CommunityWorkspace({
               <p className="cw-state">
                 {labels(record.status)} · revision {record.revision}
               </p>
-              <dl>
-                <dt>Receipt reference</dt>
-                <dd>{record.id}</dd>
-                <dt>Report reference</dt>
-                <dd>{record.report.id}</dd>
-                <dt>Saved</dt>
-                <dd>{time(record.createdAt)}</dd>
-                <dt>Publication preference</dt>
-                <dd>{labels(record.intake.publication)}</dd>
-                <dt>Approximate place</dt>
-                <dd>{record.intake.place}</dd>
-                <dt>Observed interval</dt>
-                <dd>
-                  {time(record.intake.observedFrom)} to{" "}
-                  {time(record.intake.observedTo)} ·{" "}
-                  {labels(record.intake.timePrecision)}
-                </dd>
-                <dt>Source basis</dt>
-                <dd>{labels(record.intake.basis)}</dd>
-                {record.intake.sourceDescription && (
-                  <>
-                    <dt>Private source description</dt>
-                    <dd>{record.intake.sourceDescription}</dd>
-                  </>
+              {!moderator &&
+                !["withdrawn", "retracted"].includes(record.status) && (
+                  <button
+                    className="cw-primary"
+                    type="button"
+                    onClick={() => {
+                      try {
+                        sessionStorage.setItem(
+                          "momentum:report-graph-context",
+                          JSON.stringify({
+                            version: 1,
+                            reportId: record.report.id,
+                            pilotId,
+                            persona,
+                          }),
+                        );
+                        const graphUrl = new URL(
+                          `/?demo=1&workspace=graph&area=${pilotId}&examples=1`,
+                          location.origin,
+                        );
+                        const current = new URLSearchParams(location.search);
+                        if (
+                          current.get("returnTo") === "presentation" ||
+                          current.get("presentation") === "1"
+                        ) {
+                          graphUrl.searchParams.set("returnTo", "presentation");
+                          graphUrl.searchParams.set(
+                            "slide",
+                            String(
+                              Math.min(
+                                10,
+                                Math.max(1, Number(current.get("slide")) || 1),
+                              ),
+                            ),
+                          );
+                        }
+                        window.location.assign(
+                          graphUrl.pathname + graphUrl.search,
+                        );
+                      } catch {
+                        setError(
+                          "The report graph could not open. Allow session storage, then try again.",
+                        );
+                      }
+                    }}
+                  >
+                    View report in graph
+                  </button>
                 )}
-                <dt>Optional narrative</dt>
-                <dd>{record.intake.narrative || "Not supplied"}</dd>
-              </dl>
-              {record.notice && (
-                <a
-                  href={`/?demo=1&workspace=community&area=${pilotId}&notice=${record.notice.id}`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setTab("published");
-                  }}
-                >
-                  Open reviewed public summary
-                </a>
-              )}
-              <h3>Private status history</h3>
-              <ol className="cw-history">
-                {[...record.history].reverse().map((item) => (
-                  <li key={item.revision}>
-                    <strong>
-                      {labels(item.action)} · revision {item.revision}
-                    </strong>
-                    <span>
-                      {item.actor} · {time(item.at)}
-                    </span>
-                    <p>{item.message}</p>
-                  </li>
+              <nav className="cw-journey" aria-label="Report journey">
+                {(["report", "evidence", "changes"] as const).map((step) => (
+                  <button
+                    key={step}
+                    type="button"
+                    aria-pressed={receiptView === step}
+                    aria-controls={`receipt-${step}`}
+                    onClick={() => setReceiptView(step)}
+                  >
+                    {step === "report"
+                      ? "Report"
+                      : step === "evidence"
+                        ? "Evidence"
+                        : "Changes"}
+                  </button>
                 ))}
-              </ol>
+              </nav>
+              <div id="receipt-report" hidden={receiptView !== "report"}>
+                <dl>
+                  <dt>Receipt reference</dt>
+                  <dd>{record.id}</dd>
+                  <dt>Report reference</dt>
+                  <dd>{record.report.id}</dd>
+                  <dt>Saved</dt>
+                  <dd>{time(record.createdAt)}</dd>
+                  <dt>Publication preference</dt>
+                  <dd>{labels(record.intake.publication)}</dd>
+                  <dt>Approximate place</dt>
+                  <dd>{record.intake.place}</dd>
+                  <dt>Observed interval</dt>
+                  <dd>
+                    {time(record.intake.observedFrom)} to{" "}
+                    {time(record.intake.observedTo)} ·{" "}
+                    {labels(record.intake.timePrecision)}
+                  </dd>
+                  <dt>Source basis</dt>
+                  <dd>{labels(record.intake.basis)}</dd>
+                  {record.intake.sourceDescription && (
+                    <>
+                      <dt>Private source description</dt>
+                      <dd>{record.intake.sourceDescription}</dd>
+                    </>
+                  )}
+                  <dt>Optional narrative</dt>
+                  <dd>{record.intake.narrative || "Not supplied"}</dd>
+                </dl>
+                {record.notice && (
+                  <a
+                    href={`/?demo=1&workspace=community&area=${pilotId}&notice=${record.notice.id}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setTab("published");
+                    }}
+                  >
+                    Open reviewed public summary
+                  </a>
+                )}
+              </div>
+              <section
+                id="receipt-evidence"
+                hidden={receiptView !== "evidence"}
+                aria-label="Area evidence"
+              >
+                <h3>Area evidence</h3>
+                <p>
+                  Explore published sources for this area. These sources do not
+                  confirm your observation or describe the same event.
+                </p>
+                <a
+                  className="cw-journey-link"
+                  href={`/?public=1&workspace=graph&area=${pilotId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open area graph (new tab)
+                </a>
+                <p>
+                  Your private report stays here. No report details are included
+                  in the link.
+                </p>
+              </section>
+              <section
+                id="receipt-changes"
+                hidden={receiptView !== "changes"}
+                aria-label="Report changes"
+              >
+                <h3>Private status history</h3>
+                <ol className="cw-history">
+                  {[...record.history].reverse().map((item) => (
+                    <li key={item.revision}>
+                      <strong>
+                        {labels(item.action)} · revision {item.revision}
+                      </strong>
+                      <span>
+                        {item.actor} · {time(item.at)}
+                      </span>
+                      <p>{item.message}</p>
+                    </li>
+                  ))}
+                </ol>
+                <p>
+                  This history records review activity. It does not confirm
+                  action by police or the council.
+                </p>
+              </section>
+              <a
+                className="cw-journey-link"
+                href={`/?public=1&tab=help&area=${pilotId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Get help (new tab)
+              </a>
               {moderator ? (
                 <ReviewForm
                   key={record.id}
