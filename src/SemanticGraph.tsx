@@ -5,13 +5,109 @@ import {
   type SemanticGraph as GraphData,
 } from "../packages/semantic-graph/schema";
 import "./SemanticGraph.css";
+import { EvidenceNetwork } from "./EvidenceNetwork";
 
 const predicateLabels: Record<string, string> = {
   WITHIN_AREA: "Within research area",
   AFFECTS_PLACE: "Concerns approximate place",
   ISSUED_BY: "Source",
   CONTEXTUAL_HISTORY_FOR: "Historical source coverage",
+  DERIVED_FROM: "Derived from source",
+  CONTEXTUAL_AREA_ONLY: "Area context only",
 };
+
+const readable = (value: string) => value.replaceAll("_", " ");
+function nodeDetails(
+  node: GraphData["nodes"][number],
+): Array<[string, string]> {
+  const meta = node.metadata;
+  const details: Array<[string, string]> = [
+    ["Record type", node.type.replaceAll(/([a-z])([A-Z])/g, "$1 $2")],
+  ];
+  if (meta.availability)
+    details.push([
+      "Current availability",
+      `${meta.availability}. A listing does not confirm current assistance.`,
+    ]);
+  if (meta.schedule !== undefined)
+    details.push(["Published schedule", meta.schedule ?? "Not supplied"]);
+  if (meta.address) details.push(["Listed address", meta.address]);
+  if (meta.summary) details.push(["Summary", meta.summary]);
+  if (meta.precision) details.push(["Precision", readable(meta.precision)]);
+  if (meta.revision !== undefined)
+    details.push(["Revision", String(meta.revision)]);
+  if (meta.observedAt) details.push(["Observed time", meta.observedAt]);
+  if (meta.reportedAt) details.push(["Reported time", meta.reportedAt]);
+  if (meta.correctionNote) details.push(["Correction", meta.correctionNote]);
+  if (meta.sourceRecordKey)
+    details.push(["Source record key", meta.sourceRecordKey]);
+  if (meta.status) details.push(["Coverage", readable(meta.status)]);
+  if (meta.months?.length)
+    details.push(["Source months", meta.months.join(", ")]);
+  if (meta.acquiredUnits !== undefined)
+    details.push([
+      "Acquisition",
+      meta.acquiredUnits === null
+        ? "Not supplied"
+        : `${meta.acquiredUnits} ${meta.unitLabel ?? "source units"}`,
+    ]);
+  if (meta.geographyDescription)
+    details.push(["Geography", meta.geographyDescription]);
+  if (meta.coordinates)
+    details.push([
+      "Source coordinates",
+      `${meta.coordinates.join(", ")}. Source precision applies.`,
+    ]);
+  if (node.provenance) {
+    details.push(
+      ["Source family", node.provenance.sourceFamilyId],
+      ["Source ID", node.provenance.sourceId],
+      ["Original claim lineage", node.provenance.originGroupId ?? "Unknown"],
+      ["Source retrieved", node.provenance.fetchedAt ?? "Unknown"],
+    );
+    if (node.provenance.snapshotSha256 !== undefined)
+      details.push([
+        "Snapshot SHA256",
+        node.provenance.snapshotSha256 ?? "Not supplied",
+      ]);
+  }
+  if (
+    meta.fetchedAt !== undefined &&
+    meta.fetchedAt !== node.provenance?.fetchedAt
+  )
+    details.push(["Record retrieved", meta.fetchedAt ?? "Unknown"]);
+  return details;
+}
+function assertionDetails(
+  edge: GraphData["assertions"][number],
+  labels: Map<string, string>,
+): Array<[string, string]> {
+  const details: Array<[string, string]> = [
+    ["Method", readable(edge.inferenceType)],
+    ["Method version", edge.methodVersion],
+    ["Reason codes", edge.reasonCodes.join(", ")],
+    [
+      "Evidence records",
+      edge.evidenceRefs.map((id) => labels.get(id) ?? id).join("; "),
+    ],
+  ];
+  if (edge.metadata) {
+    const meta = edge.metadata;
+    details.push(
+      ["Source family", meta.sourceFamilyId],
+      ["Original claim lineage", meta.originGroupId ?? "Unknown"],
+      ["Revision", String(meta.revision)],
+      ["Recorded time", meta.recordedAt],
+      ["Valid from", meta.validFrom ?? "Unknown"],
+      ["Valid to", meta.validTo ?? "Unknown"],
+      ["Time precision", readable(meta.timePrecision)],
+      ["Spatial precision", readable(meta.spatialPrecision)],
+      ["Relationship status", readable(meta.relationStatus)],
+      ["Source independence", meta.independence],
+    );
+  }
+  return details;
+}
 
 export function SemanticGraph({
   area,
@@ -78,6 +174,31 @@ export function SemanticGraph({
               : "Fictional community notices with public source coverage"}{" "}
             · Ontology {graph.ontologyVersion}
           </p>
+          <EvidenceNetwork
+            nodes={graph.nodes.map((node) => ({
+              id: node.id,
+              label: node.label,
+              type: node.type,
+              synthetic: node.synthetic,
+              sourceUrl: node.provenance?.sourceUrl,
+              details: nodeDetails(node),
+            }))}
+            edges={graph.assertions.map((edge) => ({
+              id: edge.id,
+              from: edge.subjectId,
+              to: edge.objectId,
+              label: predicateLabels[edge.predicate] || edge.predicate,
+              synthetic: edge.synthetic,
+              details: assertionDetails(edge, labels),
+            }))}
+          />
+          <a
+            className="button secondary"
+            href={`/api/${isPublic ? "public/" : ""}graph/export?area=${area}`}
+            download
+          >
+            Download Graphify graph
+          </a>
           <div className="semantic-table-wrap">
             <table className="semantic-table">
               <caption>Source relations and their meaning</caption>

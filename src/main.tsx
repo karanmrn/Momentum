@@ -154,15 +154,36 @@ function Modal({
   title,
   onClose,
   children,
+  closeDisabled = false,
+  inertBackground = false,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  closeDisabled?: boolean;
+  inertBackground?: boolean;
 }) {
   const dialogRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  onCloseRef.current = () => {
+    if (!closeDisabled) onClose();
+  };
+  useEffect(() => {
+    if (!inertBackground) return;
+    const backdrop = dialogRef.current?.parentElement;
+    const siblings = [...(backdrop?.parentElement?.children ?? [])].filter(
+      (element): element is HTMLElement =>
+        element instanceof HTMLElement && element !== backdrop,
+    );
+    const previous = siblings.map(
+      (element) => [element, element.inert] as const,
+    );
+    for (const [element] of previous) element.inert = true;
+    return () => {
+      for (const [element, inert] of previous) element.inert = inert;
+    };
+  }, [inertBackground]);
   useEffect(() => {
     const opener =
       document.activeElement instanceof HTMLElement
@@ -205,7 +226,9 @@ function Modal({
     <div
       className="modal-backdrop"
       role="presentation"
-      onMouseDown={(event) => event.currentTarget === event.target && onClose()}
+      onMouseDown={(event) =>
+        event.currentTarget === event.target && onCloseRef.current()
+      }
     >
       <section
         ref={dialogRef}
@@ -217,7 +240,8 @@ function Modal({
         <button
           ref={closeRef}
           className="close"
-          onClick={onClose}
+          onClick={() => onCloseRef.current()}
+          disabled={closeDisabled}
           aria-label="Close dialog"
         >
           <X size={22} />
@@ -420,7 +444,7 @@ function Inspector({
 }
 
 function ReportForm({
-  area,
+  area: initialArea,
   onClose,
   onCreated,
 }: {
@@ -428,6 +452,7 @@ function ReportForm({
   onClose: () => void;
   onCreated: () => Promise<void>;
 }) {
+  const [area] = useState(initialArea);
   const formRef = useRef<HTMLFormElement>(null);
   function useScenario(draft: ScenarioDraft) {
     const form = formRef.current;
@@ -451,14 +476,15 @@ function ReportForm({
   }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [done, setDone] = useState(false);
+  const [receipt, setReceipt] = useState<Report | null>(null);
+  const retryRequest = useRef<{ payload: string; key: string } | null>(null);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError("");
     const form = new FormData(event.currentTarget);
     try {
-      await api.submitReport({
+      const input = {
         pilotId: area.id,
         category: String(form.get("category")) as
           "infrastructure" | "transport" | "access" | "community",
@@ -466,10 +492,23 @@ function ReportForm({
         description: String(form.get("description")),
         place: String(form.get("place")),
         observedAt: new Date(String(form.get("observedAt"))).toISOString(),
-        synthetic: true,
-      });
-      await onCreated();
-      setDone(true);
+        synthetic: true as const,
+      };
+      const payload = JSON.stringify(input);
+      if (retryRequest.current?.payload !== payload)
+        retryRequest.current = { payload, key: crypto.randomUUID() };
+      const savedReport = await api.submitReport(
+        input,
+        retryRequest.current.key,
+      );
+      setReceipt(savedReport);
+      try {
+        await onCreated();
+      } catch {
+        setError(
+          "Your observation was saved. Close this receipt and refresh My reports.",
+        );
+      }
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -477,10 +516,36 @@ function ReportForm({
     }
   }
   return (
-    <Modal title="Share a local observation" onClose={onClose}>
-      {done ? (
+    <Modal
+      title="Share a local observation"
+      onClose={onClose}
+      closeDisabled={saving}
+      inertBackground
+    >
+      {receipt ? (
         <div className="history">
           <strong>Saved for private review</strong>
+          <dl className="receipt-fields">
+            <dt>Report reference</dt>
+            <dd style={{ overflowWrap: "anywhere", marginLeft: 0 }}>
+              {receipt.id}
+            </dd>
+            <dt>Status</dt>
+            <dd style={{ marginLeft: 0 }}>
+              {receipt.status.replaceAll("_", " ")}
+            </dd>
+            <dt>Revision</dt>
+            <dd style={{ marginLeft: 0 }}>{receipt.revision}</dd>
+            <dt>Saved</dt>
+            <dd style={{ marginLeft: 0 }}>
+              {new Date(receipt.createdAt).toLocaleString("en-GB")}
+            </dd>
+          </dl>
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
           <p className="subtle">
             This synthetic observation is not public. A moderator must review a
             summary before a notice can appear.
@@ -1478,7 +1543,12 @@ function App() {
     () => publicBrowse && currentEntryArea().invalid,
   );
   const [tab, setTab] = useState<Tab>("now");
-  const [view, setView] = useState<View>("dashboard");
+  const [view, setView] = useState<View>(() =>
+    !publicBrowse &&
+    new URLSearchParams(window.location.search).get("view") === "reports"
+      ? "reports"
+      : "dashboard",
+  );
   const [mapOpen, setMapOpen] = useState(false);
   const [data, setData] = useState<AreaData>(emptyAreaData);
   const [reports, setReports] = useState<Report[]>([]);
@@ -1797,6 +1867,12 @@ function App() {
           )}
           {publicBrowse && (
             <div className="public-actions">
+              <a
+                className="button secondary"
+                href={`/?updates=1&area=${selected.id}${import.meta.env.DEV ? "&public=1" : ""}`}
+              >
+                Local updates
+              </a>
               <AreaShare
                 areaId={selected.id}
                 canonicalOrigin={import.meta.env.VITE_PUBLIC_SITE_URL}
@@ -2035,6 +2111,11 @@ function App() {
     </div>
   );
 }
+const RecentUpdates = lazy(() =>
+  import("./RecentUpdates").then((module) => ({
+    default: module.RecentUpdates,
+  })),
+);
 const Presentation = lazy(() =>
   import("./Presentation").then((module) => ({ default: module.Presentation })),
 );
@@ -2044,19 +2125,46 @@ const CamdenEvidence = lazy(() =>
   })),
 );
 const EnrichmentContext = lazy(() =>
-  import("./EnrichmentContext").then((module) => ({ default: module.EnrichmentContext })),
+  import("./EnrichmentContext").then((module) => ({
+    default: module.EnrichmentContext,
+  })),
 );
 function Entry() {
   const query = new URLSearchParams(window.location.search);
   const entry = entryArea(window.location.search);
   if (query.get("enrichment") === "1" && !entry.invalid) {
-    return <Suspense fallback={<main className="map-fallback">Loading data context...</main>}>
-      <EnrichmentContext initialPilot={entry.areaId} onExit={() => {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("enrichment");
-        window.location.assign(url.href);
-      }} />
-    </Suspense>;
+    return (
+      <Suspense
+        fallback={<main className="map-fallback">Loading data context...</main>}
+      >
+        <EnrichmentContext
+          initialPilot={entry.areaId}
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("enrichment");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
+  }
+  if (query.get("updates") === "1" && !entry.invalid) {
+    return (
+      <Suspense
+        fallback={
+          <main className="map-fallback">Loading local updates...</main>
+        }
+      >
+        <RecentUpdates
+          areaId={entry.areaId}
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("updates");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
   }
   if (query.get("evidence") === "camden") {
     return (

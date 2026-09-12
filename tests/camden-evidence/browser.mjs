@@ -11,6 +11,7 @@ const checks=[];
 try {
  await page.goto(base);
  await page.getByRole('heading',{name:'What can each source tell us?'}).waitFor();
+ await page.getByText('Fictional state: original. Police source record unchanged.',{exact:true}).waitFor();
  const choices=page.getByRole('navigation',{name:'Select a police record'}).getByRole('button');
  assert.equal(await choices.count(),5);checks.push('five record choices');
  for(let i=0;i<5;i++){
@@ -25,10 +26,12 @@ try {
  await page.getByText('Fictional intake detail',{exact:true}).click();
  assert.match(await page.locator('.ce-fiction').innerText(),/4 Jul 2026, 22:15/);
  await page.getByRole('button',{name:'Correct fictional time',exact:true}).click();
+ await page.getByText('Fictional state: corrected. Police source record unchanged.',{exact:true}).waitFor();
  assert.match(await page.locator('.ce-fiction').innerText(),/4 Jul 2026, 21:55/);
  assert.match(await page.locator('.ce-summary').innerText(),/unwanted contact/);
  checks.push('correction changes occurrence time and retains summary');
  await page.getByRole('button',{name:'Withdraw fictional account',exact:true}).click();
+ await page.getByText('Fictional state: withdrawn. Police source record unchanged.',{exact:true}).waitFor();
  assert.equal(await page.getByText('Fictional intake detail',{exact:true}).count(),0);
  assert.match(await page.locator('.ce-fiction').innerText(),/withdrawn/);
  await page.getByText(/Inspect \d+ nodes and \d+ qualified assertions/).click();
@@ -40,11 +43,13 @@ try {
  await choices.nth(0).click();
  assert.match(await page.locator('.ce-fiction').innerText(),/Fictional state: withdrawn/);
  await page.getByRole('button',{name:'Reset example',exact:true}).click();
+ await page.getByText('Fictional state: original. Police source record unchanged.',{exact:true}).waitFor();
  checks.push('record states are independent and reset works');
  await page.reload();
  await page.getByRole('heading',{name:'What can each source tell us?'}).waitFor();
+ await page.getByText('Fictional state: original. Police source record unchanged.',{exact:true}).waitFor();
  assert.match(await page.locator('.ce-fiction').innerText(),/Fictional state: original/);
- checks.push('reload resets local exercise');
+ checks.push('reload retains the saved reset state');
  await choices.nth(0).focus();await page.keyboard.press('Tab');await page.keyboard.press('Enter');
  assert.equal(await choices.nth(1).getAttribute('aria-pressed'),'true');checks.push('keyboard selection');
  for(const width of [1440,390,320]){

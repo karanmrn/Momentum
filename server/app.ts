@@ -1,7 +1,14 @@
+import { createRecentUpdatesService } from "../services/recent-updates.js";
+import {
+  createPostgresRecentUpdatesStore,
+  createRecentUpdatesRouter,
+} from "./recent-updates.js";
 import { createAccountRoutes } from "./account.js";
 import { getDatasetCoverage } from "../packages/datasets/src/coverage.js";
 import { getHistoricalCoverage } from "../packages/history/src/coverage.js";
 import express from "express";
+import { ZodError } from "zod";
+import { DomainError } from "../packages/domain/index.js";
 import {
   createHash,
   randomBytes,
@@ -17,6 +24,7 @@ import {
 import type { DemoDatabase } from "./database.js";
 import { createRoutes } from "./routes.js";
 import { createSemanticRoutes } from "./semantic.js";
+import { createCamdenRoutes } from "./camden.js";
 import { createPublicRoutes } from "./public.js";
 import { getHelp, getSources } from "../services/index.js";
 export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
@@ -43,6 +51,23 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
   });
   app.use("/api/account", createAccountRoutes());
   app.use("/api/public/graph", createSemanticRoutes());
+  const updatesConnection = process.env.RECENT_UPDATES_DATABASE_URL;
+  const updatesStore = updatesConnection
+    ? createPostgresRecentUpdatesStore(updatesConnection)
+    : {
+        async read() {
+          throw new Error("Updates storage is unavailable.");
+        },
+        async write() {
+          throw new Error("Updates storage is unavailable.");
+        },
+      };
+  app.use(
+    "/api/public/recent-updates",
+    createRecentUpdatesRouter({
+      service: createRecentUpdatesService({ store: updatesStore }),
+    }),
+  );
   app.use("/api/public", createPublicRoutes());
   if (process.env.VERCEL) {
     app.use((req, res, next) => {
@@ -277,6 +302,7 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
       graph: async (id, pilot) => (await database()).graph(id, pilot),
     }),
   );
+  app.use("/api/camden/examples", createCamdenRoutes(store));
   app.use("/api", createRoutes(store));
   app.use("/api", (_req, res) =>
     fail(res, 404, "not_found", "This item is not available."),
@@ -295,6 +321,14 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
       }
       if (error instanceof SyntaxError) {
         fail(res, 400, "invalid_input", "Use valid JSON.");
+        return;
+      }
+      if (error instanceof ZodError) {
+        fail(res, 400, "invalid_input", "Request input is invalid.");
+        return;
+      }
+      if (error instanceof DomainError) {
+        fail(res, error.status, error.code, error.message);
         return;
       }
       fail(res, 500, "internal_error", "This action could not be completed.");
