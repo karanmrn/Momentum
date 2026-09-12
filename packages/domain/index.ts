@@ -9,6 +9,7 @@ import type {
   Preferences,
   Report,
   ReportInput,
+  ReportEditInput,
   DecisionInput,
 } from '../contracts/index.js';
 import { areas, pilotSchema } from '../contracts/index.js';
@@ -214,6 +215,25 @@ export function submitReport(state: DemoState, actor: Persona, input: ReportInpu
   };
   state.reports.push(record);
   return copy(record);
+}
+
+export function editReport(state: DemoState, actor: Persona, reportId: string, input: ReportEditInput): Report {
+  requireMember(actor);
+  const report = requireOwnedReport(state, actor, reportId);
+  requireRevision(report.revision, input.expectedRevision);
+  if (report.status !== 'submitted' || report.noticeId !== null) {
+    throw new DomainError(409, 'conflict', 'Only unreviewed reports can be edited.');
+  }
+  rejectSensitiveText([input.changes.title, input.changes.description, input.changes.place]);
+  report.category = input.changes.category;
+  report.title = input.changes.title;
+  report.description = input.changes.description;
+  report.place = input.changes.place;
+  report.observedAt = input.changes.observedAt;
+  report.revision += 1;
+  // A retried creation request must not return the replaced private narrative.
+  scrubCachedReportOutcomes(state, report);
+  return copy(report);
 }
 
 export function withdrawReport(state: DemoState, actor: Persona, reportId: string, expectedRevision: number): Report {
