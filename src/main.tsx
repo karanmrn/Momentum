@@ -1190,9 +1190,27 @@ function Decision({
   );
   const [summary, setSummary] = useState("");
   const [saving, setSaving] = useState(false);
+  const [recorded, setRecorded] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [receipt, setReceipt] = useState("");
   const [error, setError] = useState("");
+  async function refreshQueue() {
+    setRefreshing(true);
+    setError("");
+    try {
+      await changed();
+      close();
+    } catch {
+      setError(
+        "The decision was recorded. The review queue could not refresh. Retry queue refresh.",
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (saving || recorded) return;
     setSaving(true);
     setError("");
     try {
@@ -1201,8 +1219,9 @@ function Decision({
         action,
         summary,
       });
-      await changed();
-      close();
+      setRecorded(true);
+      setReceipt("Decision recorded.");
+      await refreshQueue();
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -1222,6 +1241,7 @@ function Decision({
             id="moderation-decision"
             value={action}
             onChange={(event) => setAction(event.target.value as typeof action)}
+            disabled={saving || recorded || refreshing}
           >
             {options.map(([value, label]) => (
               <option value={value} key={value}>
@@ -1237,16 +1257,28 @@ function Decision({
               minLength={5}
               maxLength={600}
               required
+              disabled={saving || recorded || refreshing}
             />
           </label>
+          {receipt && <p role="status">{receipt}</p>}
           {error && (
             <div className="error" role="alert">
               {error}
             </div>
           )}
-          <button className="button" disabled={saving}>
+          <button className="button" disabled={saving || recorded || refreshing}>
             {saving ? "Recording…" : "Record decision"}
           </button>
+          {recorded && error && (
+            <button
+              className="button secondary"
+              type="button"
+              disabled={refreshing}
+              onClick={() => void refreshQueue()}
+            >
+              {refreshing ? "Refreshing…" : "Retry queue refresh"}
+            </button>
+          )}
         </form>
       ) : (
         <Empty title="No further decision is available">
@@ -1406,34 +1438,56 @@ function Inbox({
 function PreferencesPanel({
   preferences,
   saved,
+  refreshPersonalFeed,
   onError,
 }: {
   preferences: Preferences;
-  saved: (preferences: Preferences) => Promise<void>;
+  saved: (preferences: Preferences) => void;
+  refreshPersonalFeed: () => Promise<void>;
   onError: (message: string) => void;
 }) {
   const [areas, setAreas] = useState(preferences.areas);
   const [categories, setCategories] = useState(preferences.categories);
   const [enabled, setEnabled] = useState(preferences.inAppEnabled);
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [receipt, setReceipt] = useState("");
+  const [refreshError, setRefreshError] = useState("");
   const toggle = <T,>(list: T[], item: T, update: (value: T[]) => void) =>
     update(
       list.includes(item)
         ? list.filter((value) => value !== item)
         : [...list, item],
     );
+  async function refresh() {
+    setRefreshing(true);
+    setRefreshError("");
+    try {
+      await refreshPersonalFeed();
+      setReceipt("Preferences saved. Personalised notices refreshed.");
+    } catch {
+      setRefreshError(
+        "Preferences were saved. Personalised notices could not refresh. Retry personal feed.",
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }
   async function submit(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
+    setReceipt("");
+    setRefreshError("");
     try {
-      await saved(
-        await api.savePreferences({
-          expectedRevision: preferences.revision,
-          areas,
-          categories,
-          inAppEnabled: enabled,
-        }),
-      );
+      const next = await api.savePreferences({
+        expectedRevision: preferences.revision,
+        areas,
+        categories,
+        inAppEnabled: enabled,
+      });
+      saved(next);
+      setReceipt("Preferences saved.");
+      await refresh();
     } catch (error) {
       onError(errorText(error));
     } finally {
@@ -1500,10 +1554,22 @@ function PreferencesPanel({
         </label>
         <button
           className="button"
-          disabled={saving || !areas.length || !categories.length}
+          disabled={saving || refreshing || !areas.length || !categories.length}
         >
           {saving ? "Saving…" : "Save preferences"}
         </button>
+        {receipt && <p role="status">{receipt}</p>}
+        {refreshError && <p className="error" role="alert">{refreshError}</p>}
+        {refreshError && (
+          <button
+            className="button secondary"
+            type="button"
+            disabled={refreshing}
+            onClick={() => void refresh()}
+          >
+            {refreshing ? "Refreshing…" : "Retry personal feed"}
+          </button>
+        )}
       </form>
     </section>
   );
@@ -1952,10 +2018,10 @@ function App() {
             <PreferencesPanel
               key={session.persona}
               preferences={preferences}
-              saved={async (next) => {
-                setPreferences(next);
-                setPersonalFeed(await api.personalFeed());
-              }}
+              saved={setPreferences}
+              refreshPersonalFeed={async () =>
+                setPersonalFeed(await api.personalFeed())
+              }
               onError={setError}
             />
           )}
