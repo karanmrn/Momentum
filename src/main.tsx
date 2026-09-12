@@ -3,6 +3,8 @@ import { AreaShare } from "./AreaShare";
 import { entryArea, publicBrowse, rememberArea } from "./entry";
 import { ResearchPanel } from "../packages/recruitment/ResearchPanel";
 import {
+  lazy,
+  Suspense,
   useEffect,
   useMemo,
   useRef,
@@ -1867,6 +1869,12 @@ function App() {
                 areaId={selected.id}
                 canonicalOrigin={import.meta.env.VITE_PUBLIC_SITE_URL}
               />
+              <a
+                className="button secondary presentation-entry"
+                href={`/?presentation=1&area=${selected.id}${import.meta.env.DEV ? "&public=1" : ""}`}
+              >
+                Presentation
+              </a>
               {import.meta.env.VITE_DEMO_ENABLED === "true" && (
                 <a
                   className="button"
@@ -2069,4 +2077,29 @@ function App() {
     </div>
   );
 }
-createRoot(document.getElementById("root")!).render(<App />);
+const Presentation = lazy(() =>
+  import("./Presentation").then((module) => ({ default: module.Presentation })),
+);
+function Entry() {
+  const query = new URLSearchParams(window.location.search);
+  const entry = entryArea(window.location.search);
+  if (query.get("presentation") === "1" && !entry.invalid) {
+    return (
+      <Suspense
+        fallback={<main className="map-fallback">Opening presentation.</main>}
+      >
+        <Presentation
+          areaId={entry.areaId}
+          canonicalOrigin={import.meta.env.VITE_PUBLIC_SITE_URL}
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("presentation");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
+  }
+  return <App />;
+}
+createRoot(document.getElementById("root")!).render(<Entry />);
