@@ -1,3 +1,4 @@
+import { getDatasetCoverage } from '../packages/datasets/src/coverage';
 import { getHistoricalCoverage } from '../packages/history/src/coverage';
 import express from "express";
 import {
@@ -211,6 +212,14 @@ export function createApp(db: DemoDatabase) {
       historyRefreshes.set(area.data, refresh);
     }
     ok(res, await refresh, false);
+  });
+  app.get("/api/datasets", (req, res) => {
+    const area = pilotSchema.safeParse(req.query.area);
+    if (!area.success) {
+      fail(res, 400, "invalid_input", "Choose a pilot area.");
+      return;
+    }
+    ok(res, getDatasetCoverage(area.data), false);
   });
   app.use("/api", createRoutes(db));
   app.use("/api", (_req, res) =>

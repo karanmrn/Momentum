@@ -49,7 +49,7 @@ export async function getSources(pilotId: PilotId): Promise<SourceCard[]> {
   if (pilotId === 'camden_town') local.push(getCamdenDirectorySource(), await getCamdenLighting());
   return [...local, police, {
     id: 'T01', title: 'TfL travel information',
-    summary: 'Open TfL for travel information. Live station data is not connected.',
+    summary: 'Open TfL for current travel information. Dataset coverage lists dated station and line-status snapshots.',
     url: 'https://tfl.gov.uk/status-updates/', status: 'link_only',
     sourceKind: 'official_operator', fetchedAt: null, publishedAt: null,
     synthetic: false, scope: 'London transport; no pilot station status is asserted.',
