@@ -48,8 +48,7 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
   });
   app.use("/api/account", createAccountRoutes());
   app.use("/api/public/graph", createSemanticRoutes());
-  const updatesConnection =
-    process.env.RECENT_UPDATES_DATABASE_URL || process.env.DATABASE_URL;
+  const updatesConnection = process.env.RECENT_UPDATES_DATABASE_URL;
   const updatesStore = updatesConnection
     ? createPostgresRecentUpdatesStore(updatesConnection)
     : {

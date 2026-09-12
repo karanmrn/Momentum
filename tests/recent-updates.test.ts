@@ -301,6 +301,101 @@ describe("news refresh routes and persistence", () => {
       await database.close();
     }
   });
+  it.each(["success-first", "failure-first"])(
+    "merges independent refreshes when %s completes",
+    async (order) => {
+      const database = new PGlite();
+      try {
+        await database.exec(
+          "CREATE TABLE public.recent_updates_snapshot(id text PRIMARY KEY, snapshot jsonb NOT NULL)",
+        );
+        const store = createPostgresRecentUpdatesStore({
+          query: async (sql, values) => database.query(sql, values),
+        });
+        const oldTime = new Date(NOW.getTime() - 86400000);
+        const latestTime = new Date(NOW.getTime() + 60000);
+        await createRecentUpdatesService({
+          store,
+          now: () => oldTime,
+          fetchImpl: async () =>
+            new Response(
+              rss(
+                entry(
+                  "Police investigate old report",
+                  `${ARTICLE_URL}old`,
+                  oldTime.toUTCString(),
+                ),
+              ),
+            ),
+        }).refresh();
+        let finishSuccess!: (response: Response) => void;
+        let finishFailure!: (error: Error) => void;
+        let startedSuccess!: () => void;
+        let startedFailure!: () => void;
+        const successStarted = new Promise<void>((resolve) => {
+          startedSuccess = resolve;
+        });
+        const failureStarted = new Promise<void>((resolve) => {
+          startedFailure = resolve;
+        });
+        const success = createRecentUpdatesService({
+          store,
+          now: () => NOW,
+          fetchImpl: async () => {
+            startedSuccess();
+            return new Promise<Response>((resolve) => {
+              finishSuccess = resolve;
+            });
+          },
+        });
+        const failure = createRecentUpdatesService({
+          store,
+          now: () => latestTime,
+          fetchImpl: async () => {
+            startedFailure();
+            return new Promise<Response>((_resolve, reject) => {
+              finishFailure = reject;
+            });
+          },
+        });
+        const goodResult = success.refresh();
+        await successStarted;
+        const badResult = failure.refresh();
+        await failureStarted;
+        let finalResult: RecentUpdatesSnapshot;
+        if (order === "success-first") {
+          finishSuccess(new Response(rss()));
+          await goodResult;
+          finishFailure(new Error("source unavailable"));
+          finalResult = await badResult;
+        } else {
+          finishFailure(new Error("source unavailable"));
+          await badResult;
+          finishSuccess(new Response(rss()));
+          finalResult = await goodResult;
+        }
+        const persisted = await store.read();
+        expect(persisted).toEqual(finalResult);
+        expect(finalResult).toMatchObject({
+          status: "stale",
+          checkedAt: latestTime.toISOString(),
+          sources: [
+            {
+              status: "failed",
+              lastCheckedAt: latestTime.toISOString(),
+              lastSuccessAt: NOW.toISOString(),
+            },
+          ],
+        });
+        expect(finalResult.items).toHaveLength(1);
+        expect(finalResult.items[0].title).toBe(
+          "Police investigate Camden assault",
+        );
+      } finally {
+        await database.close();
+      }
+    },
+  );
   it("uses parameterized monotonic snapshot writes", async () => {
     const query = vi.fn(async (_sql: string, _values?: unknown[]) => ({
       rows: [],
@@ -312,7 +407,7 @@ describe("news refresh routes and persistence", () => {
     };
     await store.write(value);
     expect(query.mock.calls[0][0]).toContain("$1::jsonb");
-    expect(query.mock.calls[0][0]).toContain("< (EXCLUDED.snapshot");
+    expect(query.mock.calls[0][0]).toContain("AS successful");
     expect(await store.read()).toBeNull();
     await store.close();
   });

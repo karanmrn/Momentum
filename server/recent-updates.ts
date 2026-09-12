@@ -38,7 +38,32 @@ export function createPostgresRecentUpdatesStore(
     async write(value) {
       const snapshot = recentUpdatesSnapshotSchema.parse(value);
       await sql.query(
-        "INSERT INTO public.recent_updates_snapshot (id, snapshot) VALUES ('latest', $1::jsonb) ON CONFLICT (id) DO UPDATE SET snapshot = EXCLUDED.snapshot WHERE (public.recent_updates_snapshot.snapshot->>'checkedAt')::timestamptz < (EXCLUDED.snapshot->>'checkedAt')::timestamptz",
+        `INSERT INTO public.recent_updates_snapshot AS saved (id, snapshot)
+         VALUES ('latest', $1::jsonb)
+         ON CONFLICT (id) DO UPDATE SET snapshot = (
+           SELECT attempt || jsonb_build_object(
+             'items', successful->'items',
+             'sources', jsonb_build_array(
+               (attempt #> '{sources,0}') || jsonb_build_object(
+                 'lastSuccessAt', successful #> '{sources,0,lastSuccessAt}'
+               )
+             ),
+             'status', CASE
+               WHEN successful #>> '{sources,0,lastSuccessAt}' IS NULL THEN 'unavailable'
+               WHEN attempt #>> '{sources,0,status}' = 'success' THEN 'current'
+               ELSE 'stale'
+             END
+           )
+           FROM (
+             SELECT
+               CASE WHEN (EXCLUDED.snapshot->>'checkedAt')::timestamptz >
+                              (saved.snapshot->>'checkedAt')::timestamptz
+                    THEN EXCLUDED.snapshot ELSE saved.snapshot END AS attempt,
+               CASE WHEN COALESCE((EXCLUDED.snapshot #>> '{sources,0,lastSuccessAt}')::timestamptz, '-infinity'::timestamptz) >
+                              COALESCE((saved.snapshot #>> '{sources,0,lastSuccessAt}')::timestamptz, '-infinity'::timestamptz)
+                    THEN EXCLUDED.snapshot ELSE saved.snapshot END AS successful
+           ) AS versions
+         )`,
         [JSON.stringify(snapshot)],
       );
     },
@@ -80,14 +105,12 @@ export function createRecentUpdatesRouter({
   });
   router.get("/refresh", async (req, res) => {
     if (!validRecentUpdatesSecret(req.headers.authorization, cronSecret())) {
-      res
-        .status(401)
-        .json({
-          error: {
-            code: "unauthorized",
-            message: "Refresh authorization is required.",
-          },
-        });
+      res.status(401).json({
+        error: {
+          code: "unauthorized",
+          message: "Refresh authorization is required.",
+        },
+      });
       return;
     }
     try {
@@ -104,14 +127,12 @@ export function createRecentUpdatesRouter({
           itemCount: snapshot.items.length,
         });
     } catch {
-      res
-        .status(503)
-        .json({
-          error: {
-            code: "refresh_unavailable",
-            message: "The news refresh is unavailable.",
-          },
-        });
+      res.status(503).json({
+        error: {
+          code: "refresh_unavailable",
+          message: "The news refresh is unavailable.",
+        },
+      });
     }
   });
   router.all(["/", "/refresh"], (_req, res) => {

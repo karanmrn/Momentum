@@ -1,9 +1,7 @@
 import { createRecentUpdatesService } from "../services/recent-updates.js";
 import { createPostgresRecentUpdatesStore } from "../server/recent-updates.js";
 
-const connection =
-  process.env.RECENT_UPDATES_DATABASE_URL ||
-  process.env.RECENT_UPDATES_DATABASE_URL;
+const connection = process.env.RECENT_UPDATES_DATABASE_URL;
 if (!connection)
   throw new Error(
     "RECENT_UPDATES_DATABASE_URL is required for the news refresh.",

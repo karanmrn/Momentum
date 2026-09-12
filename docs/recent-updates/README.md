@@ -8,7 +8,7 @@ A saved sample contains six real headlines fetched on 12 September 2026. The use
 
 ## Daily refresh
 
-Vercel calls `/api/public/recent-updates/refresh` daily at 06:00 UTC. Its schedule must be deployed before it can run. Configure CRON_SECRET and RECENT_UPDATES_DATABASE_URL through the deployment owner. DATABASE_URL is a fallback, but its role still needs the explicit updates policy.
+Vercel calls `/api/public/recent-updates/refresh` daily at 06:00 UTC. Its schedule must be deployed before it can run. Configure CRON_SECRET and RECENT_UPDATES_DATABASE_URL through the deployment owner. The refresh uses only the dedicated updates connection. DATABASE_URL is not a fallback.
 
 Apply the reviewed migration through the database owner. Assign the dedicated updates role to the server login. Keep database credentials and CRON_SECRET server-only. The public endpoint never fetches upstream data or writes storage.
 

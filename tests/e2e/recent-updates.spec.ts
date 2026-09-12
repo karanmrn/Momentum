@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-09-12T16:00:00Z"));
+});
 const snapshot = {
   schemaVersion: "1.0",
   checkedAt: "2026-09-12T06:00:00.000Z",
@@ -158,4 +161,31 @@ test("clipboard failure does not report a successful share", async ({
   await expect(
     page.getByText("Source link and publication date copied."),
   ).toHaveCount(0);
+});
+
+test("saved sample removes coverage outside the current 30-day window", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-10-12T12:00:00Z"));
+  await page.route("**/api/public/recent-updates", (route) =>
+    route.fulfill({
+      json: {
+        data: {
+          ...snapshot,
+          status: "unavailable",
+          checkedAt: null,
+          items: [],
+          sources: [],
+        },
+      },
+    }),
+  );
+  await page.goto("/recent-updates.html");
+  await page.getByRole("button", { name: "Show fetched news sample" }).click();
+  await expect(
+    page.getByText("No matching coverage was found in this feed.", {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(page.locator(".ru-list li")).toHaveCount(0);
 });

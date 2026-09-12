@@ -74,7 +74,10 @@ export function RecentUpdates({
       : null;
   const items =
     data?.items.filter(
-      (item) => area === "london" || item.areaIds.includes(area),
+      (item) =>
+        (area === "london" || item.areaIds.includes(area)) &&
+        Date.parse(item.publishedAt) >= Date.now() - 30 * 86400000 &&
+        Date.parse(item.publishedAt) <= Date.now(),
     ) ?? [];
   const source = data?.sources[0];
   async function share(

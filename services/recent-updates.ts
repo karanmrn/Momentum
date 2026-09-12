@@ -278,7 +278,10 @@ export function createRecentUpdatesService({
     }
     next = project(next, at);
     await store.write(next);
-    return next;
+    // Another instance may have completed meanwhile. Return the merged stored state.
+    const persisted = await store.read();
+    if (!persisted) throw new Error("News snapshot persistence unavailable");
+    return project(recentUpdatesSnapshotSchema.parse(persisted), now());
   }
   return {
     read,
