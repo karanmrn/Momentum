@@ -1,3 +1,4 @@
+import { ScenarioPicker, type ScenarioDraft } from "./ScenarioPicker";
 import { DatasetCoverage } from "./DatasetCoverage";
 import { SemanticGraph } from "./SemanticGraph";
 import { AreaShare } from "./AreaShare";
@@ -426,6 +427,27 @@ function ReportForm({
   onClose: () => void;
   onCreated: () => Promise<void>;
 }) {
+  const formRef = useRef<HTMLFormElement>(null);
+  function useScenario(draft: ScenarioDraft) {
+    const form = formRef.current;
+    if (!form) return;
+    const date = new Date(draft.observedAt);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+    for (const [name, value] of Object.entries({
+      ...draft,
+      observedAt: local,
+    })) {
+      const field = form.elements.namedItem(name);
+      if (
+        field instanceof HTMLInputElement ||
+        field instanceof HTMLTextAreaElement ||
+        field instanceof HTMLSelectElement
+      )
+        field.value = value;
+    }
+  }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -467,11 +489,17 @@ function ReportForm({
           </button>
         </div>
       ) : (
-        <form className="form-grid" onSubmit={submit}>
+        <form ref={formRef} className="form-grid" onSubmit={submit}>
           <div className="synthetic">
             <CircleAlert size={17} /> Demonstration only. This is not an
             official report.
           </div>
+          <ScenarioPicker
+            key={area.id}
+            areaId={area.id}
+            disabled={saving}
+            onUse={useScenario}
+          />
           <label>
             Category
             <select name="category" defaultValue="infrastructure">
