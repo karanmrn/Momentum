@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.14",
+    "@supabase/supabase-js": "2.116.0",
     "context.dev": "^2.14.0",
     "express": "^5.1.0",
     "leaflet": "^1.9.4",

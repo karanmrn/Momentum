@@ -1,3 +1,4 @@
+import { createAccountRoutes } from "./account.js";
 import { getDatasetCoverage } from '../packages/datasets/src/coverage.js';
 import { getHistoricalCoverage } from '../packages/history/src/coverage.js';
 import express from "express";
@@ -38,6 +39,7 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
     response.set("Cache-Control", "no-store");
     next();
   });
+  app.use("/api/account", createAccountRoutes());
   app.use("/api/public", createPublicRoutes());
   if (process.env.VERCEL) {
     app.use((req, res, next) => {
