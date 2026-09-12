@@ -68,6 +68,19 @@ Use `.env.local` for local credentials. Never commit that file.
 Automated source tests use mock responses and make no paid calls.
 Acquisition documents remain review-required internal evidence.
 
+## Responsive website and source coverage
+
+Mobile uses a list-first layout, a map switch, and four navigation tabs.
+Desktop shows the map and local information together.
+Preferences and research remain separate from the main mobile tabs.
+
+Source cards identify their publisher, retrieval date, coverage, and original link.
+Help listings include source-backed addresses and published schedules where available.
+A listed venue does not confirm that staff can help now.
+Lighting samples describe council infrastructure records, not current lighting faults.
+Historical publication coverage does not establish local crime totals or a risk estimate.
+Fictional community reports retain their separate labels and review workflow.
+
 ## Controlled pilot requirements
 
 The current schema isolates fictional sessions. It is not the production report schema.

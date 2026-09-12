@@ -220,3 +220,86 @@ test("narrow screens fit and persona transitions cannot overlap", async ({
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(320);
 });
+
+test("mobile uses four tabs and preserves area between list and map", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
+  const navigation = page.getByRole("navigation", {
+    name: "Mobile navigation",
+    exact: true,
+  });
+  await expect(navigation.getByRole("button")).toHaveCount(4);
+  await expect(
+    page.getByRole("button", { name: "List view", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByLabel("Choose pilot area").selectOption("camden_town");
+  await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
+  await page.getByRole("button", { name: "Map view", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Map view", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Choose pilot area")).toHaveValue("camden_town");
+  await page.getByRole("button", { name: "List view", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Camden Town", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Source and history" }).first(),
+  ).toBeVisible();
+  const blocked = await navigation.getByRole("button").evaluateAll((buttons) =>
+    buttons.some((button) => {
+      const box = button.getBoundingClientRect();
+      return !button.contains(
+        document.elementFromPoint(
+          box.x + box.width / 2,
+          box.y + box.height / 2,
+        ),
+      );
+    }),
+  );
+  expect(blocked).toBe(false);
+});
+
+test("area enrichment reaches the website with source links and uncertainty", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+  await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
+  await page.getByLabel("Choose pilot area").selectOption("camden_town");
+  await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
+  await expect(
+    page.getByText("Camden street lighting inventory", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Camden help directory", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("link")
+      .filter({ hasText: /source/i })
+      .first(),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Get help", exact: true }).click();
+  await expect(
+    page.getByText("Castlehaven Community Centre", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Hawley Wharf Security Office", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("body")).toContainText(/unconfirmed/i);
+  await expect(page.locator("body")).toContainText("23 Castlehaven Road");
+  await page
+    .getByLabel("Choose pilot area")
+    .selectOption("hounslow_town_centre");
+  await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
+  await expect(
+    page.getByText("Castlehaven Community Centre", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Urgent council support", { exact: true }),
+  ).toBeVisible();
+});
