@@ -231,7 +231,7 @@ h3 {
 }
 .dashboard {
   display: grid;
-  grid-template-columns: minmax(330px, 1.15fr) minmax(300px, 0.85fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 18px;
 }
 .panel {
@@ -677,8 +677,13 @@ textarea {
 }
 .now-layout {
   display: grid;
-  grid-template-columns: minmax(330px, 1.15fr) minmax(300px, 0.85fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 18px;
+}
+.dashboard > *,
+.now-layout > *,
+.topbar > * {
+  min-width: 0;
 }
 .source-compact {
   padding: 14px;
@@ -794,12 +799,12 @@ textarea {
     display: none;
   }
   .dashboard {
-    grid-template-columns: minmax(430px, 1.15fr) minmax(360px, 0.85fr);
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     align-items: stretch;
     gap: 22px;
   }
   .now-layout {
-    grid-template-columns: minmax(430px, 1.15fr) minmax(360px, 0.85fr);
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     align-items: stretch;
     gap: 22px;
   }
@@ -844,6 +849,25 @@ textarea {
   }
 }
 
+@media (min-width: 821px) and (max-width: 1119px) {
+  .dashboard,
+  .now-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard .map-panel,
+  .dashboard .map,
+  .dashboard .map-shell,
+  .now-layout .map-panel,
+  .now-layout .map,
+  .now-layout .map-shell {
+    min-height: 500px;
+    height: 500px;
+  }
+  .now-layout .source-panel {
+    min-height: 0;
+  }
+}
+
 @media (max-width: 820px) {
   body {
     background: #f7f1e7;
@@ -872,6 +896,9 @@ textarea {
   }
   .mobile-brand {
     display: block;
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
     align-self: center;
     color: #153e32;
     font:
@@ -886,11 +913,20 @@ textarea {
     gap: 8px;
     align-items: center;
   }
+  .topbar > .button.secondary {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    min-width: 0;
+    padding-inline: 10px;
+  }
   .area-control select {
     width: 100%;
     min-height: 48px;
   }
   .persona {
+    grid-column: 1;
+    grid-row: 3;
     align-self: center;
   }
   .persona .avatar {
@@ -907,7 +943,7 @@ textarea {
   }
   .mobile-utilities {
     display: flex;
-    grid-column: 1 / -1;
+    grid-column: 2;
     grid-row: 3;
     justify-content: flex-end;
     gap: 3px;
