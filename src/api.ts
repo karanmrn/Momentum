@@ -109,16 +109,20 @@ export const api = {
       publicPath(`/api/history?area=${encodeURIComponent(area)}`),
     ),
   reports: () => request<Report[]>("/api/reports"),
-  submitReport: (input: ReportInput) =>
+  submitReport: (input: ReportInput, idempotencyKey = newIdempotencyKey()) =>
     request<Report>("/api/reports", {
       method: "POST",
-      headers: { "Idempotency-Key": newIdempotencyKey() },
+      headers: { "Idempotency-Key": idempotencyKey },
       body: JSON.stringify(input),
     }),
-  editReport: (id: string, expectedRevision: number, changes: ReportEditChanges) =>
+  editReport: (
+    id: string,
+    expectedRevision: number,
+    changes: ReportEditChanges,
+  ) =>
     request<Report>(`/api/reports/${encodeURIComponent(id)}`, {
       method: "PATCH",
-      body: JSON.stringify({action: "edit", expectedRevision, changes}),
+      body: JSON.stringify({ action: "edit", expectedRevision, changes }),
     }),
   withdrawReport: (id: string, expectedRevision: number) =>
     request<Report>(`/api/reports/${encodeURIComponent(id)}`, {
