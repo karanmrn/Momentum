@@ -437,3 +437,42 @@ test("area tabs support keyboard navigation and failed resources stay explicit",
     page.getByRole("button", { name: "Preferences", exact: true }),
   ).toHaveCSS("min-height", "48px");
 });
+
+test("public browsing uses public area data and no private member routes", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const apiPaths: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/api/")) apiPaths.push(url.pathname);
+  });
+  await page.goto("/?public=1&area=unknown");
+  await expect(
+    page.getByRole("heading", { name: "Choose a pilot area", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Camden Town centre" }),
+  ).toBeVisible();
+  expect(apiPaths).toEqual([]);
+
+  await page.getByRole("button", { name: "Camden Town centre" }).click();
+  await expect(page).toHaveURL(/public=1&area=camden_town/);
+  await expect(
+    page.getByRole("heading", { name: "Camden Town", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Pilot information. Not an emergency service.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Choose demo persona")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Share observation", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "Mobile navigation", exact: true }),
+  ).toContainText("Historical context");
+  expect(apiPaths.length).toBeGreaterThan(0);
+  expect(apiPaths.every((path) => path.startsWith("/api/public/"))).toBe(true);
+});

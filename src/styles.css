@@ -651,7 +651,8 @@ textarea {
 /* Responsive product shell: the website and handheld experience use different information layouts. */
 .mobile-brand,
 .mobile-utilities,
-.map-switcher {
+.map-switcher,
+.public-actions {
   display: none;
 }
 .source-fact {
@@ -760,6 +761,13 @@ textarea {
   .persona {
     border-left: 1px solid #d3dbcf;
     padding-left: 16px;
+  }
+  .public-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-left: auto;
   }
   .tabs {
     margin-top: 10px;
@@ -903,6 +911,13 @@ textarea {
     grid-row: 3;
     justify-content: flex-end;
     gap: 3px;
+  }
+  .public-actions {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-content: flex-end;
+    gap: 8px;
   }
   .utility-button {
     min-height: 48px;

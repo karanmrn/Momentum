@@ -1,4 +1,6 @@
 import { DatasetCoverage } from "./DatasetCoverage";
+import { AreaShare } from "./AreaShare";
+import { entryArea, publicBrowse, rememberArea } from "./entry";
 import { ResearchPanel } from "../packages/recruitment/ResearchPanel";
 import {
   useEffect,
@@ -37,6 +39,7 @@ import type {
   Report,
   SourceCard,
 } from "../packages/contracts";
+import { areas as pilotAreas } from "../packages/contracts";
 import { api, ApiError } from "./api";
 import "./styles.css";
 
@@ -74,6 +77,8 @@ const localDateTime = (value = new Date()) => {
   const pad = (number: number) => String(number).padStart(2, "0");
   return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
 };
+const currentEntryArea = () =>
+  entryArea(typeof window === "undefined" ? "" : window.location.search);
 const emptyAreaData = (): AreaData => ({
   notices: [],
   help: [],
@@ -107,6 +112,27 @@ function Unavailable({
         Retry area data
       </button>
     </div>
+  );
+}
+function AreaChooser({ choose }: { choose: (areaId: Area["id"]) => void }) {
+  return (
+    <main className="map-fallback area-chooser">
+      <div>
+        <h1>Choose a pilot area</h1>
+        <p>The area link is not recognised.</p>
+        <div className="actions">
+          {pilotAreas.map((area) => (
+            <button
+              className="button"
+              key={area.id}
+              onClick={() => choose(area.id)}
+            >
+              {area.name}
+            </button>
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }
 function StatusTag({
@@ -340,9 +366,11 @@ function PilotMap({
 function NoticeCard({
   notice,
   onInspect,
+  canInspect = true,
 }: {
   notice: Notice;
   onInspect: (notice: Notice) => void;
+  canInspect?: boolean;
 }) {
   const source = notice.evidence[0];
   const observed = new Intl.DateTimeFormat("en-GB", {
@@ -367,11 +395,16 @@ function NoticeCard({
         {source?.precision.replaceAll("_", " ") || "Precision unknown"} ·{" "}
         {notice.reviewStatus.replaceAll("_", " ")}
       </p>
-      <div className="actions">
-        <button className="button secondary" onClick={() => onInspect(notice)}>
-          Source and history <ChevronRight size={14} />
-        </button>
-      </div>
+      {canInspect && (
+        <div className="actions">
+          <button
+            className="button secondary"
+            onClick={() => onInspect(notice)}
+          >
+            Source and history <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
     </article>
   );
 }
@@ -726,6 +759,7 @@ function Dashboard({
   mapOpen,
   toggleMap,
   retryArea,
+  isPublic,
 }: {
   area: Area;
   tab: Tab;
@@ -739,6 +773,7 @@ function Dashboard({
   mapOpen: boolean;
   toggleMap: () => void;
   retryArea: () => void;
+  isPublic: boolean;
 }) {
   const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, id: Tab) => {
     const current = tabs.findIndex(([tabId]) => tabId === id);
@@ -871,13 +906,15 @@ function Dashboard({
                     <NoticeCard
                       notice={notice}
                       onInspect={inspect}
+                      canInspect={!isPublic}
                       key={notice.id}
                     />
                   ))
                 ) : (
                   <Empty title="No published notices">
-                    No current item was returned. This does not show that
-                    conditions are clear.
+                    {isPublic
+                      ? "Community updates are not collected in public browsing."
+                      : "No current item was returned. This does not show that conditions are clear."}
                   </Empty>
                 )}
               </div>
@@ -915,13 +952,15 @@ function Dashboard({
                       <NoticeCard
                         notice={notice}
                         onInspect={inspect}
+                        canInspect={!isPublic}
                         key={notice.id}
                       />
                     ))
                   ) : (
                     <Empty title="No published notices">
-                      No current item was returned. This does not show that
-                      conditions are clear.
+                      {isPublic
+                        ? "Community updates are not collected in public browsing."
+                        : "No current item was returned. This does not show that conditions are clear."}
                     </Empty>
                   )}
                 </div>
@@ -1142,8 +1181,8 @@ function Reports({
       <section className="panel history section">
         <h2>Official reporting</h2>
         <p>
-          Streetwise Safety does not send an official report. Use the relevant route
-          yourself if you choose to report an issue.
+          Streetwise Safety does not send an official report. Use the relevant
+          route yourself if you choose to report an issue.
         </p>
         <a
           className="button secondary"
@@ -1509,7 +1548,10 @@ function App() {
   const [switchingPersona, setSwitchingPersona] = useState(false);
   const [session, setSession] = useState<{ persona: Persona } | null>(null);
   const [areas, setAreas] = useState<Area[]>([]);
-  const [areaId, setAreaId] = useState("hounslow_town_centre");
+  const [areaId, setAreaId] = useState(() => currentEntryArea().areaId);
+  const [invalidArea, setInvalidArea] = useState(
+    () => publicBrowse && currentEntryArea().invalid,
+  );
   const [tab, setTab] = useState<Tab>("now");
   const [view, setView] = useState<View>("dashboard");
   const [mapOpen, setMapOpen] = useState(false);
@@ -1524,6 +1566,11 @@ function App() {
   const [noticeOpen, setNoticeOpen] = useState<Notice | null>(null);
   const [moderation, setModeration] = useState<Report[]>([]);
   const selected = areas.find((area) => area.id === areaId) || areas[0];
+  const chooseArea = (id: Area["id"]) => {
+    setAreaId(id);
+    setInvalidArea(false);
+    if (publicBrowse) rememberArea(id);
+  };
   const clearPrivate = () => {
     setReports([]);
     setPreferences(null);
@@ -1599,10 +1646,13 @@ function App() {
       if (nextArea) {
         setAreaId(nextArea);
         await loadArea(nextArea);
-        if (isMember(nextSession.persona)) await loadMember();
-        else {
+        if (!publicBrowse && isMember(nextSession.persona)) {
+          await loadMember();
+        } else if (!publicBrowse) {
           clearPrivate();
           setModeration(await api.moderation(nextArea));
+        } else {
+          clearPrivate();
         }
       }
     } catch (err) {
@@ -1612,14 +1662,14 @@ function App() {
     }
   };
   useEffect(() => {
-    void reload();
-  }, []);
+    if (!invalidArea) void reload();
+  }, [invalidArea]);
   useEffect(() => {
-    if (!session) return;
+    if (!session || invalidArea) return;
     setLoading(true);
     Promise.all([
       loadArea(areaId),
-      session.persona === "moderator"
+      !publicBrowse && session.persona === "moderator"
         ? api.moderation(areaId).then(setModeration)
         : Promise.resolve(),
     ])
@@ -1640,7 +1690,7 @@ function App() {
     [data.notices, tab],
   );
   async function persona(persona: Persona) {
-    if (personaPending.current || loading) return;
+    if (publicBrowse || personaPending.current || loading) return;
     personaPending.current = true;
     setSwitchingPersona(true);
     setLoading(true);
@@ -1671,6 +1721,7 @@ function App() {
       setError(errorText(err));
     }
   }
+  if (invalidArea) return <AreaChooser choose={chooseArea} />;
   if (loading && !session)
     return (
       <main className="map-fallback">
@@ -1719,12 +1770,34 @@ function App() {
           Streetwise Safety
         </div>
         <nav className="nav" aria-label="Website navigation">
-          {navItems.map((item) => {
+          {(publicBrowse
+            ? tabs.map(([id, label]) => ({
+                id,
+                label,
+                icon: MapIcon,
+              }))
+            : navItems
+          ).map((item) => {
             const Icon = item.icon;
             return (
               <button
-                className={view === item.id ? "active" : ""}
-                onClick={() => setView(item.id)}
+                className={
+                  publicBrowse
+                    ? view === "dashboard" && tab === item.id
+                      ? "active"
+                      : ""
+                    : view === item.id
+                      ? "active"
+                      : ""
+                }
+                onClick={() => {
+                  if (publicBrowse) {
+                    setView("dashboard");
+                    setTab(item.id as Tab);
+                  } else {
+                    setView(item.id as View);
+                  }
+                }}
                 key={item.id}
               >
                 <Icon size={18} />
@@ -1733,17 +1806,21 @@ function App() {
             );
           })}
         </nav>
-        <div className="side-note">
-          <strong>Report trial</strong>
-          <br />
-          Community reports and operator actions are fictional. Local sources
-          have their own dates and links.
-        </div>
+        {!publicBrowse && (
+          <div className="side-note">
+            <strong>Report trial</strong>
+            <br />
+            Community reports and operator actions are fictional. Local sources
+            have their own dates and links.
+          </div>
+        )}
       </aside>
       <main className="main">
         <div className="synthetic" role="status">
-          <CircleAlert size={17} /> Community reports and reviews are fictional.
-          This is not an emergency service.
+          <CircleAlert size={17} />{" "}
+          {publicBrowse
+            ? "Pilot information. Not an emergency service."
+            : "Community reports and reviews are fictional. This is not an emergency service."}
         </div>
         <header className="topbar">
           <div className="mobile-brand">Streetwise Safety</div>
@@ -1751,7 +1828,7 @@ function App() {
             <span className="eyebrow">Pilot area</span>
             <select
               value={areaId}
-              onChange={(event) => setAreaId(event.target.value)}
+              onChange={(event) => chooseArea(event.target.value as Area["id"])}
               disabled={loading || switchingPersona}
               aria-label="Choose pilot area"
             >
@@ -1762,27 +1839,45 @@ function App() {
               ))}
             </select>
           </div>
-          <div className="persona">
-            <span className="avatar">
-              {session.persona.slice(0, 1).toUpperCase()}
-            </span>
-            <label>
-              <span className="eyebrow">Demo persona</span>
-              <select
-                value={session.persona}
-                onChange={(event) =>
-                  void persona(event.target.value as Persona)
-                }
-                disabled={loading || switchingPersona}
-                aria-label="Choose demo persona"
-              >
-                <option value="alex">Alex</option>
-                <option value="sam">Sam</option>
-                <option value="moderator">Moderator</option>
-              </select>
-            </label>
-          </div>
-          {isMember(session.persona) && (
+          {!publicBrowse && (
+            <div className="persona">
+              <span className="avatar">
+                {session.persona.slice(0, 1).toUpperCase()}
+              </span>
+              <label>
+                <span className="eyebrow">Demo persona</span>
+                <select
+                  value={session.persona}
+                  onChange={(event) =>
+                    void persona(event.target.value as Persona)
+                  }
+                  disabled={loading || switchingPersona}
+                  aria-label="Choose demo persona"
+                >
+                  <option value="alex">Alex</option>
+                  <option value="sam">Sam</option>
+                  <option value="moderator">Moderator</option>
+                </select>
+              </label>
+            </div>
+          )}
+          {publicBrowse && (
+            <div className="public-actions">
+              <AreaShare
+                areaId={selected.id}
+                canonicalOrigin={import.meta.env.VITE_PUBLIC_SITE_URL}
+              />
+              {import.meta.env.VITE_DEMO_ENABLED === "true" && (
+                <a
+                  className="button"
+                  href={`/api/demo?area=${encodeURIComponent(selected.id)}`}
+                >
+                  Try invited demo
+                </a>
+              )}
+            </div>
+          )}
+          {!publicBrowse && isMember(session.persona) && (
             <div className="mobile-utilities" aria-label="More sections">
               <button
                 className="utility-button"
@@ -1815,15 +1910,16 @@ function App() {
             data={data}
             notices={notices}
             loading={loading}
-            canReport={isMember(session.persona)}
+            canReport={!publicBrowse && isMember(session.persona)}
             report={() => setReportOpen(true)}
             inspect={setNoticeOpen}
             mapOpen={mapOpen}
             toggleMap={() => setMapOpen((open) => !open)}
             retryArea={() => void retryArea()}
+            isPublic={publicBrowse}
           />
         )}
-        {view === "reports" && isMember(session.persona) && (
+        {!publicBrowse && view === "reports" && isMember(session.persona) && (
           <Reports
             reports={reports}
             area={selected}
@@ -1838,18 +1934,20 @@ function App() {
             }}
           />
         )}
-        {view === "moderation" && session.persona === "moderator" && (
-          <Moderation
-            reports={moderation}
-            changed={async () => {
-              await Promise.all([
-                loadArea(areaId),
-                api.moderation(areaId).then(setModeration),
-              ]);
-            }}
-          />
-        )}
-        {view === "inbox" && isMember(session.persona) && (
+        {!publicBrowse &&
+          view === "moderation" &&
+          session.persona === "moderator" && (
+            <Moderation
+              reports={moderation}
+              changed={async () => {
+                await Promise.all([
+                  loadArea(areaId),
+                  api.moderation(areaId).then(setModeration),
+                ]);
+              }}
+            />
+          )}
+        {!publicBrowse && view === "inbox" && isMember(session.persona) && (
           <Inbox
             notifications={notifications}
             personalFeed={personalFeed}
@@ -1858,18 +1956,21 @@ function App() {
             onError={setError}
           />
         )}
-        {view === "preferences" && isMember(session.persona) && preferences && (
-          <PreferencesPanel
-            key={session.persona}
-            preferences={preferences}
-            saved={async (next) => {
-              setPreferences(next);
-              setPersonalFeed(await api.personalFeed());
-            }}
-            onError={setError}
-          />
-        )}
-        {view === "research" && (
+        {!publicBrowse &&
+          view === "preferences" &&
+          isMember(session.persona) &&
+          preferences && (
+            <PreferencesPanel
+              key={session.persona}
+              preferences={preferences}
+              saved={async (next) => {
+                setPreferences(next);
+                setPersonalFeed(await api.personalFeed());
+              }}
+              onError={setError}
+            />
+          )}
+        {!publicBrowse && view === "research" && (
           <ResearchPanel
             key={session.persona}
             actor={session.persona}
@@ -1878,77 +1979,91 @@ function App() {
         )}
       </main>
       <nav className="mobile-nav" aria-label="Mobile navigation">
-        {isMember(session.persona)
-          ? [
-              {
-                id: "dashboard" as View,
-                label: "Explore",
-                icon: MapIcon,
-                action: () => {
+        {publicBrowse
+          ? tabs.map(([id, label]) => (
+              <button
+                className={view === "dashboard" && tab === id ? "active" : ""}
+                key={id}
+                onClick={() => {
                   setView("dashboard");
-                  setTab("now");
+                  setTab(id);
+                }}
+              >
+                <MapIcon size={18} />
+                {label}
+              </button>
+            ))
+          : isMember(session.persona)
+            ? [
+                {
+                  id: "dashboard" as View,
+                  label: "Explore",
+                  icon: MapIcon,
+                  action: () => {
+                    setView("dashboard");
+                    setTab("now");
+                  },
                 },
-              },
-              {
-                id: "reports" as View,
-                label: "My reports",
-                icon: ClipboardList,
-                action: () => setView("reports"),
-              },
-              {
-                id: "inbox" as View,
-                label: "Updates",
-                icon: Bell,
-                action: () => setView("inbox"),
-              },
-              {
-                id: "help" as View,
-                label: "Get help",
-                icon: Compass,
-                action: () => {
-                  setView("dashboard");
-                  setTab("help");
+                {
+                  id: "reports" as View,
+                  label: "My reports",
+                  icon: ClipboardList,
+                  action: () => setView("reports"),
                 },
-              },
-            ].map((item) => {
-              const Icon = item.icon;
-              const active =
-                item.label === "Get help"
-                  ? view === "dashboard" && tab === "help"
-                  : view === item.id;
-              return (
-                <button
-                  className={active ? "active" : ""}
-                  key={item.id}
-                  onClick={item.action}
-                >
-                  <Icon size={18} />
-                  {item.label}
-                </button>
-              );
-            })
-          : navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  className={view === item.id ? "active" : ""}
-                  key={item.id}
-                  onClick={() => setView(item.id)}
-                >
-                  <Icon size={18} />
-                  {item.label}
-                </button>
-              );
-            })}
+                {
+                  id: "inbox" as View,
+                  label: "Updates",
+                  icon: Bell,
+                  action: () => setView("inbox"),
+                },
+                {
+                  id: "help" as View,
+                  label: "Get help",
+                  icon: Compass,
+                  action: () => {
+                    setView("dashboard");
+                    setTab("help");
+                  },
+                },
+              ].map((item) => {
+                const Icon = item.icon;
+                const active =
+                  item.label === "Get help"
+                    ? view === "dashboard" && tab === "help"
+                    : view === item.id;
+                return (
+                  <button
+                    className={active ? "active" : ""}
+                    key={item.id}
+                    onClick={item.action}
+                  >
+                    <Icon size={18} />
+                    {item.label}
+                  </button>
+                );
+              })
+            : navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    className={view === item.id ? "active" : ""}
+                    key={item.id}
+                    onClick={() => setView(item.id)}
+                  >
+                    <Icon size={18} />
+                    {item.label}
+                  </button>
+                );
+              })}
       </nav>
-      {reportOpen && isMember(session.persona) && (
+      {!publicBrowse && reportOpen && isMember(session.persona) && (
         <ReportForm
           area={selected}
           onClose={() => setReportOpen(false)}
           onCreated={refreshMember}
         />
       )}
-      {noticeOpen && (
+      {!publicBrowse && noticeOpen && (
         <Inspector notice={noticeOpen} onClose={() => setNoticeOpen(null)} />
       )}
     </div>
