@@ -1,6 +1,6 @@
 import { createAccountRoutes } from "./account.js";
-import { getDatasetCoverage } from '../packages/datasets/src/coverage.js';
-import { getHistoricalCoverage } from '../packages/history/src/coverage.js';
+import { getDatasetCoverage } from "../packages/datasets/src/coverage.js";
+import { getHistoricalCoverage } from "../packages/history/src/coverage.js";
 import express from "express";
 import {
   createHash,
@@ -16,10 +16,12 @@ import {
 } from "../packages/contracts/index.js";
 import type { DemoDatabase } from "./database.js";
 import { createRoutes } from "./routes.js";
+import { createSemanticRoutes } from "./semantic.js";
 import { createPublicRoutes } from "./public.js";
 import { getHelp, getSources } from "../services/index.js";
 export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
-  const database = () => typeof db === "function" ? db() : Promise.resolve(db);
+  const database = () =>
+    typeof db === "function" ? db() : Promise.resolve(db);
   const store: Pick<DemoDatabase, "read" | "mutate"> = {
     read: async (id) => (await database()).read(id),
     mutate: async (id, operation) => (await database()).mutate(id, operation),
@@ -40,6 +42,7 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
     next();
   });
   app.use("/api/account", createAccountRoutes());
+  app.use("/api/public/graph", createSemanticRoutes());
   app.use("/api/public", createPublicRoutes());
   if (process.env.VERCEL) {
     app.use((req, res, next) => {
@@ -78,10 +81,22 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
     response.redirect(303, `/?demo=1&area=${encodeURIComponent(area.data)}`);
   });
   app.use("/api", express.json({ limit: "8kb" }));
-  const sourceCaches = new Map<string, { until: number; data: Awaited<ReturnType<typeof getSources>> }>();
-  const sourceRefreshes = new Map<string, Promise<Awaited<ReturnType<typeof getSources>>>>();
-  const historyCaches = new Map<string, {until: number; data: Awaited<ReturnType<typeof getHistoricalCoverage>>}>();
-  const historyRefreshes = new Map<string, Promise<Awaited<ReturnType<typeof getHistoricalCoverage>>>>();
+  const sourceCaches = new Map<
+    string,
+    { until: number; data: Awaited<ReturnType<typeof getSources>> }
+  >();
+  const sourceRefreshes = new Map<
+    string,
+    Promise<Awaited<ReturnType<typeof getSources>>>
+  >();
+  const historyCaches = new Map<
+    string,
+    { until: number; data: Awaited<ReturnType<typeof getHistoricalCoverage>> }
+  >();
+  const historyRefreshes = new Map<
+    string,
+    Promise<Awaited<ReturnType<typeof getHistoricalCoverage>>>
+  >();
   const limits = new Map<string, { count: number; until: number }>();
   app.use("/api", (req, res, next) => {
     res.set("Cache-Control", "no-store");
@@ -195,13 +210,19 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
     }
     let refresh = sourceRefreshes.get(area.data);
     if (!refresh) {
-      refresh = getSources(area.data).then((data) => {
-        sourceCaches.set(area.data, {
-          data,
-          until: Date.now() + (data.some((source) => source.status === 'unavailable') ? 60000 : 300000),
-        });
-        return data;
-      }).finally(() => sourceRefreshes.delete(area.data));
+      refresh = getSources(area.data)
+        .then((data) => {
+          sourceCaches.set(area.data, {
+            data,
+            until:
+              Date.now() +
+              (data.some((source) => source.status === "unavailable")
+                ? 60000
+                : 300000),
+          });
+          return data;
+        })
+        .finally(() => sourceRefreshes.delete(area.data));
       sourceRefreshes.set(area.data, refresh);
     }
     ok(res, await refresh, false);
@@ -227,10 +248,17 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
     }
     let refresh = historyRefreshes.get(area.data);
     if (!refresh) {
-      refresh = getHistoricalCoverage(area.data).then((data) => {
-        historyCaches.set(area.data, {data, until: Date.now() + (data.status === 'source_unavailable' ? 60000 : 300000)});
-        return data;
-      }).finally(() => historyRefreshes.delete(area.data));
+      refresh = getHistoricalCoverage(area.data)
+        .then((data) => {
+          historyCaches.set(area.data, {
+            data,
+            until:
+              Date.now() +
+              (data.status === "source_unavailable" ? 60000 : 300000),
+          });
+          return data;
+        })
+        .finally(() => historyRefreshes.delete(area.data));
       historyRefreshes.set(area.data, refresh);
     }
     ok(res, await refresh, false);
@@ -243,6 +271,12 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
     }
     ok(res, getDatasetCoverage(area.data), false);
   });
+  app.use(
+    "/api/graph",
+    createSemanticRoutes({
+      graph: async (id, pilot) => (await database()).graph(id, pilot),
+    }),
+  );
   app.use("/api", createRoutes(store));
   app.use("/api", (_req, res) =>
     fail(res, 404, "not_found", "This item is not available."),

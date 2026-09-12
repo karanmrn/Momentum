@@ -52,7 +52,7 @@ Only executable tests and recorded runs establish implementation evidence.
 
 The repository includes Vercel build and API configuration.
 Use a separate PostgreSQL database for the invited demonstration.
-Apply `supabase/migrations/001_demo_sessions.sql` using its database administrator.
+Apply both SQL files in `supabase/migrations` in filename order using its database administrator.
 Use a dedicated database administrator connection that can assume `streetwise_demo_app` and delete expired demo sessions.
 Set `DATABASE_URL` and a random `DEMO_ACCESS_CODE` with at least 16 characters.
 Hosted demonstration API access uses HTTP Basic authentication with username `demo`.
@@ -93,6 +93,22 @@ Raw acquired records remain local and are excluded from public repository histor
 The current schema isolates fictional sessions. It is not the production report schema.
 Real intake requires authenticated accounts, domain-level RLS, moderation staffing, and reviewed retention rules.
 Pilot boundaries and station identifiers remain unapproved.
+
+## Accounts and evidence graph
+
+The Account button supports Supabase email signup, confirmation, login, and logout.
+Configure the selected project's server variables and confirmation URLs using [the account contract](docs/auth/CONTRACT.md).
+Without configuration, the UI states that accounts are unavailable. It does not simulate a successful login.
+Real accounts do not grant access to demo moderator roles or enable real report intake.
+
+Historical context includes an accessible evidence graph with source links, acquisition months, and relationship meanings.
+Public mode exposes source coverage only. Demo mode adds current, reviewed fictional community notices.
+Police coverage describes acquired source files, not local crime totals or confirmation of a community claim.
+
+The demo graph uses PostgreSQL snapshot, node, and assertion tables with session isolation and expiry.
+Graph reads rebuild from locked authoritative state. State mutations invalidate stored projections within the same transaction.
+Withdrawal therefore removes dependent graph relations. Graph traversal never includes private reports or account identities.
+See [the graph implementation](docs/semantic-graph.md) for storage, ontology, and Graphify limits.
 External alerts, automatic reporting, and AI publication remain disabled.
 Historical correlation returns insufficient-data status.
 

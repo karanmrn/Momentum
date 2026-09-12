@@ -1,4 +1,5 @@
 import { DatasetCoverage } from "./DatasetCoverage";
+import { SemanticGraph } from "./SemanticGraph";
 import { AreaShare } from "./AreaShare";
 import { entryArea, publicBrowse, rememberArea } from "./entry";
 import { ResearchPanel } from "../packages/recruitment/ResearchPanel";
@@ -939,6 +940,7 @@ function Dashboard({
               view does not estimate a person's risk.
             </p>
             <DatasetCoverage pilotId={area.id} />
+            <SemanticGraph area={area.id} isPublic={isPublic} />
           </section>
         )}
       </div>
@@ -1409,6 +1411,12 @@ function PreferencesPanel({
   );
 }
 
+const AccountAccess = lazy(() =>
+  import("./AccountPanel").then((module) => ({
+    default: module.AccountAccess,
+  })),
+);
+
 function App() {
   const personaPending = useRef(false);
   const areaRequestGeneration = useRef(0);
@@ -1430,6 +1438,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState<Notice | null>(null);
   const [moderation, setModeration] = useState<Report[]>([]);
   const selected = areas.find((area) => area.id === areaId) || areas[0];
@@ -1690,6 +1699,12 @@ function App() {
             : "Community reports and reviews are fictional. This is not an emergency service."}
         </div>
         <header className="topbar">
+          <button
+            className="button secondary"
+            onClick={() => setAccountOpen(true)}
+          >
+            Account
+          </button>
           <div className="mobile-brand">Streetwise Safety</div>
           <div className="area-control">
             <span className="eyebrow">Pilot area</span>
@@ -1938,6 +1953,13 @@ function App() {
       )}
       {!publicBrowse && noticeOpen && (
         <Inspector notice={noticeOpen} onClose={() => setNoticeOpen(null)} />
+      )}
+      {accountOpen && (
+        <Modal title="Account" onClose={() => setAccountOpen(false)}>
+          <Suspense fallback={<p role="status">Loading account...</p>}>
+            <AccountAccess embedded />
+          </Suspense>
+        </Modal>
       )}
     </div>
   );
