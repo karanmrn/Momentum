@@ -31,9 +31,9 @@ interface Scope {
   role: "moderator" | "partner";
   expiresAt: string;
 }
-const reportSelect = `SELECT id,pilot_id AS "pilotId",title,description,source_basis AS "sourceBasis",client_request_id AS "clientRequestId",created_at::text AS "createdAt" FROM private_accounts.reports WHERE owner=$1 ORDER BY created_at,id LIMIT 100`;
-const inboxSelect = `SELECT id,pilot_id AS "pilotId",notice_id AS "noticeId",created_at::text AS "createdAt",read_at::text AS "readAt" FROM private_accounts.inbox WHERE owner=$1 ORDER BY created_at DESC,id LIMIT 100`;
-const scopeSelect = `SELECT pilot_id AS "pilotId",role,expires_at::text AS "expiresAt" FROM private_accounts.scopes WHERE owner=$1 AND revoked_at IS NULL AND expires_at>now() ORDER BY pilot_id,role LIMIT 6`;
+const reportSelect = `SELECT id,pilot_id AS "pilotId",title,description,source_basis AS "sourceBasis",client_request_id AS "clientRequestId",to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt" FROM private_accounts.reports WHERE owner=$1 ORDER BY created_at,id LIMIT 100`;
+const inboxSelect = `SELECT id,pilot_id AS "pilotId",notice_id AS "noticeId",to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt",to_char(read_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "readAt" FROM private_accounts.inbox WHERE owner=$1 ORDER BY created_at DESC,id LIMIT 100`;
+const scopeSelect = `SELECT pilot_id AS "pilotId",role,to_char(expires_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "expiresAt" FROM private_accounts.scopes WHERE owner=$1 AND revoked_at IS NULL AND expires_at>now() ORDER BY pilot_id,role LIMIT 6`;
 async function readFollows(sql: Sql, owner: string): Promise<FollowInput> {
   return (
     (
@@ -174,7 +174,7 @@ export async function createPrivateAccountStore(
         const report = parsed.data;
         return (
           await sql.query<Report>(
-            `INSERT INTO private_accounts.reports(id,owner,pilot_id,title,description,source_basis,client_request_id) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id,pilot_id AS "pilotId",title,description,source_basis AS "sourceBasis",client_request_id AS "clientRequestId",created_at::text AS "createdAt"`,
+            `INSERT INTO private_accounts.reports(id,owner,pilot_id,title,description,source_basis,client_request_id) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id,pilot_id AS "pilotId",title,description,source_basis AS "sourceBasis",client_request_id AS "clientRequestId",to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt"`,
             [
               randomUUID(),
               id,
@@ -231,7 +231,7 @@ export async function createPrivateAccountStore(
       return transaction(owner, async (sql, id) => {
         const row = (
           await sql.query<Inbox>(
-            `UPDATE private_accounts.inbox SET read_at=coalesce(read_at,now()) WHERE owner=$1 AND id=$2 RETURNING id,pilot_id AS "pilotId",notice_id AS "noticeId",created_at::text AS "createdAt",read_at::text AS "readAt"`,
+            `UPDATE private_accounts.inbox SET read_at=coalesce(read_at,now()) WHERE owner=$1 AND id=$2 RETURNING id,pilot_id AS "pilotId",notice_id AS "noticeId",to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt",to_char(read_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "readAt"`,
             [id, parsed.data],
           )
         ).rows[0];
@@ -265,7 +265,7 @@ export async function createPrivateAccountStore(
             expiresAt: string;
             revokedAt: string | null;
           }>(
-            `SELECT pilot_id AS "pilotId",role,expires_at::text AS "expiresAt",revoked_at::text AS "revokedAt" FROM private_accounts.scopes WHERE owner=$1 ORDER BY pilot_id,role LIMIT 10001`,
+            `SELECT pilot_id AS "pilotId",role,to_char(expires_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "expiresAt",to_char(revoked_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "revokedAt" FROM private_accounts.scopes WHERE owner=$1 ORDER BY pilot_id,role LIMIT 10001`,
             [id],
           )
         ).rows;

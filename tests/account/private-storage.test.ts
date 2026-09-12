@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
@@ -43,6 +44,7 @@ describe("private account store", () => {
     const row = await store.report(a, report);
     expect(row).toMatchObject(report);
     expect(row).not.toHaveProperty("owner");
+    expect(z.string().datetime().safeParse(row.createdAt).success).toBe(true);
     expect(await store.reports(b)).toEqual([]);
     expect(await store.reports(a)).toHaveLength(1);
   });
@@ -159,6 +161,10 @@ describe("actual PostgreSQL role and RLS boundaries", () => {
       `INSERT INTO private_accounts.scopes(owner,pilot_id,role,expires_at,revoked_at) VALUES($1,'camden_town','moderator',now()+interval '1 day',NULL),($1,'west_croydon','partner',now()-interval '1 day',now())`,
       [a],
     );
+    await database.query(
+      `INSERT INTO private_accounts.inbox(id,owner,pilot_id,notice_id) VALUES($1,$1,'camden_town','notice')`,
+      [a],
+    );
     await database.close();
     const reopened = await createPrivateAccountStore({ path });
     try {
@@ -166,6 +172,41 @@ describe("actual PostgreSQL role and RLS boundaries", () => {
       const exported = await reopened.exportData(a);
       expect(exported.scopes).toHaveLength(2);
       expect(exported.scopes[1].revokedAt).not.toBeNull();
+      const inboxSchema = z.array(
+        z.object({
+          id: z.string().uuid(),
+          pilotId: z.string(),
+          noticeId: z.string(),
+          createdAt: z.string().datetime(),
+          readAt: z.string().datetime().nullable(),
+        }),
+      );
+      const scopeSchema = z.array(
+        z.object({
+          pilotId: z.string(),
+          role: z.enum(["moderator", "partner"]),
+          expiresAt: z.string().datetime(),
+        }),
+      );
+      expect(inboxSchema.safeParse(await reopened.inbox(a)).success).toBe(true);
+      const read = await reopened.markRead(a, a);
+      expect(z.string().datetime().safeParse(read.readAt).success).toBe(true);
+      expect(scopeSchema.safeParse(await reopened.scopes(a)).success).toBe(
+        true,
+      );
+      expect(
+        z
+          .object({
+            inbox: inboxSchema,
+            scopes: z.array(
+              z.object({
+                expiresAt: z.string().datetime(),
+                revokedAt: z.string().datetime().nullable(),
+              }),
+            ),
+          })
+          .safeParse(exported).success,
+      ).toBe(true);
     } finally {
       await reopened.close();
     }
