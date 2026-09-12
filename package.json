@@ -10,7 +10,8 @@
     "test:e2e": "playwright test",
     "check": "tsc --noEmit",
     "start": "tsx server/dev.ts",
-    "format": "prettier --write src packages server services api tests/e2e"
+    "format": "prettier --write src packages server services api tests/e2e",
+    "test:server": "tsc -p tsconfig.server.json && node scripts/check-native-server.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.14",

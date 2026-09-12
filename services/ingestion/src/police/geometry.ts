@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { areaSchema, type ApprovedArea } from './types';
+import { areaSchema, type ApprovedArea } from './types.js';
 
 type Point = [number, number];
 const centres: Record<ApprovedArea['pilotId'], Point> = {

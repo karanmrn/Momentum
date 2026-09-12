@@ -476,3 +476,41 @@ test("public browsing uses public area data and no private member routes", async
   expect(apiPaths.length).toBeGreaterThan(0);
   expect(apiPaths.every((path) => path.startsWith("/api/public/"))).toBe(true);
 });
+
+test("desktop presentation shares the public area and exits to that area", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?public=1&presentation=1&area=camden_town");
+  await expect(
+    page.getByRole("heading", { name: "A report should have a next step." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("img", {
+      name: "QR code to open Camden Town centre on the mobile website",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "https://streetwise-safety.vercel.app/?area=camden_town",
+    }),
+  ).toHaveAttribute(
+    "href",
+    "https://streetwise-safety.vercel.app/?area=camden_town",
+  );
+  await page.keyboard.press("ArrowRight");
+  await expect(
+    page.getByRole("heading", { name: "Start with local sources." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Next slide" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Follow the report through review." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Exit presentation" }).click();
+  await expect(page).not.toHaveURL(/presentation=/);
+  await expect(
+    page.getByRole("heading", { name: "Camden Town", exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("Choose pilot area")).toHaveValue("camden_town");
+});

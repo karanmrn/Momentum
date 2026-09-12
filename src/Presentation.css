@@ -1,0 +1,190 @@
+.streetwise-presentation {
+  min-height: 100dvh;
+  width: 100%;
+  background: #f7f1e7;
+  color: #183e33;
+  padding: clamp(16px, 3vw, 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.streetwise-presentation *,
+.streetwise-presentation *::before {
+  box-sizing: border-box;
+}
+.presentation-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  border-bottom: 1px solid #b9c3b3;
+  padding-bottom: 20px;
+}
+.presentation-brand {
+  font:
+    700 26px/1.2 Georgia,
+    serif;
+}
+.presentation-area {
+  flex: 1;
+  min-width: 0;
+  font-size: 18px;
+}
+.streetwise-presentation button,
+.presentation-download {
+  min-height: 48px;
+  padding: 12px 18px;
+  border: 1px solid #183e33;
+  border-radius: 6px;
+  background: transparent;
+  color: #183e33;
+  font:
+    600 16px/1.4 system-ui,
+    sans-serif;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.streetwise-presentation button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.streetwise-presentation button:focus-visible,
+.streetwise-presentation a:focus-visible {
+  outline: 3px solid #a74612;
+  outline-offset: 4px;
+}
+.presentation-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
+  gap: clamp(28px, 5vw, 80px);
+}
+.presentation-slide {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  justify-content: space-between;
+  gap: 32px;
+}
+.presentation-count {
+  font:
+    600 16px/1.5 system-ui,
+    sans-serif;
+  margin: 0 0 20px;
+}
+.presentation-slide h1 {
+  font:
+    700 clamp(36px, 4.4vw, 72px)/1.07 Georgia,
+    serif;
+  letter-spacing: -0.025em;
+  margin: 0 0 26px;
+  max-width: 16ch;
+  text-wrap: balance;
+}
+.presentation-slide h1:focus {
+  outline: none;
+}
+.presentation-intro {
+  font-size: clamp(19px, 1.7vw, 25px);
+  line-height: 1.5;
+  max-width: 48ch;
+  margin: 0 0 28px;
+}
+.presentation-steps {
+  padding-left: 1.4em;
+  margin: 0;
+  font-size: clamp(18px, 1.45vw, 22px);
+  line-height: 1.5;
+}
+.presentation-steps li {
+  padding-left: 8px;
+  margin-bottom: 12px;
+}
+.presentation-steps li::marker {
+  font-weight: 700;
+}
+.presentation-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.presentation-controls button:last-child:not(:disabled) {
+  background: #183e33;
+  color: #fffef9;
+}
+.presentation-scan {
+  min-width: 0;
+  align-self: start;
+  text-align: center;
+  padding: 24px;
+  background: #fffef9;
+  border: 1px solid #b9c3b3;
+}
+.presentation-scan h2 {
+  font:
+    700 clamp(24px, 2.2vw, 36px)/1.2 Georgia,
+    serif;
+  margin: 0 0 20px;
+}
+.presentation-scan p {
+  font-size: 18px;
+  line-height: 1.5;
+}
+.presentation-qr {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin: 0 auto 20px;
+  background: #fff;
+}
+.presentation-url {
+  display: block;
+  color: #183e33;
+  overflow-wrap: anywhere;
+  font:
+    16px/1.5 system-ui,
+    sans-serif;
+  margin-top: 16px;
+  min-height: 48px;
+  padding: 12px 0;
+}
+.presentation-footer {
+  border-top: 1px solid #b9c3b3;
+  padding-top: 18px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+@media (max-width: 759px) {
+  .streetwise-presentation {
+    gap: 24px;
+  }
+  .presentation-header {
+    gap: 12px;
+  }
+  .presentation-brand {
+    flex-basis: 100%;
+  }
+  .presentation-area {
+    flex-basis: 100%;
+  }
+  .presentation-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .presentation-slide h1 {
+    font-size: clamp(34px, 7.5vw, 52px);
+  }
+  .presentation-controls button {
+    flex: 1 1 120px;
+  }
+  .presentation-scan {
+    padding: 16px;
+  }
+  .presentation-qr {
+    max-width: 360px;
+  }
+}

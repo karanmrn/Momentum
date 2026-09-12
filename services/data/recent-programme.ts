@@ -1,4 +1,4 @@
-import type {SourceCard} from '../../packages/contracts/index';
+import type {SourceCard} from '../../packages/contracts/index.js';
 
 /** Dated announcement. This does not assert current staff availability. */
 export function getCroydonProgrammeSource(): SourceCard {

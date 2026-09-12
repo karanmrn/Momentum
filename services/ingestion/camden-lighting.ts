@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { SourceCard } from "../../packages/contracts/index";
+import type { SourceCard } from "../../packages/contracts/index.js";
 
 const query = new URLSearchParams({
   $where: "latitude between 51.533 and 51.545 AND longitude between -0.148 and -0.132",

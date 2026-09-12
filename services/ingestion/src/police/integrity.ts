@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { recordSchema, type PoliceRecord } from './types';
+import { recordSchema, type PoliceRecord } from './types.js';
 
 /** Verify saved normalised records separately from the original HTTP response bytes. */
 export function checksumRecords(records: PoliceRecord[]): string {

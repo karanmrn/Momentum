@@ -5,10 +5,10 @@ import {
   pilotSchema,
   type Envelope,
   type PilotId,
-} from "../packages/contracts/index";
-import { getHelp, getSources } from "../services/index";
-import { getHistoricalCoverage } from "../packages/history/src/coverage";
-import { getDatasetCoverage } from "../packages/datasets/src/coverage";
+} from "../packages/contracts/index.js";
+import { getHelp, getSources } from "../services/index.js";
+import { getHistoricalCoverage } from "../packages/history/src/coverage.js";
+import { getDatasetCoverage } from "../packages/datasets/src/coverage.js";
 
 /** Cache only validated pilot IDs. Each cache and pending map has at most three entries. */
 function areaCache<T>(

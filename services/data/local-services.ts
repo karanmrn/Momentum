@@ -3,7 +3,7 @@ import {
   type HelpCard,
   type PilotId,
   type SourceCard,
-} from "../../packages/contracts/index";
+} from "../../packages/contracts/index.js";
 
 // Exa retrieval time. The source pages did not provide publication timestamps.
 const retrievedAt = "2026-09-12T12:08:48Z";

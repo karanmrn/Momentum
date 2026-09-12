@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { pilotSchema } from '../../../../packages/contracts/index';
+import { pilotSchema } from '../../../../packages/contracts/index.js';
 
 export const monthSchema = z.string().regex(/^20\d{2}-(0[1-9]|1[0-2])$/);
 export const pointSchema = z.tuple([z.number().finite().min(-180).max(180), z.number().finite().min(-90).max(90)]);
