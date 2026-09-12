@@ -2085,7 +2085,7 @@ function App() {
                 canonicalOrigin={import.meta.env.VITE_PUBLIC_SITE_URL}
               />
               <a
-                className="button secondary presentation-entry"
+                className={`button secondary presentation-entry${new URLSearchParams(window.location.search).get("returnTo") === "presentation" ? " presentation-return" : ""}`}
                 href={`/?presentation=1&area=${selected.id}&public=1&slide=${Math.min(10, Math.max(1, Number(new URLSearchParams(window.location.search).get("slide")) || 1))}`}
               >
                 {new URLSearchParams(window.location.search).get("returnTo") ===

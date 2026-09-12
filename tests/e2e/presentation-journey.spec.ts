@@ -82,6 +82,7 @@ test("invalid slide input starts at the first slide", async ({ page }) => {
 test("police and community journeys return to the same town and slide", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   for (const label of ["Police records", "Community reports"]) {
     await page.goto("/?public=1&presentation=1&area=west_croydon&slide=6");
     await page.getByRole("link", { name: label, exact: true }).click();
