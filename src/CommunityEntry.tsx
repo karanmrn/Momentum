@@ -49,6 +49,11 @@ export function CommunityEntry({
   }, []);
   return (
     <>
+      {!persona && (
+        <button className="button" onClick={onExit}>
+          Back to Momentum
+        </button>
+      )}
       <div className="workflow-entry-controls">
         <label>
           Demo persona
