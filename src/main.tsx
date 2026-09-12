@@ -451,14 +451,15 @@ function ReportForm({
   }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [done, setDone] = useState(false);
+  const [receipt, setReceipt] = useState<Report | null>(null);
+  const retryRequest = useRef<{ payload: string; key: string } | null>(null);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError("");
     const form = new FormData(event.currentTarget);
     try {
-      await api.submitReport({
+      const input = {
         pilotId: area.id,
         category: String(form.get("category")) as
           "infrastructure" | "transport" | "access" | "community",
@@ -466,10 +467,23 @@ function ReportForm({
         description: String(form.get("description")),
         place: String(form.get("place")),
         observedAt: new Date(String(form.get("observedAt"))).toISOString(),
-        synthetic: true,
-      });
-      await onCreated();
-      setDone(true);
+        synthetic: true as const,
+      };
+      const payload = JSON.stringify(input);
+      if (retryRequest.current?.payload !== payload)
+        retryRequest.current = { payload, key: crypto.randomUUID() };
+      const savedReport = await api.submitReport(
+        input,
+        retryRequest.current.key,
+      );
+      setReceipt(savedReport);
+      try {
+        await onCreated();
+      } catch {
+        setError(
+          "Your observation was saved. Close this receipt and refresh My reports.",
+        );
+      }
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -478,9 +492,30 @@ function ReportForm({
   }
   return (
     <Modal title="Share a local observation" onClose={onClose}>
-      {done ? (
+      {receipt ? (
         <div className="history">
           <strong>Saved for private review</strong>
+          <dl className="receipt-fields">
+            <dt>Report reference</dt>
+            <dd style={{ overflowWrap: "anywhere", marginLeft: 0 }}>
+              {receipt.id}
+            </dd>
+            <dt>Status</dt>
+            <dd style={{ marginLeft: 0 }}>
+              {receipt.status.replaceAll("_", " ")}
+            </dd>
+            <dt>Revision</dt>
+            <dd style={{ marginLeft: 0 }}>{receipt.revision}</dd>
+            <dt>Saved</dt>
+            <dd style={{ marginLeft: 0 }}>
+              {new Date(receipt.createdAt).toLocaleString("en-GB")}
+            </dd>
+          </dl>
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
           <p className="subtle">
             This synthetic observation is not public. A moderator must review a
             summary before a notice can appear.
@@ -1472,7 +1507,12 @@ function App() {
     () => publicBrowse && currentEntryArea().invalid,
   );
   const [tab, setTab] = useState<Tab>("now");
-  const [view, setView] = useState<View>("dashboard");
+  const [view, setView] = useState<View>(() =>
+    !publicBrowse &&
+    new URLSearchParams(window.location.search).get("view") === "reports"
+      ? "reports"
+      : "dashboard",
+  );
   const [mapOpen, setMapOpen] = useState(false);
   const [data, setData] = useState<AreaData>(emptyAreaData);
   const [reports, setReports] = useState<Report[]>([]);

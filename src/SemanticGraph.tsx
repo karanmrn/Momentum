@@ -5,6 +5,7 @@ import {
   type SemanticGraph as GraphData,
 } from "../packages/semantic-graph/schema";
 import "./SemanticGraph.css";
+import { EvidenceNetwork } from "./EvidenceNetwork";
 
 const predicateLabels: Record<string, string> = {
   WITHIN_AREA: "Within research area",
@@ -78,6 +79,49 @@ export function SemanticGraph({
               : "Fictional community notices with public source coverage"}{" "}
             · Ontology {graph.ontologyVersion}
           </p>
+          <EvidenceNetwork
+            nodes={graph.nodes.map((node) => ({
+              id: node.id,
+              label: node.label,
+              type: node.type,
+              synthetic: node.synthetic,
+              sourceUrl: node.provenance?.sourceUrl,
+              details: [
+                ["Record type", node.type],
+                ...(node.metadata.summary
+                  ? [["Summary", node.metadata.summary] as [string, string]]
+                  : []),
+                ...(node.provenance
+                  ? ([
+                      ["Source family", node.provenance.sourceFamilyId],
+                      ["Retrieved", node.provenance.fetchedAt ?? "Unknown"],
+                    ] as Array<[string, string]>)
+                  : []),
+                ...(node.metadata.status
+                  ? [["Coverage", node.metadata.status] as [string, string]]
+                  : []),
+              ],
+            }))}
+            edges={graph.assertions.map((edge) => ({
+              id: edge.id,
+              from: edge.subjectId,
+              to: edge.objectId,
+              label: predicateLabels[edge.predicate] || edge.predicate,
+              synthetic: edge.synthetic,
+              details: [
+                ["Method", edge.inferenceType.replaceAll("_", " ")],
+                ["Reason", edge.reasonCodes.join(", ").replaceAll("_", " ")],
+                ["Evidence", edge.evidenceRefs.join(", ")],
+              ],
+            }))}
+          />
+          <a
+            className="button secondary"
+            href={`/api/${isPublic ? "public/" : ""}graph/export?area=${area}`}
+            download
+          >
+            Download Graphify graph
+          </a>
           <div className="semantic-table-wrap">
             <table className="semantic-table">
               <caption>Source relations and their meaning</caption>

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { z } from "zod";
+import { EvidenceNetwork } from "./EvidenceNetwork";
 import {
   buildCaseGraph,
   fictionalScenarios,
@@ -9,6 +11,53 @@ import {
 } from "../packages/camden-evidence";
 import "./camden-evidence.css";
 
+const exampleStateSchema = z.enum(["original", "corrected", "withdrawn"]);
+const studySchema = z
+  .object({
+    revision: z.number().int().positive(),
+    examples: z
+      .object({
+        "CAM-01": exampleStateSchema,
+        "CAM-02": exampleStateSchema,
+        "CAM-03": exampleStateSchema,
+        "CAM-04": exampleStateSchema,
+        "CAM-05": exampleStateSchema,
+      })
+      .strict(),
+  })
+  .strict();
+type Study = z.infer<typeof studySchema>;
+const receiptSchema = z.object({
+  id: z.string().uuid(),
+  revision: z.number().int().positive(),
+  status: z.string(),
+  createdAt: z.string().datetime({ offset: true }),
+  synthetic: z.literal(true),
+});
+class StudyError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+async function studyRequest(path: string, init?: RequestInit) {
+  const response = await fetch(path, {
+    credentials: "same-origin",
+    cache: "no-store",
+    ...init,
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok)
+    throw new StudyError(
+      body?.error?.message || "The fictional study is unavailable. Try again.",
+      response.status,
+    );
+  if (body?.schemaVersion !== "1.0")
+    throw new Error("The study response is invalid. Try again.");
+  return body.data;
+}
 const dateTime = (value: string) =>
   new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -18,19 +67,131 @@ const dateTime = (value: string) =>
 
 export function CamdenEvidence({ onExit }: { onExit?: () => void } = {}) {
   const [selected, setSelected] = useState<ExampleId>("CAM-01");
-  const [states, setStates] = useState<
-    Partial<Record<ExampleId, DemoRevision>>
-  >({});
+  const [study, setStudy] = useState<Study | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [receipt, setReceipt] = useState<z.infer<typeof receiptSchema> | null>(
+    null,
+  );
+  const [receiptExample, setReceiptExample] = useState<ExampleId | null>(null);
+  const pending = useRef(false);
+  const reportKeys = useRef(new Map<string, string>());
+  async function loadStudy() {
+    const next = studySchema.parse(await studyRequest("/api/camden/examples"));
+    setStudy(next);
+    return next;
+  }
+  useEffect(() => {
+    let active = true;
+    studyRequest("/api/camden/examples")
+      .then((data) => {
+        const next = studySchema.parse(data);
+        if (active) setStudy(next);
+      })
+      .catch((failure) => {
+        if (active)
+          setError(
+            failure instanceof Error
+              ? failure.message
+              : "The study is unavailable.",
+          );
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  async function recover(failure: unknown) {
+    let message =
+      failure instanceof Error
+        ? failure.message
+        : "The change could not be saved. Try again.";
+    if (failure instanceof StudyError && failure.status === 409) {
+      try {
+        await loadStudy();
+        message =
+          "This example changed elsewhere. The latest saved state is shown. Review it and try again.";
+      } catch {
+        setStudy(null);
+        message =
+          "This example changed elsewhere. Reload the study before retrying.";
+      }
+    }
+    setError(message);
+  }
+  async function retryStudy() {
+    if (pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    try {
+      await loadStudy();
+      setError("");
+    } catch (failure) {
+      await recover(failure);
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
   const record = policeSelection.records.find(
     (row) => row.exampleId === selected,
   )!;
   const scenario = fictionalScenarios.find(
     (row) => row.id === `fictional:${selected}`,
   )!;
-  const state = states[selected] ?? "original";
+  const state = study?.examples[selected] ?? "withdrawn";
   const graph = buildCaseGraph(selected, state);
-  function changeState(next: DemoRevision) {
-    setStates((previous) => ({ ...previous, [selected]: next }));
+  async function changeState(next: DemoRevision) {
+    if (!study || pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    try {
+      const saved = studySchema.parse(
+        await studyRequest(`/api/camden/examples/${selected}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            expectedRevision: study.revision,
+            state: next,
+          }),
+        }),
+      );
+      setStudy(saved);
+      setError("");
+    } catch (failure) {
+      await recover(failure);
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+  async function reportExample() {
+    if (!study || pending.current || state === "withdrawn") return;
+    const example = selected;
+    const key = `${example}:${study.revision}`;
+    if (!reportKeys.current.has(key))
+      reportKeys.current.set(key, crypto.randomUUID());
+    pending.current = true;
+    setBusy(true);
+    try {
+      const saved = receiptSchema.parse(
+        await studyRequest(`/api/camden/examples/${example}/report`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Idempotency-Key": reportKeys.current.get(key)!,
+          },
+          body: JSON.stringify({ expectedRevision: study.revision }),
+        }),
+      );
+      setReceipt(saved);
+      setReceiptExample(example);
+      setError("");
+    } catch (failure) {
+      await recover(failure);
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
   }
   return (
     <main className="camden-evidence">
@@ -81,6 +242,93 @@ export function CamdenEvidence({ onExit }: { onExit?: () => void } = {}) {
           </button>
         ))}
       </nav>
+      <section className="ce-card" aria-label="Camden graph workspace">
+        <h2>Graph evidence</h2>
+        <p>
+          The police record and fictional account share broad area context only.
+          No same-incident link is established.
+        </p>
+        {error && (
+          <div role="alert" className="error">
+            <p>{error}</p>
+            <button
+              className="ce-button"
+              disabled={busy}
+              onClick={() => void retryStudy()}
+            >
+              Reload study
+            </button>
+            <a href="/?demo=1&area=camden_town">Open demonstration access</a>
+          </div>
+        )}
+        {!study && !error && (
+          <p role="status">
+            Loading saved fictional study. Public source records remain
+            available.
+          </p>
+        )}
+        <EvidenceNetwork
+          title="Camden evidence network"
+          nodes={graph.nodes.map((node) => ({
+            id: node.id,
+            label: node.label,
+            type: node.type,
+            synthetic: node.synthetic,
+            sourceUrl: node.provenance?.sourceUrl,
+            details: [
+              ["Precision", node.precision.replaceAll("_", " ")],
+              ["Revision", String(node.revision)],
+              ...(node.provenance
+                ? ([
+                    ["Source family", node.provenance.sourceFamilyId],
+                    ["Retrieved", dateTime(node.provenance.fetchedAt)],
+                  ] as Array<[string, string]>)
+                : []),
+              ...(node.observedAt
+                ? [
+                    ["Fictional observed time", dateTime(node.observedAt)] as [
+                      string,
+                      string,
+                    ],
+                  ]
+                : []),
+              ...(node.correctionNote
+                ? [["Correction", node.correctionNote] as [string, string]]
+                : []),
+            ],
+          }))}
+          edges={graph.assertions.map((edge) => ({
+            id: edge.id,
+            from: edge.subjectId,
+            to: edge.objectId,
+            label:
+              edge.predicate === "DERIVED_FROM"
+                ? "Derived from"
+                : "Area context only",
+            synthetic: edge.synthetic,
+            details: [
+              ["Method", edge.inferenceType.replaceAll("_", " ")],
+              ["Reason", edge.reasonCodes.join(", ").replaceAll("_", " ")],
+              ["Independence", edge.independence],
+              ["Time precision", edge.timePrecision.replaceAll("_", " ")],
+              ["Source family", edge.sourceFamilyId],
+            ],
+          }))}
+        />
+        {study && (
+          <p>
+            Saved study revision {study.revision}. Changes remain in this
+            fictional session after reload.
+          </p>
+        )}
+        <a
+          className="ce-button"
+          href={`/api/${study ? "" : "public/"}graph/export?area=camden_town`}
+          download
+        >
+          Download Graphify graph
+        </a>
+      </section>
       <div className="ce-columns">
         <section className="ce-card" aria-labelledby="ce-police-title">
           <span className="ce-label">Real public source</span>
@@ -192,107 +440,154 @@ export function CamdenEvidence({ onExit }: { onExit?: () => void } = {}) {
             </a>
           </details>
         </section>
-        <section
-          className="ce-card ce-fiction"
-          aria-labelledby="ce-fiction-title"
-        >
-          <span className="ce-label">
-            Fictional exercise · no real event match
-          </span>
-          <h2 id="ce-fiction-title">{scenario.title}</h2>
-          <p className="ce-note">
-            All details below are invented. The precise times illustrate
-            unverified self-reports, not verified event times.
-          </p>
-          <div className="ce-summary">
-            <h3>Public summary example</h3>
-            <p>
-              {state === "withdrawn"
-                ? "This fictional account has been withdrawn. Its summary and derived graph links are removed."
-                : scenario.publicSummary}
-            </p>
-            {state === "corrected" && (
-              <p className="ce-note">
-                <strong>Correction, revision 2:</strong> {scenario.correction}
-              </p>
-            )}
-          </div>
-          {state !== "withdrawn" && (
-            <details>
-              <summary>Fictional intake detail</summary>
-              <p>{scenario.account}</p>
-              <dl className="ce-fields">
-                <div>
-                  <dt>Reported occurrence time</dt>
-                  <dd>
-                    {dateTime(
-                      state === "corrected"
-                        ? scenario.correctedObservedAt
-                        : scenario.observedAt,
-                    )}{" "}
-                    London time · fictional and unverified
-                  </dd>
-                </div>
-                <div>
-                  <dt>Submitted time</dt>
-                  <dd>
-                    {dateTime(scenario.reportedAt)} London time · fictional
-                  </dd>
-                </div>
-                <div>
-                  <dt>Participant roles</dt>
-                  <dd>
-                    {scenario.participantRoles.join("; ")}. No real names or
-                    identity nodes.
-                  </dd>
-                </div>
-                <div>
-                  <dt>Relationship to police record</dt>
-                  <dd>
-                    No known match. Position beside this record is a display
-                    choice.
-                  </dd>
-                </div>
-              </dl>
-            </details>
-          )}
+        {study && (
           <section
-            className="ce-revision"
-            aria-label="Fictional correction controls"
+            className="ce-card ce-fiction"
+            aria-labelledby="ce-fiction-title"
           >
-            <h3>Try a correction</h3>
-            <p>
-              These controls affect this local exercise only. Reloading restores
-              the original examples.
+            <span className="ce-label">
+              Fictional exercise · no real event match
+            </span>
+            <h2 id="ce-fiction-title">{scenario.title}</h2>
+            <p className="ce-note">
+              All details below are invented. The precise times illustrate
+              unverified self-reports, not verified event times.
             </p>
-            <div className="ce-actions">
-              <button
-                className="ce-button"
-                disabled={state !== "original"}
-                onClick={() => changeState("corrected")}
-              >
-                Correct fictional time
-              </button>
-              <button
-                className="ce-button"
-                disabled={state === "withdrawn"}
-                onClick={() => changeState("withdrawn")}
-              >
-                Withdraw fictional account
-              </button>
-              <button
-                className="ce-button"
-                disabled={state === "original"}
-                onClick={() => changeState("original")}
-              >
-                Reset example
-              </button>
+            <div className="ce-summary">
+              <h3>Public summary example</h3>
+              <p>
+                {state === "withdrawn"
+                  ? "This fictional account has been withdrawn. Its summary and derived graph links are removed."
+                  : scenario.publicSummary}
+              </p>
+              {state === "corrected" && (
+                <p className="ce-note">
+                  <strong>Correction, revision 2:</strong> {scenario.correction}
+                </p>
+              )}
             </div>
-            <p role="status" aria-live="polite">
-              Fictional state: {state}. Police source record unchanged.
-            </p>
+            {state !== "withdrawn" && (
+              <details>
+                <summary>Fictional intake detail</summary>
+                <p>{scenario.account}</p>
+                <dl className="ce-fields">
+                  <div>
+                    <dt>Reported occurrence time</dt>
+                    <dd>
+                      {dateTime(
+                        state === "corrected"
+                          ? scenario.correctedObservedAt
+                          : scenario.observedAt,
+                      )}{" "}
+                      London time · fictional and unverified
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Submitted time</dt>
+                    <dd>
+                      {dateTime(scenario.reportedAt)} London time · fictional
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Participant roles</dt>
+                    <dd>
+                      {scenario.participantRoles.join("; ")}. No real names or
+                      identity nodes.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Relationship to police record</dt>
+                    <dd>
+                      No known match. Position beside this record is a display
+                      choice.
+                    </dd>
+                  </div>
+                </dl>
+              </details>
+            )}
+            <section
+              className="ce-revision"
+              aria-label="Fictional report submission"
+            >
+              <h3>Try the reporting journey</h3>
+              <p>
+                This creates a private fictional report in a demonstration
+                session. It does not send a real report.
+              </p>
+              <button
+                className="ce-button"
+                disabled={
+                  busy || state === "withdrawn" || receiptExample === selected
+                }
+                onClick={() => void reportExample()}
+              >
+                Report this example
+              </button>
+              {receipt && receiptExample === selected && (
+                <div className="ce-summary" role="status">
+                  <h3>Saved for private review</h3>
+                  <dl className="ce-fields">
+                    <div>
+                      <dt>Report reference</dt>
+                      <dd>{receipt.id}</dd>
+                    </div>
+                    <div>
+                      <dt>Status</dt>
+                      <dd>{receipt.status.replaceAll("_", " ")}</dd>
+                    </div>
+                    <div>
+                      <dt>Revision</dt>
+                      <dd>{receipt.revision}</dd>
+                    </div>
+                    <div>
+                      <dt>Saved</dt>
+                      <dd>{dateTime(receipt.createdAt)}</dd>
+                    </div>
+                  </dl>
+                  <a href="/?demo=1&area=camden_town&view=reports">
+                    Open My reports
+                  </a>
+                </div>
+              )}
+            </section>
+            <section
+              className="ce-revision"
+              aria-label="Fictional correction controls"
+            >
+              <h3>Try a correction</h3>
+              <p>
+                These controls update this saved fictional study. Police source
+                records remain unchanged.
+              </p>
+              <div className="ce-actions">
+                <button
+                  className="ce-button"
+                  disabled={busy || state !== "original"}
+                  onClick={() => changeState("corrected")}
+                >
+                  Correct fictional time
+                </button>
+                <button
+                  className="ce-button"
+                  disabled={busy || state === "withdrawn"}
+                  onClick={() => changeState("withdrawn")}
+                >
+                  Withdraw fictional account
+                </button>
+                <button
+                  className="ce-button"
+                  disabled={busy || state === "original"}
+                  onClick={() => changeState("original")}
+                >
+                  Reset example
+                </button>
+              </div>
+              <p role="status" aria-live="polite">
+                Fictional state: {state}. Police source record unchanged.
+              </p>
+            </section>
           </section>
-        </section>
+        )}
       </div>
       <section className="ce-card ce-context">
         <h2>What enriched data means</h2>
@@ -359,7 +654,7 @@ export function CamdenEvidence({ onExit }: { onExit?: () => void } = {}) {
         </p>
       </section>
       <section className="ce-card">
-        <h2>Graph evidence</h2>
+        <h2>Graph records and assertions</h2>
         <p>
           The real record and the fictional account connect only through broad
           area context. There is no same-incident relationship.

@@ -1,0 +1,224 @@
+.evidence-network {
+  min-width: 0;
+  margin: 18px 0;
+  color: #183e33;
+}
+.evidence-network * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.en-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.en-toolbar h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.en-count {
+  font-size: 14px;
+  color: #526658;
+}
+.en-view {
+  display: flex;
+  margin-left: auto;
+  gap: 4px;
+}
+.en-view button,
+.en-records button {
+  min-height: 48px;
+  border: 1px solid #acbbae;
+  background: #fffdf7;
+  border-radius: 8px;
+  color: #183e33;
+  padding: 8px 14px;
+  font: inherit;
+  cursor: pointer;
+}
+.en-view button[aria-pressed="true"] {
+  background: #183e33;
+  color: #fffdf7;
+}
+.en-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 12px;
+  margin: 16px 0;
+}
+.en-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  background: #cbd8cc;
+  border: 1px solid #718779;
+}
+.en-legend .en-fiction-key::before {
+  background: #efcc9b;
+  border-color: #a45c30;
+}
+.en-legend span:last-child::before {
+  background: none;
+  height: 0;
+  width: 16px;
+  border: 0;
+  border-top: 2px dashed #718779;
+  vertical-align: middle;
+}
+.en-search,
+.en-edge-picker {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.en-search input,
+.en-edge-picker select {
+  min-height: 48px;
+  width: 100%;
+  max-width: 100%;
+  padding: 10px 12px;
+  color: #183e33;
+  background: #fffdf7;
+  border: 1px solid #acbbae;
+  border-radius: 8px;
+  font: inherit;
+}
+.en-canvas-container {
+  width: 100%;
+  border: 1px solid #cdd1c3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f5f4eb;
+}
+.en-canvas {
+  position: relative;
+  min-width: 0;
+}
+.en-canvas svg {
+  position: absolute;
+  inset: 0;
+}
+.en-node {
+  position: absolute;
+  height: 82px;
+  min-height: 48px;
+  border: 1px solid #899e8e;
+  border-radius: 9px;
+  padding: 9px;
+  background: #fffdf7;
+  color: #183e33;
+  text-align: left;
+  box-shadow: 0 2px 4px #183e330a;
+  cursor: pointer;
+}
+.en-node span {
+  display: block;
+  font-size: 10px;
+  line-height: 1.2;
+  margin-bottom: 5px;
+  color: #526658;
+}
+.en-node strong {
+  font:
+    650 12px/1.25 system-ui,
+    sans-serif;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.en-node.en-fiction {
+  background: #fff0dc;
+  border-color: #bd824a;
+}
+.en-node[aria-pressed="true"] {
+  outline: 3px solid #a45c30;
+  outline-offset: 2px;
+}
+.en-node.en-muted {
+  opacity: 0.4;
+}
+.evidence-network button:focus-visible,
+.evidence-network input:focus-visible,
+.evidence-network select:focus-visible,
+.evidence-network a:focus-visible {
+  outline: 3px solid #d97536;
+  outline-offset: 3px;
+}
+.en-records {
+  list-style: none;
+  margin: 0;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+.en-records button {
+  width: 100%;
+  text-align: left;
+}
+.en-records span {
+  display: block;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.en-detail {
+  padding: 16px;
+  background: #eef1e6;
+  border: 1px solid #cbd5c5;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+}
+.en-detail h4 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+.en-detail p,
+.en-hint {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.en-detail dl {
+  margin: 0;
+}
+.en-detail dl div {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.4fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid #cbd5c5;
+  font-size: 13px;
+}
+.en-detail dt {
+  color: #526658;
+}
+.en-detail dd {
+  margin: 0;
+}
+.en-detail a {
+  color: #245f4b;
+}
+@media (max-width: 540px) {
+  .en-view {
+    margin-left: 0;
+  }
+  .en-detail dl div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .en-node strong {
+    font-size: 13px;
+  }
+}
+
+.camden-evidence a.ce-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+}
