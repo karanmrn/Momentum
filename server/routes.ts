@@ -185,21 +185,19 @@ export function createRoutes(store: Store): Router {
           "This action requires the demo moderator session.",
         );
       const key = idempotencyKey(request);
-      const result = await store.mutate(current.sessionId, (state) =>
-        replayOrRecord(
+      const result = await store.mutate(current.sessionId, (state) => {
+        const report = state.reports.find((row) => row.id === reportId);
+        if (!report)
+          throw new DomainError(404, "not_found", "Record was not found.");
+        requireModerationArea(response, report.pilotId);
+        assertStandardWorkflowAllowed(state, reportId);
+        return replayOrRecord(
           state,
           `moderation:${current.persona}:${reportId}:${key}`,
           fingerprint(input),
-          () => {
-            const report = state.reports.find((row) => row.id === reportId);
-            if (!report)
-              throw new DomainError(404, "not_found", "Record was not found.");
-            requireModerationArea(response, report.pilotId);
-            assertStandardWorkflowAllowed(state, reportId);
-            return decideReport(state, current.persona, reportId, input);
-          },
-        ),
-      );
+          () => decideReport(state, current.persona, reportId, input),
+        );
+      });
       response.json(envelope(result));
     } catch (error) {
       next(error);

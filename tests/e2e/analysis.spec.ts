@@ -44,3 +44,39 @@ for (const width of [390, 1440])
     const download = await downloadEvent;
     expect(download.suggestedFilename()).toContain("fictional-analysis");
   });
+test("locks the area selector during a delayed reload", async ({ page }) => {
+  let camdenRequests = 0;
+  await page.route("**/api/analytics?area=*", async (route) => {
+    const area = new URL(route.request().url()).searchParams.get("area");
+    if (area === "camden_town" && ++camdenRequests === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: { message: "Research temporarily unavailable." },
+        }),
+      });
+      return;
+    }
+    if (area === "camden_town")
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: { revision: area === "camden_town" ? 2 : 7, runs: [] },
+      }),
+    });
+  });
+  await page.goto("/?demo=1&workspace=analysis");
+  await expect(page.getByRole("alert")).toContainText(
+    "Research temporarily unavailable.",
+  );
+  await page.getByRole("button", { name: "Reload research" }).click();
+  await expect(page.getByRole("combobox")).toBeDisabled();
+  await expect(page.getByRole("combobox")).toBeEnabled();
+  await page.getByRole("combobox").selectOption("west_croydon");
+  await expect(
+    page.getByRole("button", { name: "Run fictional comparison" }),
+  ).toBeEnabled();
+  await expect(page.getByRole("combobox")).toHaveValue("west_croydon");
+});

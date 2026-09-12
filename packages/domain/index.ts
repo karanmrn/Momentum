@@ -597,8 +597,8 @@ function areaName(pilotId: Notice['pilotId']): string {
 
 function genericMessage(kind: Notification['kind']): string {
   return kind === 'correction'
-    ? 'A reviewed Streetwise update you saw has changed.'
-    : 'A reviewed Streetwise update matches your saved preferences.';
+    ? 'A reviewed Momentum update you saw has changed.'
+    : 'A reviewed Momentum update matches your saved preferences.';
 }
 
 function rejectSensitiveText(values: string[]): void {

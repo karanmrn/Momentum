@@ -142,3 +142,40 @@ it("serialises concurrent run creation and rejects caller-supplied empirical ser
     ).status,
   ).toBe(400);
 });
+it("returns only the reviewed area while retaining other private area runs", async () => {
+  const cookie = await session();
+  await call("/api/session", cookie, { persona: "moderator" });
+  const camden = (
+    await (
+      await call(
+        "/api/analytics/runs",
+        cookie,
+        { area: "camden_town", expectedRevision: 1 },
+        "area-camden-run",
+      )
+    ).json()
+  ).data;
+  await call(
+    "/api/analytics/runs",
+    cookie,
+    { area: "west_croydon", expectedRevision: 2 },
+    "area-croydon-run",
+  );
+  const reviewed = await call(
+    `/api/analytics/runs/${camden.id}/review`,
+    cookie,
+    {
+      expectedRevision: 3,
+      decision: "approved_demo",
+      note: "Reviewed the fictional Camden comparison.",
+    },
+  );
+  expect(reviewed.status).toBe(200);
+  const body = (await reviewed.json()).data;
+  expect(body.runs).toHaveLength(1);
+  expect(body.runs[0].question.pilotId).toBe("camden_town");
+  expect(
+    (await (await call("/api/analytics?area=west_croydon", cookie)).json()).data
+      .runs,
+  ).toHaveLength(1);
+});

@@ -92,7 +92,7 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
         res
           .set(
             "WWW-Authenticate",
-            'Basic realm="Streetwise invited demonstration"',
+            'Basic realm="Momentum invited demonstration"',
           )
           .status(401)
           .send("An invitation is required.");
