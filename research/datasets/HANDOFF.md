@@ -72,7 +72,7 @@ node --import tsx scripts/datasets/ons/index.ts
 node --import tsx scripts/datasets/tfl/index.ts
 node --import tsx scripts/datasets/tfl/live.ts
 node --import tsx scripts/datasets/priorities/collect.ts
-node --import tsx scripts/datasets/osm/index.ts
+node --import tsx scripts/datasets/osm/collect.ts
 node --import tsx scripts/datasets/build-coverage.ts
 ```
 
