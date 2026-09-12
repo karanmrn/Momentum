@@ -23,13 +23,64 @@ const venues: HelpCard[] = [
   summary:'Council-listed Safe Haven at Hawley Wharf. Current access and staffing are unconfirmed.',
   schedule:'The council lists 24-hour operation. This is not a live availability check.',services:['Staff assistance','Onward travel support']},
 ];
-export function getCamdenHelp(): HelpCard[] {
- return [{id:'C01',pilotId:'camden_town',name:'Camden Safety Bus',
-  summary:'Council-listed support outside Camden Town station. Deployment tonight is unconfirmed.',
-  url:'https://www.camden.gov.uk/staying-safe-at-night',availability:'unconfirmed',
-  schedule:'Friday and Saturday, 21:30 to 02:30 the next day, Europe/London.',
-  address:'Outside Camden Town Underground station',sourceLabel:'Camden Council',checkedAt,
-  services:['Phone charging','Water','First aid'],kind:'service'},...structuredClone(venues)];
+// Council notice checked on 12 September. Friday service keeps its normal location.
+const relocationCheckedAt = "2026-09-12T14:18:31.995Z";
+const relocationPlanningStart = Date.parse("2026-09-12T02:30:00+01:00");
+const relocationEnd = Date.parse("2026-09-13T02:30:00+01:00");
+function clock(now: Date): number {
+  const value = now.getTime();
+  if (!Number.isFinite(value)) throw new Error("Invalid help listing clock.");
+  return value;
+}
+/** Cache entries cannot cross a dated listing change. */
+export function getCamdenHelpCacheTtl(now = new Date()): number {
+  const at = clock(now);
+  const next = [relocationPlanningStart, relocationEnd].find(
+    (boundary) => boundary > at,
+  );
+  return next === undefined ? 300000 : Math.min(300000, next - at);
+}
+export function getCamdenHelp(now = new Date()): HelpCard[] {
+  const at = clock(now);
+  const relocated = at >= relocationPlanningStart && at < relocationEnd;
+  const bus: HelpCard = relocated
+    ? {
+        id: "C01",
+        pilotId: "camden_town",
+        name: "Camden Safety Bus",
+        summary:
+          "Council notice for Saturday 12 September: the bus is planned outside KOKO on Camden High Street. Deployment remains unconfirmed.",
+        url: "https://www.camden.gov.uk/staying-safe-at-night",
+        availability: "unconfirmed",
+        schedule:
+          "Saturday 12 September 2026, 21:30 to Sunday 13 September, 02:30, Europe/London.",
+        address: "Outside KOKO on Camden High Street",
+        sourceLabel: "Camden Council",
+        checkedAt: relocationCheckedAt,
+        services: ["Phone charging", "Water", "First aid"],
+        kind: "service",
+      }
+    : normalBus();
+  // No verified coordinates exist for this service location. Do not invent a map pin.
+  return [bus, ...structuredClone(venues)];
+}
+function normalBus(): HelpCard {
+  return {
+    id: "C01",
+    pilotId: "camden_town",
+    name: "Camden Safety Bus",
+    summary:
+      "Council-listed support outside Camden Town station. Deployment tonight is unconfirmed.",
+    url: "https://www.camden.gov.uk/staying-safe-at-night",
+    availability: "unconfirmed",
+    schedule:
+      "Friday and Saturday, 21:30 to 02:30 the next day, Europe/London.",
+    address: "Outside Camden Town Underground station",
+    sourceLabel: "Camden Council",
+    checkedAt,
+    services: ["Phone charging", "Water", "First aid"],
+    kind: "service",
+  };
 }
 export function getCamdenDirectorySource(): SourceCard {
  return {id:'C02',title:'Camden help directory',summary:'Four selected council-listed venues and the Safety Bus. Check access and staffing before travelling.',
