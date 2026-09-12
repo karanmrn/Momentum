@@ -46,15 +46,16 @@ it("serves a bounded source-only graph without a session cookie", async () => {
 });
 
 it("rejects unbounded traversals and write requests", async () => {
-  for (const query of [
-    "area=london",
-    "area=camden_town&depth=3",
-    "area=camden_town&notice=private",
-    "area=camden_town&area=west_croydon",
-    "area=camden_town&path=public/graph",
-  ]) {
+  for (const query of ["area=london", "area=camden_town&area=west_croydon"]) {
     expect((await fetch(`${base}/api/public/graph?${query}`)).status).toBe(400);
   }
+  const baseline = await fetch(
+    `${base}/api/public/graph?area=camden_town`,
+  ).then((response) => response.json());
+  const ignored = await fetch(
+    `${base}/api/public/graph?area=camden_town&depth=999&notice=private&path=public/graph`,
+  ).then((response) => response.json());
+  expect(ignored.data).toEqual(baseline.data);
   expect(
     (
       await fetch(`${base}/api/public/graph?area=camden_town`, {

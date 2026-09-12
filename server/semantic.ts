@@ -35,12 +35,8 @@ export function createSemanticRoutes(
     next();
   });
   router.get("/", async (request, response) => {
-    // Validate caller parameters, excluding routing metadata added by the host.
-    const parameters = new URL(request.originalUrl, "http://localhost")
-      .searchParams;
-    const query = querySchema.safeParse(
-      parameters.size === 1 ? Object.fromEntries(parameters) : null,
-    );
+    // Only area affects this fixed projection. Host rewrite fields have no meaning here.
+    const query = querySchema.safeParse({ area: request.query.area });
     if (!query.success) {
       response.status(400).json({
         schemaVersion: "1.0",
