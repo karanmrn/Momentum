@@ -155,7 +155,7 @@ function Modal({
   onClose,
   children,
   closeDisabled = false,
-  inertBackground = false,
+  inertBackground = true,
 }: {
   title: string;
   onClose: () => void;
@@ -171,11 +171,15 @@ function Modal({
   };
   useEffect(() => {
     if (!inertBackground) return;
-    const backdrop = dialogRef.current?.parentElement;
-    const siblings = [...(backdrop?.parentElement?.children ?? [])].filter(
-      (element): element is HTMLElement =>
-        element instanceof HTMLElement && element !== backdrop,
-    );
+    const siblings: HTMLElement[] = [];
+    let branch = dialogRef.current?.parentElement;
+    while (branch?.parentElement && branch.parentElement !== document.body) {
+      for (const sibling of branch.parentElement.children) {
+        if (sibling instanceof HTMLElement && sibling !== branch)
+          siblings.push(sibling);
+      }
+      branch = branch.parentElement;
+    }
     const previous = siblings.map(
       (element) => [element, element.inert] as const,
     );
@@ -550,7 +554,7 @@ function ReportForm({
             This synthetic observation is not public. A moderator must review a
             summary before a notice can appear.
           </p>
-          <button className="button" onClick={onClose}>
+          <button className="button" disabled={saving} onClick={onClose}>
             Close
           </button>
         </div>
@@ -682,16 +686,18 @@ function Sources({
                 ? `retrieved ${new Date(source.fetchedAt).toLocaleString("en-GB")}`
                 : "retrieval time unavailable"}
             </p>
-            {source.checkedAt && !compact && (
-              <p className="source-fact">
-                Checked {new Date(source.checkedAt).toLocaleString("en-GB")}
-              </p>
-            )}
+            {source.checkedAt &&
+              source.checkedAt !== source.fetchedAt &&
+              !compact && (
+                <p className="source-fact">
+                  Checked {new Date(source.checkedAt).toLocaleString("en-GB")}
+                </p>
+              )}
             {source.attribution && !compact && (
               <p className="source-fact">{source.attribution}</p>
             )}
             <a href={source.url} target="_blank" rel="noreferrer">
-              Open source
+              View {source.title}
             </a>
           </article>
         ))
@@ -733,7 +739,10 @@ function Dashboard({
   retryArea: () => void;
   isPublic: boolean;
 }) {
-  const transportData = useLocalTransport(area.id, tab === "now");
+  const transportData = useLocalTransport(
+    area.id,
+    tab === "now" || tab === "community",
+  );
   const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, id: Tab) => {
     const current = tabs.findIndex(([tabId]) => tabId === id);
     const last = tabs.length - 1;
@@ -828,12 +837,11 @@ function Dashboard({
               <section className="panel feed-panel source-panel">
                 <TransportPanel area={area.id} data={transportData} />
                 <div className="panel-title">
-                  <h2>Local source updates</h2>
-                  <span className="count">Source-backed</span>
+                  <h2>Local information sources</h2>
                 </div>
                 {data.errors.sources ? (
                   <Unavailable
-                    title="Local source updates are unavailable"
+                    title="Local sources are unavailable"
                     message={data.errors.sources}
                     retry={retryArea}
                   />
@@ -860,7 +868,7 @@ function Dashboard({
                   />
                 ) : loading ? (
                   <Empty title="Loading reviewed updates">
-                    Checking the current projection.
+                    Loading community updates.
                   </Empty>
                 ) : notices.length ? (
                   notices.map((notice) => (
@@ -874,7 +882,7 @@ function Dashboard({
                 ) : (
                   <Empty title="No published notices">
                     {isPublic
-                      ? "Community updates are not collected in public browsing."
+                      ? "Community reporting is not open yet. You can still find local help and official reporting routes."
                       : "No current item was returned. This does not show that conditions are clear."}
                   </Empty>
                 )}
@@ -907,7 +915,7 @@ function Dashboard({
                     />
                   ) : loading ? (
                     <Empty title="Loading notices">
-                      Checking the current projection.
+                      Loading community updates.
                     </Empty>
                   ) : notices.length ? (
                     notices.map((notice) => (
@@ -921,7 +929,7 @@ function Dashboard({
                   ) : (
                     <Empty title="No published notices">
                       {isPublic
-                        ? "Community updates are not collected in public browsing."
+                        ? "Community reporting is not open yet. You can still find local help and official reporting routes."
                         : "No current item was returned. This does not show that conditions are clear."}
                     </Empty>
                   )}
@@ -942,39 +950,89 @@ function Dashboard({
           </>
         )}
         {tab === "help" && (
-          <div className="grid section">
-            <section className="panel feed-panel">
-              <h2>Help directory</h2>
-              <div className="stack">
-                {data.errors.help ? (
+          <section className="help-view">
+            <section
+              className="panel feed-panel section"
+              aria-labelledby="official-help-title"
+            >
+              <h2 id="official-help-title">Get help or report an issue</h2>
+              <p>
+                <strong>In an emergency, call 999.</strong>
+              </p>
+              <div className="actions">
+                <a
+                  className="button secondary"
+                  href="https://www.met.police.uk/ro/report/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Report to the police
+                </a>
+                <a
+                  className="button secondary"
+                  href="https://www.btp.police.uk/police-forces/british-transport-police/areas/campaigns/How-to-use-our-text-number/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Rail incidents: BTP 61016
+                </a>
+                <a
+                  className="button secondary"
+                  href={area.reportUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Report a street problem
+                </a>
+              </div>
+              <p className="source-fact">
+                61016 is for non-emergency rail incidents. These links open
+                official services; Momentum does not send a report.
+              </p>
+            </section>
+            <div className="grid section">
+              <section className="panel feed-panel">
+                <h2>Help directory</h2>
+                <div className="stack">
+                  {data.errors.help ? (
+                    <Unavailable
+                      title="Help directory is unavailable"
+                      message={data.errors.help}
+                      retry={retryArea}
+                    />
+                  ) : loading ? (
+                    <p role="status">Loading help directory.</p>
+                  ) : data.help.length ? (
+                    data.help.map((item) => <Help item={item} key={item.id} />)
+                  ) : (
+                    <Empty title="No help locations returned">
+                      No local help listing is available. Use the official
+                      routes above.
+                    </Empty>
+                  )}
+                </div>
+              </section>
+              <section className="panel feed-panel">
+                <h2>Local reporting sources</h2>
+                {data.errors.sources ? (
                   <Unavailable
-                    title="Help directory is unavailable"
-                    message={data.errors.help}
+                    title="Source status is unavailable"
+                    message={data.errors.sources}
                     retry={retryArea}
                   />
-                ) : data.help.length ? (
-                  data.help.map((item) => <Help item={item} key={item.id} />)
+                ) : loading ? (
+                  <p role="status">Loading local sources.</p>
                 ) : (
-                  <Empty title="No help locations returned">
-                    Directory omissions are visible. A listed service is not
-                    confirmation that help is available now.
-                  </Empty>
+                  <Sources
+                    sources={data.sources.filter(
+                      (source) =>
+                        source.coverage === "directory" || source.id === "R01",
+                    )}
+                  />
                 )}
-              </div>
-            </section>
-            <section className="panel feed-panel">
-              <h2>Source status</h2>
-              {data.errors.sources ? (
-                <Unavailable
-                  title="Source status is unavailable"
-                  message={data.errors.sources}
-                  retry={retryArea}
-                />
-              ) : (
-                <Sources sources={data.sources} />
-              )}
-            </section>
-          </div>
+              </section>
+            </div>
+          </section>
         )}
         {tab === "history" && (
           <section className="panel history section">
@@ -982,7 +1040,7 @@ function Dashboard({
               <StatusTag tone="orange">Historical context</StatusTag>
               <StatusTag>not a live warning</StatusTag>
             </div>
-            <h2>Comparable history</h2>
+            <h2>Historical police records</h2>
             {data.errors.history ? (
               <Unavailable
                 title="Historical coverage is unavailable"
@@ -1034,20 +1092,22 @@ function Dashboard({
               view does not estimate a person's risk.
             </p>
             <DatasetCoverage pilotId={area.id} />
-            <a
-              className="button secondary"
-              href={`/?enrichment=1&area=${area.id}${isPublic ? "&public=1" : "&demo=1"}`}
-            >
-              Explore data context
-            </a>
-            {area.id === "camden_town" && (
+            <div className="actions section">
               <a
                 className="button secondary"
-                href={`/?evidence=camden&area=camden_town${isPublic ? "&public=1" : "&demo=1"}`}
+                href={`/?enrichment=1&area=${area.id}${isPublic ? "&public=1" : "&demo=1"}`}
               >
-                Explore Camden evidence example
+                Explore data context
               </a>
-            )}
+              {area.id === "camden_town" && (
+                <a
+                  className="button secondary"
+                  href={`/?evidence=camden&area=camden_town${isPublic ? "&public=1" : "&demo=1"}`}
+                >
+                  Explore Camden evidence example
+                </a>
+              )}
+            </div>
             <SemanticGraph area={area.id} isPublic={isPublic} />
           </section>
         )}
@@ -1094,7 +1154,7 @@ function Help({ item }: { item: HelpCard }) {
         </p>
       )}
       <a href={item.url} target="_blank" rel="noreferrer">
-        Open source
+        View {item.name} details
       </a>
     </article>
   );
@@ -1145,7 +1205,7 @@ function Reports({
                   Edit observation
                 </button>
               )}
-              {item.status === "submitted" && (
+              {item.status !== "withdrawn" && (
                 <button
                   className="button secondary warn"
                   onClick={() => withdraw(item)}
@@ -1165,8 +1225,8 @@ function Reports({
       <section className="panel history section">
         <h2>Official reporting</h2>
         <p>
-          Streetwise Safety does not send an official report. Use the relevant
-          route yourself if you choose to report an issue.
+          Momentum does not send an official report. Use the relevant route
+          yourself if you choose to report an issue.
         </p>
         <a
           className="button secondary"
@@ -1207,9 +1267,27 @@ function Decision({
   );
   const [summary, setSummary] = useState("");
   const [saving, setSaving] = useState(false);
+  const [recorded, setRecorded] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [receipt, setReceipt] = useState("");
   const [error, setError] = useState("");
+  async function refreshQueue() {
+    setRefreshing(true);
+    setError("");
+    try {
+      await changed();
+      close();
+    } catch {
+      setError(
+        "The decision was recorded. The review queue could not refresh. Retry queue refresh.",
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (saving || recorded) return;
     setSaving(true);
     setError("");
     try {
@@ -1218,8 +1296,9 @@ function Decision({
         action,
         summary,
       });
-      await changed();
-      close();
+      setRecorded(true);
+      setReceipt("Decision recorded.");
+      await refreshQueue();
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -1239,6 +1318,7 @@ function Decision({
             id="moderation-decision"
             value={action}
             onChange={(event) => setAction(event.target.value as typeof action)}
+            disabled={saving || recorded || refreshing}
           >
             {options.map(([value, label]) => (
               <option value={value} key={value}>
@@ -1254,16 +1334,31 @@ function Decision({
               minLength={5}
               maxLength={600}
               required
+              disabled={saving || recorded || refreshing}
             />
           </label>
+          {receipt && <p role="status">{receipt}</p>}
           {error && (
             <div className="error" role="alert">
               {error}
             </div>
           )}
-          <button className="button" disabled={saving}>
+          <button
+            className="button"
+            disabled={saving || recorded || refreshing}
+          >
             {saving ? "Recording…" : "Record decision"}
           </button>
+          {recorded && error && (
+            <button
+              className="button secondary"
+              type="button"
+              disabled={refreshing}
+              onClick={() => void refreshQueue()}
+            >
+              {refreshing ? "Refreshing…" : "Retry queue refresh"}
+            </button>
+          )}
         </form>
       ) : (
         <Empty title="No further decision is available">
@@ -1423,34 +1518,56 @@ function Inbox({
 function PreferencesPanel({
   preferences,
   saved,
+  refreshPersonalFeed,
   onError,
 }: {
   preferences: Preferences;
-  saved: (preferences: Preferences) => Promise<void>;
+  saved: (preferences: Preferences) => void;
+  refreshPersonalFeed: () => Promise<void>;
   onError: (message: string) => void;
 }) {
   const [areas, setAreas] = useState(preferences.areas);
   const [categories, setCategories] = useState(preferences.categories);
   const [enabled, setEnabled] = useState(preferences.inAppEnabled);
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [receipt, setReceipt] = useState("");
+  const [refreshError, setRefreshError] = useState("");
   const toggle = <T,>(list: T[], item: T, update: (value: T[]) => void) =>
     update(
       list.includes(item)
         ? list.filter((value) => value !== item)
         : [...list, item],
     );
+  async function refresh() {
+    setRefreshing(true);
+    setRefreshError("");
+    try {
+      await refreshPersonalFeed();
+      setReceipt("Preferences saved. Personalised notices refreshed.");
+    } catch {
+      setRefreshError(
+        "Preferences were saved. Personalised notices could not refresh. Retry personal feed.",
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }
   async function submit(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
+    setReceipt("");
+    setRefreshError("");
     try {
-      await saved(
-        await api.savePreferences({
-          expectedRevision: preferences.revision,
-          areas,
-          categories,
-          inAppEnabled: enabled,
-        }),
-      );
+      const next = await api.savePreferences({
+        expectedRevision: preferences.revision,
+        areas,
+        categories,
+        inAppEnabled: enabled,
+      });
+      saved(next);
+      setReceipt("Preferences saved.");
+      await refresh();
     } catch (error) {
       onError(errorText(error));
     } finally {
@@ -1517,10 +1634,26 @@ function PreferencesPanel({
         </label>
         <button
           className="button"
-          disabled={saving || !areas.length || !categories.length}
+          disabled={saving || refreshing || !areas.length || !categories.length}
         >
           {saving ? "Saving…" : "Save preferences"}
         </button>
+        {receipt && <p role="status">{receipt}</p>}
+        {refreshError && (
+          <p className="error" role="alert">
+            {refreshError}
+          </p>
+        )}
+        {refreshError && (
+          <button
+            className="button secondary"
+            type="button"
+            disabled={refreshing}
+            onClick={() => void refresh()}
+          >
+            {refreshing ? "Refreshing…" : "Retry personal feed"}
+          </button>
+        )}
       </form>
     </section>
   );
@@ -1726,7 +1859,7 @@ function App() {
         <div>
           <RefreshCw />
           <p>
-            <strong>Opening Streetwise Safety</strong>
+            <strong>Opening Momentum</strong>
           </p>
           <p>Loading local information.</p>
         </div>
@@ -1737,7 +1870,7 @@ function App() {
       <main className="map-fallback">
         <div>
           <p>
-            <strong>Streetwise Safety is unavailable</strong>
+            <strong>Momentum is unavailable</strong>
           </p>
           <p>{error || "The session did not return any pilot areas."}</p>
           <button className="button" onClick={() => void reload()}>
@@ -1765,7 +1898,7 @@ function App() {
           <span className="brand-mark">
             <Compass size={20} />
           </span>
-          Streetwise Safety
+          Momentum
         </div>
         <nav className="nav" aria-label="Website navigation">
           {(publicBrowse
@@ -1827,7 +1960,7 @@ function App() {
           >
             Account
           </button>
-          <div className="mobile-brand">Streetwise Safety</div>
+          <div className="mobile-brand">Momentum</div>
           <div className="area-control">
             <span className="eyebrow">Pilot area</span>
             <select
@@ -1943,8 +2076,22 @@ function App() {
             report={() => setReportOpen(true)}
             withdraw={async (item) => {
               try {
-                await api.withdrawReport(item.id, item.revision);
-                await refreshMember();
+                const withdrawn = await api.withdrawReport(
+                  item.id,
+                  item.revision,
+                );
+                setReports((current) =>
+                  current.map((report) =>
+                    report.id === withdrawn.id ? withdrawn : report,
+                  ),
+                );
+                try {
+                  await refreshMember();
+                } catch {
+                  setError(
+                    "Observation withdrawn. Reload the page to refresh related updates.",
+                  );
+                }
               } catch (err) {
                 setError(errorText(err));
               }
@@ -1980,10 +2127,10 @@ function App() {
             <PreferencesPanel
               key={session.persona}
               preferences={preferences}
-              saved={async (next) => {
-                setPreferences(next);
-                setPersonalFeed(await api.personalFeed());
-              }}
+              saved={setPreferences}
+              refreshPersonalFeed={async () =>
+                setPersonalFeed(await api.personalFeed())
+              }
               onError={setError}
             />
           )}

@@ -233,6 +233,7 @@ test("map and panel expire without another source response", async ({
   let requests = 0;
   await page.route("**/api/public/transport?*", (r) => {
     requests++;
+    if (requests > 1) return; // Keep the refresh pending to verify expiry remains visible.
     const data = snapshot("camden_town");
     data.expiresAt = new Date(Date.now() + 1800).toISOString();
     data.stations[0]!.description = "Station warning from operator.";
@@ -253,5 +254,97 @@ test("map and panel expire without another source response", async ({
   await expect(
     browser.getByRole("region", { name: "camden_town station details" }),
   ).toContainText("Service status unknown.");
-  expect(requests).toBe(1);
+  await expect.poll(() => requests).toBe(2);
+});
+
+test("refreshes a nearly expired transport cache response at its expiry", async ({
+  page,
+}) => {
+  await mocks(page);
+  let requests = 0;
+  await page.route("**/api/public/transport?*", (route) => {
+    requests++;
+    const data = snapshot("camden_town");
+    if (requests === 1) {
+      data.fetchedAt = new Date(Date.now() - 28800).toISOString();
+      data.expiresAt = new Date(Date.now() + 1200).toISOString();
+      data.lines[0]!.description = "Earlier operator report.";
+    } else {
+      data.lines[0]!.description = "Refreshed operator report.";
+    }
+    return route.fulfill({ json: envelope(data) });
+  });
+  await page.goto("/?public=1&area=camden_town");
+  await expect(page.locator(".transport-panel")).toContainText(
+    "Earlier operator report.",
+  );
+  await expect(page.locator(".transport-panel")).toContainText(
+    "Refreshed operator report.",
+    { timeout: 5000 },
+  );
+  expect(requests).toBe(2);
+});
+
+test("spaces retries when transport repeatedly returns an expired snapshot", async ({
+  page,
+}) => {
+  await mocks(page);
+  const requestTimes: number[] = [];
+  await page.route("**/api/public/transport?*", (route) => {
+    requestTimes.push(Date.now());
+    return route.fulfill({ json: envelope(snapshot("camden_town", true)) });
+  });
+  await page.goto("/?public=1&area=camden_town");
+  await expect(page.locator(".transport-panel")).toContainText(
+    "Transport snapshot expired.",
+  );
+  await expect
+    .poll(() => requestTimes.length, { timeout: 5000 })
+    .toBeGreaterThanOrEqual(3);
+  for (let index = 1; index < requestTimes.length; index++)
+    expect(
+      requestTimes[index] - requestTimes[index - 1],
+    ).toBeGreaterThanOrEqual(900);
+  expect(requestTimes[2] - requestTimes[1]).toBeGreaterThanOrEqual(1900);
+  expect(requestTimes.length).toBeLessThanOrEqual(4);
+  await expect(page.locator(".transport-panel")).toContainText(
+    "Transport snapshot expired.",
+  );
+});
+
+test("keeps refreshed source failures explicit instead of extending expired reports", async ({
+  page,
+}) => {
+  await mocks(page);
+  let requests = 0;
+  await page.route("**/api/public/transport?*", (route) => {
+    requests++;
+    if (requests > 1)
+      return route.fulfill({
+        status: 503,
+        json: {
+          schemaVersion: "1.0",
+          error: {
+            code: "source_unavailable",
+            message: "Transport unavailable",
+          },
+        },
+      });
+    const data = snapshot("camden_town");
+    data.expiresAt = new Date(Date.now() + 1200).toISOString();
+    data.lines[0]!.description = "Earlier operator report.";
+    return route.fulfill({ json: envelope(data) });
+  });
+  await page.goto("/?public=1&area=camden_town");
+  await expect(page.locator(".transport-panel")).toContainText(
+    "Earlier operator report.",
+  );
+  await expect(page.locator(".transport-panel")).toContainText(
+    "Transport status is unavailable.",
+    { timeout: 5000 },
+  );
+  await expect(page.locator(".transport-panel")).not.toContainText(
+    "Earlier operator report.",
+  );
+  expect(requests).toBe(2);
 });

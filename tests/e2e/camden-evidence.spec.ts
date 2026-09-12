@@ -24,7 +24,7 @@ test("Camden evidence entry, source limits, correction and withdrawal work", asy
     stdio: "pipe",
   });
   await page
-    .getByRole("button", { name: "Back to Streetwise", exact: true })
+    .getByRole("button", { name: "Back to Momentum", exact: true })
     .click();
   await expect(page.getByLabel("Choose pilot area")).toHaveValue("camden_town");
   await expect(page).not.toHaveURL(/evidence=camden/);

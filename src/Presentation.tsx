@@ -12,7 +12,7 @@ export interface PresentationProps {
 const slides = [
   {
     title: "A report should have a next step.",
-    text: "Streetwise Safety lets people see what happened after they shared a concern.",
+    text: "Momentum lets people see what happened after they shared a concern.",
     steps: [
       "Keep a private receipt",
       "See the review state",
@@ -120,7 +120,7 @@ export function Presentation({
   return (
     <main className="streetwise-presentation" aria-labelledby={titleId}>
       <header className="presentation-header">
-        <span className="presentation-brand">Streetwise Safety</span>
+        <span className="presentation-brand">Momentum</span>
         <span className="presentation-area">
           {area?.name ?? "Select an area"}
         </span>

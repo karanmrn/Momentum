@@ -62,6 +62,19 @@ function inInterval(from: string, to: string, at: number): boolean {
   return Date.parse(from) <= at && at < Date.parse(to);
 }
 
+function describeLineStatuses(statuses: z.infer<typeof linesSchema>[number]['lineStatuses']): string {
+  const groups = new Map<string, Set<string>>();
+  for (const status of statuses) {
+    if (!status.statusSeverityDescription) continue;
+    const reason = status.reason?.replace(/\s+/g, ' ').trim() ?? '';
+    const severities = groups.get(reason) ?? new Set<string>();
+    severities.add(status.statusSeverityDescription);
+    groups.set(reason, severities);
+  }
+  return [...groups].map(([reason, severities]) =>
+    `${[...severities].join('; ')}${reason ? `: ${reason}` : ''}`).join(' ').slice(0, 3000);
+}
+
 function distanceMetres(a: [number, number], b: [number, number]): number {
   const rad = Math.PI / 180;
   const dLat = (b[0] - a[0]) * rad, dLon = (b[1] - a[1]) * rad;
@@ -168,8 +181,7 @@ export function createTransportService({ fetchImpl = fetch, now = () => new Date
           if (!current?.length) return row;
           noticeExpiries.push(...current.flatMap(status => (status.validityPeriods ?? [])
             .filter(period => inInterval(period.fromDate, period.toDate, startedAt)).map(period => Date.parse(period.toDate))));
-          return { ...row, status: 'reported', description: current.map(status =>
-            `${status.statusSeverityDescription}${status.reason ? `: ${status.reason}` : ''}`).join(' ').slice(0, 3000) };
+          return { ...row, status: 'reported', description: describeLineStatuses(current) };
         });
       } catch { return rows; }
     })();

@@ -97,10 +97,10 @@ export function EnrichmentContext({
     <main className="enrichment">
       <header className="en-heading">
         <div>
-          <span className="en-kicker">Streetwise · Data context</span>
+          <span className="en-kicker">Momentum · Data context</span>
           <h1>Connect the evidence</h1>
         </div>
-        {onExit && <button onClick={onExit}>Back to Streetwise</button>}
+        {onExit && <button onClick={onExit}>Back to Momentum</button>}
       </header>
       <div className="en-controls">
         <label>

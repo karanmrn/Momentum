@@ -121,9 +121,7 @@ test("all pilot areas, help, history and preferences remain usable on mobile", a
   await page
     .getByRole("tab", { name: "Historical context", exact: true })
     .click();
-  await expect(page.locator("body")).toContainText(
-    /not.*enough|insufficient|comparable/i,
-  );
+  await expect(page.locator("body")).toContainText(/Area totals:.*Unavailable/);
   await nav(page, "Preferences");
   await page
     .getByRole("checkbox", { name: "Camden Town", exact: true })
@@ -283,10 +281,7 @@ test("area enrichment reaches the website with source links and uncertainty", as
     page.getByText("Camden help directory", { exact: true }),
   ).toBeVisible();
   await expect(
-    page
-      .getByRole("link")
-      .filter({ hasText: /source/i })
-      .first(),
+    page.getByRole("link", { name: "View Camden help directory", exact: true }),
   ).toBeVisible();
   await page.getByRole("tab", { name: "Get help", exact: true }).click();
   await expect(

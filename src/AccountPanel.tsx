@@ -314,8 +314,8 @@ export function AccountPanel({ client, embedded = false }: AccountPanelProps) {
             onSubmit={submit}
             aria-label={
               mode === "login"
-                ? "Log in to Streetwise"
-                : "Create a Streetwise account"
+                ? "Log in to Momentum"
+                : "Create a Momentum account"
             }
           >
             <label htmlFor={emailId}>Email</label>
