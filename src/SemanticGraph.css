@@ -1,0 +1,52 @@
+.semantic-panel {
+  margin-top: 1.25rem;
+  min-width: 0;
+}
+.semantic-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.semantic-heading h2 {
+  margin: 0;
+}
+.semantic-table-wrap {
+  max-height: 28rem;
+  overflow: auto;
+}
+.semantic-table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+  font-size: 0.875rem;
+}
+.semantic-table caption {
+  text-align: left;
+  padding: 0.75rem 0;
+  font-weight: 600;
+}
+.semantic-table th,
+.semantic-table td {
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line, #ddd);
+  overflow-wrap: anywhere;
+}
+.semantic-table small {
+  display: block;
+  margin-top: 0.35rem;
+}
+.semantic-panel details {
+  margin-top: 1rem;
+}
+.semantic-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.semantic-panel li {
+  margin: 0.65rem 0;
+  overflow-wrap: anywhere;
+}

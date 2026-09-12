@@ -1,0 +1,72 @@
+.account-panel {
+  width: 100%;
+  max-width: 480px;
+  min-width: 0;
+  padding: 24px;
+  color: #183e33;
+  background: #fffef9;
+  border: 1px solid #d5d8ca;
+  border-radius: 14px;
+}
+.account-panel h2 {
+  margin: 0 0 20px;
+  font:
+    700 28px/1.15 Georgia,
+    serif;
+}
+.account-panel.account-embedded {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.account-panel p {
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.account-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.account-panel form {
+  display: grid;
+  gap: 8px;
+}
+.account-panel label {
+  font-weight: 650;
+}
+.account-panel input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid #81958a;
+  border-radius: 8px;
+  color: inherit;
+  background: #fff;
+  font-size: 16px;
+}
+.account-panel .button {
+  min-height: 48px;
+  white-space: normal;
+}
+.account-panel .account-password-hint {
+  margin: -4px 0 8px;
+  font-size: 14px;
+}
+.account-panel .account-error {
+  color: #8b391a;
+  border-left: 3px solid #b34c24;
+  padding-left: 12px;
+}
+@media (max-width: 420px) {
+  .account-panel {
+    padding: 16px;
+  }
+  .account-modes > .button {
+    flex: 1 1 110px;
+  }
+}

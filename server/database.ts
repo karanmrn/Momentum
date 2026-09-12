@@ -2,7 +2,19 @@ import { readFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import pg from "pg";
-import type { DemoState, Persona, Store } from "../packages/contracts/index.js";
+import {
+  areas,
+  pilotSchema,
+  type DemoState,
+  type Persona,
+  type Store,
+} from "../packages/contracts/index.js";
+import {
+  projectSemanticGraph,
+  type SemanticGraph,
+} from "../packages/semantic-graph/index.js";
+import { getDatasetCoverage } from "../packages/datasets/src/coverage.js";
+import { readSemanticGraph, replaceSemanticGraph } from "./semantic-store.js";
 interface Result<T> {
   rows: T[];
 }
@@ -10,6 +22,7 @@ interface Sql {
   query<T>(sql: string, params?: unknown[]): Promise<Result<T>>;
 }
 export interface DemoDatabase extends Store {
+  graph(id: string, pilot: unknown): Promise<SemanticGraph>;
   session(id: string): Promise<Persona | null>;
   create(id: string): Promise<void>;
   setPersona(id: string, persona: Persona): Promise<void>;
@@ -33,15 +46,13 @@ export async function createDatabase(
     await mkdir(dirname(dataPath), { recursive: true });
   const lite = pool ? null : new PGlite(dataPath);
   if (lite)
-    await lite.exec(
-      await readFile(
-        new URL(
-          "../supabase/migrations/001_demo_sessions.sql",
-          import.meta.url,
+    for (const migration of ["001_demo_sessions.sql", "002_semantic_graph.sql"])
+      await lite.exec(
+        await readFile(
+          new URL(`../supabase/migrations/${migration}`, import.meta.url),
+          "utf8",
         ),
-        "utf8",
-      ),
-    );
+      );
   async function pruneExpired() {
     const sql =
       "DELETE FROM public.streetwise_demo_sessions WHERE id IN (SELECT id FROM public.streetwise_demo_sessions WHERE expires_at <= now() ORDER BY expires_at LIMIT 100)";
@@ -74,6 +85,32 @@ export async function createDatabase(
     }
   }
   return {
+    async graph(id, pilot) {
+      const pilotId = pilotSchema.parse(pilot);
+      return transaction(id, async (sql) => {
+        const row = (
+          await sql.query<{ state: DemoState }>(
+            "SELECT state FROM public.streetwise_demo_sessions WHERE id=$1 FOR UPDATE",
+            [id],
+          )
+        ).rows[0];
+        if (!row) throw new Error("Session unavailable");
+        await replaceSemanticGraph(
+          sql,
+          id,
+          areas.map((area) =>
+            projectSemanticGraph(
+              row.state,
+              area.id,
+              getDatasetCoverage(area.id),
+            ),
+          ),
+        );
+        const graph = await readSemanticGraph(sql, id, pilotId);
+        if (!graph) throw new Error("Evidence unavailable");
+        return graph;
+      });
+    },
     async session(id) {
       return transaction(
         id,
@@ -129,6 +166,7 @@ export async function createDatabase(
           "UPDATE public.streetwise_demo_sessions SET state=$2::jsonb, updated_at=now() WHERE id=$1",
           [id, JSON.stringify(row.state)],
         );
+        await replaceSemanticGraph(sql, id, []);
         return result;
       });
     },
