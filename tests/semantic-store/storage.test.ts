@@ -49,7 +49,11 @@ function graph(label = "Approved place"): SemanticGraph {
 }
 beforeEach(async () => {
   pg = new PGlite();
-  for (const name of ["001_demo_sessions.sql", "002_semantic_graph.sql"])
+  for (const name of [
+    "001_demo_sessions.sql",
+    "002_semantic_graph.sql",
+    "003_camden_graph.sql",
+  ])
     await pg.exec(
       await readFile(
         new URL(`../../supabase/migrations/${name}`, import.meta.url),
@@ -120,7 +124,11 @@ describe("session graph projection storage", () => {
       withdrawn,
     );
     expect(
-      (await pg.query("SELECT id FROM streetwise_semantic_assertions")).rows,
+      (
+        await pg.query(
+          "SELECT id FROM streetwise_semantic_assertions WHERE id='assertion:one'",
+        )
+      ).rows,
     ).toEqual([]);
   });
   it("rolls back state and graph together after a failed replacement transaction", async () => {

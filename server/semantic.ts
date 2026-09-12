@@ -5,6 +5,7 @@ import { pilotSchema } from "../packages/contracts/index.js";
 import type { DemoDatabase } from "./database.js";
 import { getDatasetCoverage } from "../packages/datasets/src/coverage.js";
 import { projectSemanticGraph } from "../packages/semantic-graph/index.js";
+import { toGraphifyGraph } from "../packages/semantic-graph/graphify.js";
 
 const querySchema = z
   .object({
@@ -34,7 +35,7 @@ export function createSemanticRoutes(
     }
     next();
   });
-  router.get("/", async (request, response) => {
+  router.get(["/", "/export"], async (request, response) => {
     // Only area affects this fixed projection. Host rewrite fields have no meaning here.
     const query = querySchema.safeParse({ area: request.query.area });
     if (!query.success) {
@@ -67,6 +68,14 @@ export function createSemanticRoutes(
             query.data.area,
             getDatasetCoverage(query.data.area),
           );
+      if (request.path === "/export") {
+        response.set(
+          "Content-Disposition",
+          `attachment; filename="${query.data.area}-graphify.json"`,
+        );
+        response.json(toGraphifyGraph(data));
+        return;
+      }
       response.json({
         schemaVersion: "1.0",
         synthetic: Boolean(store),
