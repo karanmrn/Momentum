@@ -2,7 +2,6 @@ import { publicBrowse } from "./entry";
 import type {
   Area,
   DecisionInput,
-  Envelope,
   EvidenceGraph,
   HelpCard,
   HistoricalCoverage,
@@ -28,7 +27,9 @@ export class ApiError extends Error {
   }
 }
 
-type ApiErrorBody = { error?: { code?: string; message?: string } };
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
@@ -38,26 +39,46 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     ...init,
     headers,
   });
-  const body = (await response.json().catch(() => ({}))) as Envelope<T> &
-    ApiErrorBody;
-  if (!response.ok)
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = isRecord(body) && isRecord(body.error) ? body.error : {};
     throw new ApiError(
-      body.error?.message || `Request failed (${response.status})`,
+      typeof error.message === "string" && error.message
+        ? error.message
+        : `Request failed (${response.status})`,
       response.status,
-      body.error?.code,
+      typeof error.code === "string" ? error.code : undefined,
     );
-  return body.data;
+  }
+  if (
+    !isRecord(body) ||
+    body.schemaVersion !== "1.0" ||
+    !(Array.isArray(body.data) || isRecord(body.data))
+  ) {
+    throw new ApiError(
+      "The server returned an invalid response. Try again.",
+      response.status,
+      "invalid_response",
+    );
+  }
+  return body.data as T;
 }
 
 const newIdempotencyKey = () =>
   globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 
-const publicPath = (path: string) => publicBrowse ? path.replace("/api/", "/api/public/") : path;
+const publicPath = (path: string) =>
+  publicBrowse ? path.replace("/api/", "/api/public/") : path;
 
 export const api = {
-  session: () => publicBrowse
-    ? Promise.resolve<SessionView>({persona: "alex", synthetic: true, moderatorAreas: []})
-    : request<SessionView>("/api/session"),
+  session: () =>
+    publicBrowse
+      ? Promise.resolve<SessionView>({
+          persona: "alex",
+          synthetic: true,
+          moderatorAreas: [],
+        })
+      : request<SessionView>("/api/session"),
   setPersona: (persona: Persona) =>
     request<SessionView>("/api/session", {
       method: "POST",
@@ -71,13 +92,17 @@ export const api = {
   evidence: (id: string) =>
     request<EvidenceGraph>(`/api/notices/${encodeURIComponent(id)}/evidence`),
   help: (area: string) =>
-    request<HelpCard[]>(publicPath(`/api/help?area=${encodeURIComponent(area)}`)),
+    request<HelpCard[]>(
+      publicPath(`/api/help?area=${encodeURIComponent(area)}`),
+    ),
   datasets: (area: string) =>
     request<DatasetCoverageRecord[]>(
       publicPath(`/api/datasets?area=${encodeURIComponent(area)}`),
     ),
   sources: (area: string) =>
-    request<SourceCard[]>(publicPath(`/api/sources?area=${encodeURIComponent(area)}`)),
+    request<SourceCard[]>(
+      publicPath(`/api/sources?area=${encodeURIComponent(area)}`),
+    ),
   history: (area: string) =>
     request<HistoricalCoverage>(
       publicPath(`/api/history?area=${encodeURIComponent(area)}`),
