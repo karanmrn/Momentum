@@ -13,6 +13,7 @@ import type {
   PreferencesInput,
   Report,
   ReportInput,
+  ReportEditChanges,
   SessionView,
   SourceCard,
 } from "../packages/contracts";
@@ -113,6 +114,11 @@ export const api = {
       method: "POST",
       headers: { "Idempotency-Key": newIdempotencyKey() },
       body: JSON.stringify(input),
+    }),
+  editReport: (id: string, expectedRevision: number, changes: ReportEditChanges) =>
+    request<Report>(`/api/reports/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({action: "edit", expectedRevision, changes}),
     }),
   withdrawReport: (id: string, expectedRevision: number) =>
     request<Report>(`/api/reports/${encodeURIComponent(id)}`, {

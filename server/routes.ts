@@ -10,6 +10,7 @@ import {
   decisionSchema,
   preferencesSchema,
   reportInputSchema,
+  reportEditSchema,
   type DemoState,
   type Envelope,
   type Persona,
@@ -18,6 +19,7 @@ import {
 import {
   DomainError,
   decideReport,
+  editReport,
   dispatchNotifications,
   findPublicNotice,
   fingerprint,
@@ -112,14 +114,11 @@ export function createRoutes(store: Store): Router {
     try {
       const current = actor(request);
       requireJson(request);
-      const input = parse(withdrawalSchema, request.body);
+      const input = parse(z.discriminatedUnion("action", [withdrawalSchema, reportEditSchema]), request.body);
       const result = await store.mutate(current.sessionId, (state) =>
-        withdrawReport(
-          state,
-          current.persona,
-          idParam(request),
-          input.expectedRevision,
-        ),
+        input.action === "edit"
+          ? editReport(state, current.persona, idParam(request), input)
+          : withdrawReport(state, current.persona, idParam(request), input.expectedRevision),
       );
       response.json(envelope(result));
     } catch (error) {

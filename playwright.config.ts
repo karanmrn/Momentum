@@ -1,18 +1,31 @@
 import { defineConfig } from "@playwright/test";
+const basePort = 4174;
+const coreSpecs = /\/(demo|map-layers|client-recovery)\.spec\.ts$/;
 export default defineConfig({
   testDir: "tests/e2e",
   timeout: 45000,
   fullyParallel: false,
   use: {
-    baseURL: "http://127.0.0.1:4174",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  webServer: {
-    command:
-      "PORT=4174 DEMO_DB_PATH=memory:// VITE_PUBLIC_SITE_URL=https://streetwise-safety.vercel.app npm run dev",
-    url: "http://127.0.0.1:4174/api/health",
+  projects: [
+    {
+      name: "core",
+      testMatch: coreSpecs,
+      use: { baseURL: `http://127.0.0.1:${basePort}` },
+    },
+    {
+      name: "features",
+      testIgnore: coreSpecs,
+      use: { baseURL: `http://127.0.0.1:${basePort + 1}` },
+    },
+  ],
+  // Separate fixtures prevent unrelated journeys sharing the demo request budget.
+  webServer: [basePort, basePort + 1].map((port) => ({
+    command: `PORT=${port} DEMO_DB_PATH=memory:// VITE_PUBLIC_SITE_URL=https://streetwise-safety.vercel.app npm run dev`,
+    url: `http://127.0.0.1:${port}/api/health`,
     reuseExistingServer: false,
     timeout: 60000,
-  },
+  })),
 });

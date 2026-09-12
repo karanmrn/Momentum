@@ -1,0 +1,332 @@
+.camden-evidence {
+  max-width: 1280px;
+  margin: auto;
+  padding: clamp(18px, 4vw, 52px);
+  color: #183e33;
+  background: #f7f1e7;
+  min-height: 100vh;
+  overflow-wrap: anywhere;
+}
+.camden-evidence * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.ce-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+.ce-heading h1 {
+  font:
+    500 clamp(30px, 4vw, 52px)/1.08 Georgia,
+    serif;
+  letter-spacing: -0.035em;
+  max-width: 720px;
+  margin: 10px 0;
+}
+.ce-kicker,
+.ce-label {
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ce-boundary {
+  border-left: 4px solid #a45c30;
+  background: #eee7da;
+  padding: 20px 24px;
+}
+.camden-evidence p {
+  line-height: 1.6;
+  margin: 10px 0;
+}
+.ce-boundary p {
+  margin-bottom: 0;
+}
+.ce-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 38px;
+  padding: 25px 0;
+  font-size: 12px;
+}
+.ce-facts strong {
+  display: block;
+  font-size: 14px;
+  margin-top: 5px;
+}
+.ce-select {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 4px 0 25px;
+}
+.ce-select button {
+  border: 1px solid #c6ccbf;
+  border-radius: 10px;
+  background: #fffaf2;
+  color: #183e33;
+  text-align: left;
+  padding: 15px;
+  min-height: 110px;
+}
+.ce-select button[aria-pressed="true"] {
+  background: #183e33;
+  color: #fff7e9;
+  border-color: #183e33;
+}
+.ce-select button > span {
+  float: right;
+  opacity: 0.7;
+  font:
+    22px Georgia,
+    serif;
+}
+.ce-select strong,
+.ce-select small {
+  display: block;
+}
+.ce-select small {
+  margin-top: 16px;
+  line-height: 1.4;
+}
+.ce-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+.ce-card {
+  border: 1px solid #cdd1c3;
+  border-radius: 16px;
+  padding: clamp(18px, 3vw, 30px);
+  background: #fffcf6;
+  margin-bottom: 22px;
+}
+.ce-card h2 {
+  font:
+    500 27px/1.15 Georgia,
+    serif;
+  margin: 12px 0 20px;
+}
+.ce-card h3 {
+  font-size: 16px;
+  margin: 12px 0;
+}
+.ce-fiction {
+  background: #f4eee2;
+  border-color: #d6b992;
+}
+.ce-fiction .ce-label {
+  color: #855125;
+}
+.ce-record-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+.ce-fields {
+  margin: 0;
+}
+.ce-fields > div {
+  padding: 12px 0;
+  border-top: 1px solid #dce0d3;
+  display: grid;
+  grid-template-columns: minmax(90px, 0.72fr) minmax(0, 1fr);
+  gap: 18px;
+}
+.ce-fields dt {
+  font-size: 13px;
+  color: #58695e;
+}
+.ce-fields dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.ce-fields small,
+.ce-fields code {
+  display: block;
+  margin-top: 5px;
+}
+.camden-evidence code {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.ce-note {
+  font-size: 13px;
+  color: #526658;
+}
+.ce-card details {
+  border-top: 1px solid #cdd1c3;
+  margin-top: 18px;
+  padding-top: 14px;
+}
+.ce-card summary {
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+  line-height: 1.4;
+  padding: 8px 0;
+}
+.ce-summary {
+  padding: 14px 18px;
+  background: #fffaf1;
+  border: 1px solid #d7c9b1;
+  border-radius: 9px;
+}
+.ce-summary h3 {
+  margin-top: 0;
+}
+.ce-revision {
+  margin-top: 24px;
+}
+.ce-revision > p {
+  font-size: 13px;
+}
+.ce-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 15px;
+}
+.ce-button {
+  border: 1px solid #809387;
+  background: transparent;
+  color: #183e33;
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-height: 48px;
+  font-weight: 650;
+  font-size: 13px;
+}
+.ce-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.ce-context-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.ce-context-grid article {
+  border-top: 2px solid #b2ba9b;
+  padding-top: 6px;
+}
+.ce-context-grid p {
+  font-size: 14px;
+}
+.ce-graph-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+.ce-graph-overview > span {
+  background: #edf0e5;
+  padding: 16px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 650;
+}
+.ce-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 12px 0 22px;
+}
+.camden-evidence table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+  font-size: 12px;
+}
+.camden-evidence th,
+.camden-evidence td {
+  text-align: left;
+  vertical-align: top;
+  padding: 12px 10px;
+  border-bottom: 1px solid #d5dacb;
+  line-height: 1.55;
+}
+.camden-evidence thead {
+  background: #ecf0e5;
+}
+.camden-evidence caption {
+  text-align: left;
+  font-weight: 700;
+  padding: 10px 0;
+}
+.ce-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+}
+.camden-evidence a {
+  color: #245f4b;
+  font-weight: 650;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.camden-evidence footer {
+  font-size: 12px;
+  color: #526658;
+  line-height: 1.6;
+  padding-bottom: 20px;
+}
+.camden-evidence button:focus-visible,
+.camden-evidence summary:focus-visible,
+.camden-evidence a:focus-visible {
+  outline: 3px solid #e98946;
+  outline-offset: 3px;
+}
+@media (max-width: 740px) {
+  .ce-heading {
+    display: block;
+  }
+  .ce-heading .ce-button {
+    margin-top: 15px;
+  }
+  .ce-select {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+  }
+  .ce-select button {
+    flex: 0 0 142px;
+    scroll-snap-align: start;
+  }
+  .ce-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ce-context-grid,
+  .ce-graph-overview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .ce-fields > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+  }
+  .ce-facts {
+    gap: 14px;
+  }
+  .ce-card h2 {
+    font-size: 25px;
+  }
+  .camden-evidence table {
+    min-width: 550px;
+  }
+  .ce-boundary {
+    padding: 16px;
+  }
+  .ce-context-grid h3 {
+    margin-bottom: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .camden-evidence * {
+    scroll-behavior: auto;
+  }
+}

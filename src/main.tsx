@@ -1,3 +1,5 @@
+import { ReportEditor } from "./ReportEditor";
+import { ScenarioPicker, type ScenarioDraft } from "./ScenarioPicker";
 import { DatasetCoverage } from "./DatasetCoverage";
 import { SemanticGraph } from "./SemanticGraph";
 import { AreaShare } from "./AreaShare";
@@ -426,6 +428,27 @@ function ReportForm({
   onClose: () => void;
   onCreated: () => Promise<void>;
 }) {
+  const formRef = useRef<HTMLFormElement>(null);
+  function useScenario(draft: ScenarioDraft) {
+    const form = formRef.current;
+    if (!form) return;
+    const date = new Date(draft.observedAt);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+    for (const [name, value] of Object.entries({
+      ...draft,
+      observedAt: local,
+    })) {
+      const field = form.elements.namedItem(name);
+      if (
+        field instanceof HTMLInputElement ||
+        field instanceof HTMLTextAreaElement ||
+        field instanceof HTMLSelectElement
+      )
+        field.value = value;
+    }
+  }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -467,11 +490,17 @@ function ReportForm({
           </button>
         </div>
       ) : (
-        <form className="form-grid" onSubmit={submit}>
+        <form ref={formRef} className="form-grid" onSubmit={submit}>
           <div className="synthetic">
             <CircleAlert size={17} /> Demonstration only. This is not an
             official report.
           </div>
+          <ScenarioPicker
+            key={area.id}
+            areaId={area.id}
+            disabled={saving}
+            onUse={useScenario}
+          />
           <label>
             Category
             <select name="category" defaultValue="infrastructure">
@@ -940,6 +969,14 @@ function Dashboard({
               view does not estimate a person's risk.
             </p>
             <DatasetCoverage pilotId={area.id} />
+            {area.id === "camden_town" && (
+              <a
+                className="button secondary"
+                href={`/?evidence=camden&area=camden_town${isPublic ? "&public=1" : "&demo=1"}`}
+              >
+                Explore Camden evidence example
+              </a>
+            )}
             <SemanticGraph area={area.id} isPublic={isPublic} />
           </section>
         )}
@@ -995,11 +1032,13 @@ function Reports({
   reports,
   area,
   report,
+  edit,
   withdraw,
 }: {
   reports: Report[];
   area: Area;
   report: () => void;
+  edit: (report: Report) => void;
   withdraw: (report: Report) => void;
 }) {
   return (
@@ -1030,6 +1069,11 @@ function Reports({
                 {item.place} · created{" "}
                 {new Date(item.createdAt).toLocaleString("en-GB")}
               </p>
+              {item.status === "submitted" && item.noticeId === null && (
+                <button className="button secondary" onClick={() => edit(item)}>
+                  Edit observation
+                </button>
+              )}
               {item.status === "submitted" && (
                 <button
                   className="button secondary warn"
@@ -1438,6 +1482,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState<Notice | null>(null);
   const [moderation, setModeration] = useState<Report[]>([]);
@@ -1454,6 +1499,7 @@ function App() {
     setNotifications([]);
     setModeration([]);
     setReportOpen(false);
+    setEditingReport(null);
   };
   const loadArea = async (id: string) => {
     const generation = ++areaRequestGeneration.current;
@@ -1810,6 +1856,7 @@ function App() {
         {!publicBrowse && view === "reports" && isMember(session.persona) && (
           <Reports
             reports={reports}
+            edit={setEditingReport}
             area={selected}
             report={() => setReportOpen(true)}
             withdraw={async (item) => {
@@ -1951,6 +1998,24 @@ function App() {
           onCreated={refreshMember}
         />
       )}
+      {!publicBrowse &&
+        editingReport &&
+        isMember(session.persona) &&
+        editingReport.owner === session.persona && (
+          <Modal
+            title="Edit observation"
+            onClose={() => setEditingReport(null)}
+          >
+            <ReportEditor
+              key={editingReport.id}
+              report={editingReport}
+              onSaved={async () => {
+                await refreshMember();
+                setEditingReport(null);
+              }}
+            />
+          </Modal>
+        )}
       {!publicBrowse && noticeOpen && (
         <Inspector notice={noticeOpen} onClose={() => setNoticeOpen(null)} />
       )}
@@ -1967,9 +2032,32 @@ function App() {
 const Presentation = lazy(() =>
   import("./Presentation").then((module) => ({ default: module.Presentation })),
 );
+const CamdenEvidence = lazy(() =>
+  import("./CamdenEvidence").then((module) => ({
+    default: module.CamdenEvidence,
+  })),
+);
 function Entry() {
   const query = new URLSearchParams(window.location.search);
   const entry = entryArea(window.location.search);
+  if (query.get("evidence") === "camden") {
+    return (
+      <Suspense
+        fallback={
+          <main className="map-fallback">Loading Camden evidence...</main>
+        }
+      >
+        <CamdenEvidence
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("evidence");
+            url.searchParams.set("area", "camden_town");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
+  }
   if (query.get("presentation") === "1" && !entry.invalid) {
     return (
       <Suspense

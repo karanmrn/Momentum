@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "1.0",
+  "checkedAt": "2026-09-12T14:18:16.338433+00:00",
+  "sources": [
+    {
+      "id": "police-method",
+      "title": "Police.uk publication method",
+      "url": "https://data.police.uk/about/",
+      "status": "read",
+      "summary": "Forces submit records each month. The public release reduces date and location precision and removes internal references."
+    },
+    {
+      "id": "police-fields",
+      "title": "Police.uk API fields",
+      "url": "https://data.police.uk/docs/method/crime-street/",
+      "status": "read",
+      "summary": "The API provides category, month, approximate location and available outcome. Its numeric ID is not a police case reference."
+    },
+    {
+      "id": "police-category",
+      "title": "Police.uk crime categories",
+      "url": "https://www.police.uk/pu/about-police.uk-crime-data/",
+      "status": "read",
+      "summary": "Violence and sexual offences combines common assault, grievous bodily harm and sexual offences. These rows cannot reveal the subtype."
+    },
+    {
+      "id": "police-report",
+      "title": "What police ask after a report",
+      "url": "https://www.police.uk/ro/report/rsa/alpha-v1/advice/rape-sexual-assault-and-other-sexual-offences/what-happens-after-report-rape-sexual-assault/",
+      "status": "read",
+      "summary": "Police ask who, what, where and when. A forensic examination may be offered. Missing public fields do not show police indifference."
+    },
+    {
+      "id": "police-investigation",
+      "title": "Met investigation process",
+      "url": "https://www.met.police.uk/ro/report/rsa/alpha-v1/advice/rape-sexual-assault-and-other-sexual-offences/rape-sexual-assault-investigation/",
+      "status": "read",
+      "summary": "Detailed statements and relevant digital evidence can form part of an investigation. This guidance does not prove collection in these five records."
+    },
+    {
+      "id": "camden-help",
+      "title": "Camden Safety Bus",
+      "url": "https://www.camden.gov.uk/staying-safe-at-night",
+      "status": "read",
+      "summary": "The council lists a 12 September relocation outside KOKO. Published hours remain 21:30 to 02:30. Actual deployment is unconfirmed."
+    },
+    {
+      "id": "camden-havens",
+      "title": "Camden Safe Havens",
+      "url": "https://www.camden.gov.uk/safe-havens",
+      "status": "read",
+      "summary": "The council lists a help scheme. Scheme membership does not establish current staffing or availability."
+    }
+  ],
+  "areaContext": [
+    {
+      "id": "camden-night-priority",
+      "title": "Published women and girls safety priority",
+      "sourceUrl": "https://data.police.uk/api/metropolitan/E05013655/priorities",
+      "sourceFamilyId": "police-uk",
+      "sourcePublishedAt": "2026-09-01",
+      "timePrecision": "day",
+      "retrievedAt": "2026-09-12T14:18:16.338433+00:00",
+      "snapshotSha256": "629a4aa2f52b4ddc07d7c138bd7b34ebfe9da3e2e47ed5f151338a1086b8d200",
+      "summary": "The police publish a Camden Town priority on violence against women and girls during the night-time economy.",
+      "responseSummary": "The source lists police operations and work with the council and licensing staff, including staff training.",
+      "relationship": "same_source_priority_and_action",
+      "completionVerified": false,
+      "independentCommunityReport": false,
+      "incidentMatchEstablished": false,
+      "synthetic": false
+    },
+    {
+      "id": "camden-bus-exception",
+      "title": "Safety Bus location exception",
+      "sourceUrl": "https://www.camden.gov.uk/staying-safe-at-night",
+      "sourceFamilyId": "camden-council",
+      "sourcePublishedAt": null,
+      "retrievedAt": "2026-09-12T14:18:16.338433+00:00",
+      "validFrom": "2026-09-12T21:30:00+01:00",
+      "validTo": "2026-09-13T02:30:00+01:00",
+      "timePrecision": "source_schedule",
+      "summary": "The 12 September council notice lists the Safety Bus outside KOKO on Camden High Street.",
+      "usualLocation": "Outside Camden Town Tube station",
+      "exceptionLocation": "Outside KOKO on Camden High Street",
+      "actualDeployment": "unconfirmed",
+      "incidentMatchEstablished": false,
+      "synthetic": false
+    }
+  ]
+}
