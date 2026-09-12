@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.data/
+.env*
+!.env.example
+test-results/
+playwright-report/
+.DS_Store
+
+# Internal acquisition evidence is excluded from public delivery.
+research/acquisition/
+scripts/backfill/live-probe.json
+docs/release/screenshots/
+.vercel

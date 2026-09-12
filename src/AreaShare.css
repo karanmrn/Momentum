@@ -1,0 +1,89 @@
+.area-share-dialog {
+  color: #183e33;
+  background: #fffef9;
+  border: 1px solid #d5d8ca;
+  border-radius: 18px;
+  padding: 24px;
+  width: min(480px, calc(100% - 24px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  box-sizing: border-box;
+}
+.area-share-dialog::backdrop {
+  background: rgb(16 40 32 / 65%);
+}
+.area-share-header {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+}
+.area-share-header h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0 0 20px;
+  font:
+    700 28px/1.15 Georgia,
+    serif;
+}
+.area-share-close {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 28px;
+}
+.area-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.area-share-dialog .button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+}
+.area-share-link {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+.area-share-link input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+.area-share-status {
+  font-size: 14px;
+}
+.area-share-status:empty {
+  display: none;
+}
+.area-share-code {
+  margin-top: 20px;
+  text-align: center;
+}
+.area-share-code img {
+  display: block;
+  width: min(256px, 100%);
+  height: auto;
+  margin: 0 auto;
+  background: white;
+}
+.area-share-dialog p {
+  line-height: 1.5;
+}
+@media (max-width: 420px) {
+  .area-share-dialog {
+    padding: 16px;
+  }
+  .area-share-actions > .button {
+    flex: 1 1 110px;
+  }
+}

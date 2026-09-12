@@ -1,0 +1,176 @@
+{
+  "schema_version": "1.0",
+  "synthetic": true,
+  "environment": "isolated_demo",
+  "warning": "All observations, notices, relationships and preferences below are invented. They are not real incidents or current conditions in the named areas. No real station IDs, coordinates or crime totals are supplied.",
+  "places": [
+    {
+      "id": "3599c7d2-6ac4-51fe-9ff1-e2fdc4d345dd",
+      "pilotId": "hounslow_town_centre",
+      "label": "Fictional Hounslow pilot place",
+      "geometry": null
+    },
+    {
+      "id": "5faa63d2-c1a7-5a66-bf0f-63ae8c687785",
+      "pilotId": "camden_town",
+      "label": "Fictional Camden pilot place",
+      "geometry": null
+    },
+    {
+      "id": "c01a7836-9c46-59aa-9748-c447368903df",
+      "pilotId": "west_croydon",
+      "label": "Fictional West Croydon pilot place",
+      "geometry": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "demo-community",
+      "sourceFamilyId": "demo-family-community",
+      "kind": "community_firsthand",
+      "originGroupId": "demo-origin-community-observation"
+    },
+    {
+      "id": "demo-operator",
+      "sourceFamilyId": "demo-family-operator",
+      "kind": "official_operator",
+      "warning": "Fictional role, not a real authority",
+      "originGroupId": "demo-origin-operator"
+    },
+    {
+      "id": "demo-repost",
+      "sourceFamilyId": "demo-family-community",
+      "kind": "community_other_source",
+      "originGroupId": "demo-origin-community-observation"
+    }
+  ],
+  "observations": [
+    {
+      "id": "79c5bd94-2ff0-5432-bd6f-ffb777eee287",
+      "placeId": "3599c7d2-6ac4-51fe-9ff1-e2fdc4d345dd",
+      "sourceId": "demo-community",
+      "summary": "Synthetic lighting issue, not a current report.",
+      "observedFrom": "2026-09-12T18:00:00+01:00",
+      "reviewStatus": "unreviewed",
+      "visibility": "moderator_private"
+    },
+    {
+      "id": "8ec2eeb5-1b97-53a0-ad61-50ab7227fb0e",
+      "placeId": "3599c7d2-6ac4-51fe-9ff1-e2fdc4d345dd",
+      "sourceId": "demo-repost",
+      "summary": "Synthetic copy of the first fictional report.",
+      "observedFrom": "2026-09-12T18:05:00+01:00",
+      "reviewStatus": "unreviewed",
+      "visibility": "moderator_private"
+    }
+  ],
+  "notices": [
+    {
+      "id": "a24ca867-49d7-5ca0-b8a8-b6e7514fba37",
+      "revision": 1,
+      "pilotId": "west_croydon",
+      "placeIds": [
+        "c01a7836-9c46-59aa-9748-c447368903df"
+      ],
+      "sourceId": "demo-operator",
+      "category": "transport",
+      "status": "active",
+      "title": "DEMO \u2014 fictional operator notice",
+      "publicSummary": "Training-only operational notice; this describes no real disruption.",
+      "synthetic": true
+    },
+    {
+      "id": "8fcc35a3-fffc-500f-b531-71ff276e445b",
+      "revision": 1,
+      "pilotId": "camden_town",
+      "placeIds": [
+        "5faa63d2-c1a7-5a66-bf0f-63ae8c687785"
+      ],
+      "sourceId": "demo-community",
+      "category": "infrastructure",
+      "status": "active",
+      "title": "DEMO \u2014 reviewed fictional observation",
+      "publicSummary": "Training-only community summary; not official confirmation.",
+      "synthetic": true
+    }
+  ],
+  "preferences": [
+    {
+      "userId": "1c7473a9-16f0-560d-b80a-7694b27fa044",
+      "followedAreaIds": [
+        "west_croydon"
+      ],
+      "selectedCategories": [
+        "transport"
+      ],
+      "inAppEnabled": true,
+      "externalPushOptInAt": null
+    },
+    {
+      "userId": "dccf574d-e8b3-5055-9251-3a3c47ef3735",
+      "followedAreaIds": [
+        "camden_town"
+      ],
+      "selectedCategories": [
+        "infrastructure"
+      ],
+      "inAppEnabled": true,
+      "externalPushOptInAt": null
+    }
+  ],
+  "assertions": [
+    {
+      "id": "ad2e56d0-05ba-5e86-a414-701a8c03702a",
+      "subjectId": "8ec2eeb5-1b97-53a0-ad61-50ab7227fb0e",
+      "predicate": "DERIVED_FROM",
+      "objectId": "79c5bd94-2ff0-5432-bd6f-ffb777eee287",
+      "inferenceType": "source_statement",
+      "visibility": "moderator_private",
+      "reasonCodes": [
+        "shared_original_source"
+      ],
+      "synthetic": true
+    },
+    {
+      "id": "2d4f1a6e-5135-5291-ad82-4bea017b5177",
+      "subjectId": "a24ca867-49d7-5ca0-b8a8-b6e7514fba37",
+      "predicate": "AFFECTS_PLACE",
+      "objectId": "c01a7836-9c46-59aa-9748-c447368903df",
+      "inferenceType": "source_statement",
+      "visibility": "public",
+      "reasonCodes": [
+        "explicit_place_reference"
+      ],
+      "synthetic": true
+    }
+  ],
+  "analysis_example": {
+    "status": "insufficient_comparable_data",
+    "estimate": null,
+    "commonPeriods": 0,
+    "limitations": [
+      "No comparable real community history exists in this fixture."
+    ],
+    "synthetic": true
+  },
+  "required_demo_transition": {
+    "noticeId": "a24ca867-49d7-5ca0-b8a8-b6e7514fba37",
+    "fromRevision": 1,
+    "toRevision": 2,
+    "newStatus": "retracted",
+    "expectedEffect": "Withdraw original from current personal feed, invalidate derived explanation, cancel queued original notifications and display correction to prior recipient."
+  },
+  "fixture_id_aliases": {
+    "demo-user-a": "1c7473a9-16f0-560d-b80a-7694b27fa044",
+    "demo-place-hounslow": "3599c7d2-6ac4-51fe-9ff1-e2fdc4d345dd",
+    "demo-place-camden": "5faa63d2-c1a7-5a66-bf0f-63ae8c687785",
+    "demo-assertion-1": "ad2e56d0-05ba-5e86-a414-701a8c03702a",
+    "demo-observation-2": "8ec2eeb5-1b97-53a0-ad61-50ab7227fb0e",
+    "demo-notice-1": "a24ca867-49d7-5ca0-b8a8-b6e7514fba37",
+    "demo-assertion-2": "2d4f1a6e-5135-5291-ad82-4bea017b5177",
+    "demo-observation-1": "79c5bd94-2ff0-5432-bd6f-ffb777eee287",
+    "demo-place-croydon": "c01a7836-9c46-59aa-9748-c447368903df",
+    "demo-notice-2": "8fcc35a3-fffc-500f-b531-71ff276e445b",
+    "demo-user-b": "dccf574d-e8b3-5055-9251-3a3c47ef3735"
+  }
+}

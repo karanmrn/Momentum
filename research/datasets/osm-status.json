@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0",
+  "sourceId": "OSM",
+  "sourceUrl": "https://overpass-api.de/api/interpreter",
+  "licence": "ODbL 1.0",
+  "licenceUrl": "https://www.openstreetmap.org/copyright",
+  "attribution": "© OpenStreetMap contributors",
+  "publicationAllowed": false,
+  "synthetic": false,
+  "live": false,
+  "scopes": [
+    {
+      "area": "hounslow_town_centre",
+      "status": "available",
+      "fetchedAt": "2026-09-12T13:10:10.755Z",
+      "httpStatus": 200,
+      "query": "[out:json][timeout:25][maxsize:16777216];nwr[\"amenity\"~\"^(toilets|library|pharmacy|community_centre|police)$\"][\"access\"!~\"^(private|no)$\"](around:1609.344,51.4683,-0.3618);out meta center;",
+      "sourceTimestamp": "2026-09-12T13:08:52Z",
+      "sourceResponseSha256": "f1e916abf9e499c9e7587ed7bdbebc7256ffe602165abbc2d4fb69e392988d81",
+      "sourceResponseBytes": 10939,
+      "persistedSha256": "f8c75ad5f945bc669d8d9ac87c1f45e27af977581040052ebb9b28083c0c55d3",
+      "file": ".data/datasets/osm/hounslow_town_centre.json",
+      "records": 19,
+      "counts": {
+        "toilets": 4,
+        "library": 1,
+        "pharmacy": 6,
+        "community_centre": 7,
+        "police": 1
+      }
+    },
+    {
+      "area": "camden_town",
+      "status": "available",
+      "fetchedAt": "2026-09-12T13:10:12.889Z",
+      "httpStatus": 200,
+      "query": "[out:json][timeout:25][maxsize:16777216];nwr[\"amenity\"~\"^(toilets|library|pharmacy|community_centre|police)$\"][\"access\"!~\"^(private|no)$\"](around:1609.344,51.5392,-0.1426);out meta center;",
+      "sourceTimestamp": "2026-09-12T13:08:52Z",
+      "sourceResponseSha256": "9b11e95f15ab31336d3ce46e4665fe9aa8d19144d628cd8ab72945fbebe0e07c",
+      "sourceResponseBytes": 60639,
+      "persistedSha256": "88935f0c4e34a9c42b6a1d801debec428ded79fc7109758b1e5b9145fdac603f",
+      "file": ".data/datasets/osm/camden_town.json",
+      "records": 104,
+      "counts": {
+        "toilets": 47,
+        "library": 9,
+        "pharmacy": 22,
+        "community_centre": 21,
+        "police": 5
+      }
+    },
+    {
+      "area": "west_croydon",
+      "status": "available",
+      "fetchedAt": "2026-09-12T13:10:15.248Z",
+      "httpStatus": 200,
+      "query": "[out:json][timeout:25][maxsize:16777216];nwr[\"amenity\"~\"^(toilets|library|pharmacy|community_centre|police)$\"][\"access\"!~\"^(private|no)$\"](around:1609.344,51.3784,-0.1023);out meta center;",
+      "sourceTimestamp": "2026-09-12T13:08:52Z",
+      "sourceResponseSha256": "dad7f96d87e043c4f4d8b01880727b5a52075390429d68fbe52195b9228a14ff",
+      "sourceResponseBytes": 23645,
+      "persistedSha256": "7ab11a34de408180b3df3e23eb6bf0310fcf2d58ebccc01b3057f9adca0cc15a",
+      "file": ".data/datasets/osm/west_croydon.json",
+      "records": 37,
+      "counts": {
+        "toilets": 9,
+        "library": 2,
+        "pharmacy": 14,
+        "community_centre": 10,
+        "police": 2
+      }
+    }
+  ],
+  "limitations": [
+    "One-mile research circles are not approved pilot boundaries.",
+    "Mapped amenities do not confirm public access, current hours, working facilities, or help-scheme membership.",
+    "Way and relation centers are bounding-box centers, not entrances. Source features can intersect the radius while their centers lie outside.",
+    "OSM mapping may be incomplete. An absent record is not an absent facility.",
+    "Source response checksum covers received bytes. Saved records exclude contributor metadata and all tags outside the allowlist. Original response bodies are not retained.",
+    "No retries, parallel requests, endpoint failover, private feeds, or publication occurred."
+  ]
+}

@@ -1,0 +1,700 @@
+{
+  "prepared_date": "2026-09-12",
+  "verification_boundary": "Selected council help and service cards are integrated. Police.uk publication metadata and a bounded Camden lighting sample were retrieved. Pilot boundaries and local crime totals remain unapproved. TfL direct requests return HTTP 403.",
+  "sources": [
+    {
+      "id": "P01",
+      "name": "Police.uk street-crime API",
+      "url": "https://data.police.uk/docs/method/crime-street/",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "historical_crime",
+      "reuse_status": "OGL terms and attribution apply",
+      "finding": "Monthly and approximate; persistent identifier is not a police case reference. Polygon queries are supported.",
+      "implementation_action": "Validate current schema, month availability, query limits and actual responses.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "P02",
+      "name": "Police.uk publication methodology",
+      "url": "https://data.police.uk/about/",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "methodology",
+      "reuse_status": "OGL v3 stated for data",
+      "finding": "Publication anonymisation, category grouping and completeness constrain joins.",
+      "implementation_action": "Read known issues for each selected extract.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "P03",
+      "name": "Police.uk latest reporting month",
+      "url": "https://data.police.uk/api/crime-last-updated",
+      "verification_status": "live_adapter_verified",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "metadata",
+      "reuse_status": "Police.uk data terms",
+      "finding": "Live metadata returned July 2026. The history route lists 36 publication months. No pilot count is calculated.",
+      "implementation_action": "Re-fetch at implementation; a reporting month is not an incident timestamp.",
+      "connector_status": "implemented_metadata_only",
+      "automation_enabled": false
+    },
+    {
+      "id": "P04",
+      "name": "MPS recorded crime geographic breakdown",
+      "url": "https://data.london.gov.uk/dataset/mps-recorded-crime-geographic-breakdown-exy3m/",
+      "verification_status": "catalogue_and_methodology_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "historical_aggregate",
+      "reuse_status": "Inspect current dataset licence and attribution",
+      "finding": "Catalogue lists borough/LSOA through Aug 2026 and ward through Jul 2026; sexual offences withheld at LSOA.",
+      "implementation_action": "Download real files, inspect taxonomy, months, CONNECT caveat and checksums. No totals reproduced here.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "P05",
+      "name": "ONS crime statistics user guide",
+      "url": "https://www.ons.gov.uk/peoplepopulationandcommunity/crimeandjustice/methodologies/userguidetocrimestatisticsforenglandandwales",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "methodology",
+      "reuse_status": "ONS reuse terms",
+      "finding": "Police-recorded crime and victimisation measurements have different coverage and limitations.",
+      "implementation_action": "Document measurement and reporting processes before comparing series.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "T01",
+      "name": "TfL Unified API",
+      "url": "https://tfl.gov.uk/info-for/open-data-users/unified-api",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "transport",
+      "reuse_status": "TfL transport-data terms; verify registration and quotas",
+      "finding": "Operational transport source; preserve line, stop, facility and event scope.",
+      "implementation_action": "Resolve real station/stop IDs and inspect current status/disruption schema.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "T02",
+      "name": "TfL API portal",
+      "url": "https://api-portal.tfl.gov.uk/apis",
+      "verification_status": "catalogue_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "transport",
+      "reuse_status": "TfL API terms; credentials/quotas unverified",
+      "finding": "Discover supported endpoints and authentication.",
+      "implementation_action": "Read-only integration smoke test and source-specific contract tests required.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "H01",
+      "name": "Hounslow Data Hub",
+      "url": "https://stats.hounslow.gov.uk/",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre"
+      ],
+      "kind": "context_catalogue",
+      "reuse_status": "Check each underlying dataset licence",
+      "finding": "Council statistics catalogue; not an independent live incident feed.",
+      "implementation_action": "Identify underlying primary tables, dates and derivations before reuse.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "H02",
+      "name": "Hounslow crime insight",
+      "url": "https://stats.hounslow.gov.uk/crime-insight/",
+      "verification_status": "catalogue_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre"
+      ],
+      "kind": "historical_context",
+      "reuse_status": "Underlying source licence to verify",
+      "finding": "Context dashboard discovered; full numerical extract not reproduced.",
+      "implementation_action": "Do not treat republished police numbers as independent corroboration.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "H03",
+      "name": "Hounslow Highways public reports",
+      "url": "https://fms.hounslowhighways.org/",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre"
+      ],
+      "kind": "civic_fault",
+      "reuse_status": "Bulk/API reuse permission not established",
+      "finding": "Public reporting site exists; candidate for lighting and pavement observations.",
+      "implementation_action": "Identify authorised read API/feed and permissible fields before automation.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "H04",
+      "name": "Hounslow street/traffic lights",
+      "url": "https://www.hounslow.gov.uk/roads-streets/street-traffic-lights",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre"
+      ],
+      "kind": "reporting_handoff",
+      "reuse_status": "Link to official service; no automatic submission",
+      "finding": "Official handoff for infrastructure issues.",
+      "implementation_action": "Verify route and distinguish council/highways/private responsibilities.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "H05",
+      "name": "Hounslow safer communities strategy files",
+      "url": "https://www.hounslow.gov.uk/downloads/download/2163/community-safety",
+      "verification_status": "catalogue_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre"
+      ],
+      "kind": "policy_context",
+      "reuse_status": "Council document reuse terms",
+      "finding": "Strategy context for local partner conversations, not live warnings.",
+      "implementation_action": "Partner/operator and staffing agreement still required.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "C01",
+      "name": "Camden staying safe at night",
+      "url": "https://www.camden.gov.uk/staying-safe-at-night",
+      "verification_status": "page_retrieved",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "camden_town"
+      ],
+      "kind": "help_directory",
+      "reuse_status": "Review reuse; cite official source",
+      "finding": "Safety Bus listing retrieved with Context.dev. Published schedule is separate from deployment tonight.",
+      "implementation_action": "Review schedule before publication and model overnight dates correctly.",
+      "connector_status": "curated_help_card",
+      "automation_enabled": false
+    },
+    {
+      "id": "C02",
+      "name": "Camden Safe Havens",
+      "url": "https://www.camden.gov.uk/safe-havens",
+      "verification_status": "selected_facts_reviewed",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "camden_town"
+      ],
+      "kind": "help_directory",
+      "reuse_status": "Review map/dataset terms before bulk extraction",
+      "finding": "Four selected council-listed venues appear as factual source-linked cards. Availability remains unconfirmed. Raw directory is not republished.",
+      "implementation_action": "Extract only permitted locations and verify scheme eligibility, entrance and hours.",
+      "connector_status": "curated_help_cards",
+      "automation_enabled": false
+    },
+    {
+      "id": "C03",
+      "name": "Camden street-lighting dataset",
+      "url": "https://opendata.camden.gov.uk/Environment/Camden-Street-Lighting/dfq3-8wzu",
+      "verification_status": "live_adapter_verified",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "camden_town"
+      ],
+      "kind": "asset_inventory",
+      "reuse_status": "Metadata declares Open Government Licence v3; attribute London Borough of Camden.",
+      "finding": "Live candidate-rectangle sample returned 200 assets across 36 named streets. It is not a complete pilot inventory or lamp operation feed.",
+      "implementation_action": "Inspect Socrata metadata, fields, licence, freshness and sample rows; probe failed in this runtime.",
+      "connector_status": "implemented_bounded_sample",
+      "automation_enabled": false
+    },
+    {
+      "id": "C04",
+      "name": "Camden street-lighting location view",
+      "url": "https://opendata.camden.gov.uk/Environment/Camden-Street-Lighting-Location/jx8t-gxyu",
+      "verification_status": "catalogue_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "camden_town"
+      ],
+      "kind": "asset_inventory",
+      "reuse_status": "Determine canonical parent dataset and licence",
+      "finding": "Related map/view discovered; may not be an independent dataset.",
+      "implementation_action": "Resolve view lineage and prevent double ingestion.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "W01",
+      "name": "Croydon BID Street Rangers",
+      "url": "https://croydonbid.com/business/resolve/street-rangers/",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "west_croydon"
+      ],
+      "kind": "partner_candidate",
+      "reuse_status": "No live data agreement exists for this project",
+      "finding": "Published street-ranger service; potential operational partner.",
+      "implementation_action": "Confirm coverage, staffing, authority and opt-in notice supply; not emergency dispatch.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "W02",
+      "name": "Croydon BID Radio Link",
+      "url": "https://croydonbid.com/business/resolve/radio-link/",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "west_croydon"
+      ],
+      "kind": "restricted_partner_context",
+      "reuse_status": "Not an open intelligence feed; no scraping",
+      "finding": "Business/ranger/public-service coordination described; private scheme data excluded.",
+      "implementation_action": "Only integrate a specifically authorised public notice channel under agreement.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "W03",
+      "name": "Croydon lighting fault report",
+      "url": "https://www.croydon.gov.uk/streets-roads-and-transport/street-maintenance-repairs-and-improvements/street-lighting/report-street-or-sign-lighting-issue-online",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "west_croydon"
+      ],
+      "kind": "civic_fault_handoff",
+      "reuse_status": "Bulk/API reuse permission not established",
+      "finding": "Official reporting route and contractor system; not a validated open read feed.",
+      "implementation_action": "Verify stable canonical interface, jurisdiction and permissible read access.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "W04",
+      "name": "Croydon street-lighting service",
+      "url": "https://www.croydon.gov.uk/streets-roads-and-transport/street-maintenance-repairs-and-improvements/street-lighting",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "west_croydon"
+      ],
+      "kind": "infrastructure_context",
+      "reuse_status": "Council reuse terms to verify",
+      "finding": "Service information, not a real-time map of operational lights.",
+      "implementation_action": "Retain distinction between asset, complaint and repair confirmation.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "G01",
+      "name": "OpenStreetMap lighting tag",
+      "url": "https://wiki.openstreetmap.org/wiki/Key:lit",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "environment_context",
+      "reuse_status": "OSM data ODbL; attribution; wiki has separate content licence",
+      "finding": "Tag describes mapped lighting properties; missing tags mean missing information.",
+      "implementation_action": "Do not infer current illumination or safety from tag presence.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "G02",
+      "name": "OSMF tile usage policy",
+      "url": "https://operations.osmfoundation.org/policies/tiles/",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "basemap",
+      "reuse_status": "Provider-specific conditions and visible attribution",
+      "finding": "Public tile service forbids bulk/offline prefetch and is not a guaranteed hosting service.",
+      "implementation_action": "Choose compliant provider; inspect privacy/referrer/cache behaviour.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "G03",
+      "name": "ONS Open Geography Portal",
+      "url": "https://geoportal.statistics.gov.uk/",
+      "verification_status": "candidate_not_fetched",
+      "checked_date": null,
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "geographies",
+      "reuse_status": "Verify selected boundary product licence",
+      "finding": "Candidate canonical geography source, not a validated boundary asset in this pack.",
+      "implementation_action": "Choose boundary vintage, CRS, codes and downloaded checksum.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "R01",
+      "name": "Met StreetSafe",
+      "url": "https://www.met.police.uk/notices/street-safe/street-safe/",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "reporting_handoff",
+      "reuse_status": "Link to official service",
+      "finding": "Public-place safety concerns channel, distinct from reporting a crime or emergency.",
+      "implementation_action": "Keep wording and destination current; no automatic submission.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "R02",
+      "name": "BTP text reporting",
+      "url": "https://www.btp.police.uk/police-forces/british-transport-police/areas/campaigns/How-to-use-our-text-number/",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "reporting_handoff",
+      "reuse_status": "Link to official service",
+      "finding": "61016 is non-emergency rail reporting; emergencies use 999.",
+      "implementation_action": "Check applicability and support SMS/manual copy without claiming submission.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "K01",
+      "name": "W3C PROV-O",
+      "url": "https://www.w3.org/TR/prov-o/",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "provenance_standard",
+      "reuse_status": "W3C document terms",
+      "finding": "Entity/activity/agent and qualified derivation concepts inform provenance design.",
+      "implementation_action": "Implement practical relational constraints; no claim of full RDF conformance.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "K02",
+      "name": "W3C SHACL",
+      "url": "https://www.w3.org/TR/shacl/",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "graph_validation_reference",
+      "reuse_status": "W3C document terms",
+      "finding": "Reference for graph-shape validation; optional future RDF export.",
+      "implementation_action": "Use SQL and runtime schemas first; do not add a second graph stack now.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "A01",
+      "name": "SciPy Spearman correlation",
+      "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "statistics",
+      "reuse_status": "Software/documentation licences apply",
+      "finding": "Rank correlation API; small-sample inference requires care.",
+      "implementation_action": "Use dependence-aware inference, not naive significance on correlated cell-months.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "A02",
+      "name": "statsmodels negative-binomial family",
+      "url": "https://www.statsmodels.org/stable/generated/statsmodels.genmod.families.family.NegativeBinomial.html",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "statistics",
+      "reuse_status": "Software/documentation licences apply",
+      "finding": "Count-model reference for later exploratory analysis.",
+      "implementation_action": "Specify count process, dispersion, covariates and held-out validation.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "A03",
+      "name": "Runaway Feedback Loops in Predictive Policing",
+      "url": "https://proceedings.mlr.press/v81/ensign18a.html",
+      "verification_status": "paper_page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "bias_research",
+      "reuse_status": "Research citation, not content licence for scraping",
+      "finding": "Primary research on feedback effects in predictive-policing systems.",
+      "implementation_action": "Use as motivation to separate observation/exposure/enforcement from underlying prevalence.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "L01",
+      "name": "ICO criminal-offence data definition",
+      "url": "https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/criminal-offence-data/what-is-criminal-offence-data/",
+      "verification_status": "guidance_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "legal_review",
+      "reuse_status": "Guidance, not project legal advice",
+      "finding": "Identifiable suspected-offender allegations can be criminal-offence data; victims/witnesses are not automatically in that category.",
+      "implementation_action": "Classify fields and inferences, not just source labels.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "L02",
+      "name": "ICO rules on criminal-offence data",
+      "url": "https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/criminal-offence-data/what-are-the-rules-on-criminal-offence-data/",
+      "verification_status": "guidance_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "legal_review",
+      "reuse_status": "Guidance, not project legal advice",
+      "finding": "Additional authority/UK-law conditions may be required alongside lawful basis.",
+      "implementation_action": "Review before processing identifiable alleged-offender data; prohibit it in MVP intake/public output.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "L03",
+      "name": "ICO DPIA screening",
+      "url": "https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/accountability-and-governance/data-protection-impact-assessments-dpias/when-do-we-need-to-do-a-dpia/",
+      "verification_status": "guidance_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "legal_review",
+      "reuse_status": "Guidance, not project legal advice",
+      "finding": "High-risk processing indicators include relevant location/vulnerability/systematic assessment patterns.",
+      "implementation_action": "Complete DPIA screening and mitigations before real pilot launch.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "L04",
+      "name": "Ofcom illegal-content duties",
+      "url": "https://www.ofcom.org.uk/online-safety/illegal-and-harmful-content/illegal-content-duties-under-the-online-safety-act",
+      "verification_status": "guidance_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "legal_review",
+      "reuse_status": "Guidance, not project legal advice",
+      "finding": "User-to-user service duties require assessment; hackathon label does not settle scope.",
+      "implementation_action": "Assess service scope, child access, reporting/complaints and moderation obligations.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "E01",
+      "name": "Netlify scheduled functions",
+      "url": "https://docs.netlify.com/build/functions/scheduled-functions/",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "engineering",
+      "reuse_status": "Account terms/quotas must be checked",
+      "finding": "Current docs state 30-second scheduled-function limit; schedules run on published deploys.",
+      "implementation_action": "Bound polling; use manual CLI/checkpoint jobs for backfills; explicitly test previews.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "E02",
+      "name": "Supabase PostGIS",
+      "url": "https://supabase.com/docs/guides/database/extensions/postgis",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "engineering",
+      "reuse_status": "Account terms/quotas must be checked",
+      "finding": "PostGIS supplies geographic types and spatial queries in Postgres.",
+      "implementation_action": "Enable extension deliberately and test SRID/index/query semantics.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "E03",
+      "name": "Supabase RLS",
+      "url": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "engineering",
+      "reuse_status": "Account terms/quotas must be checked",
+      "finding": "RLS and grants need explicit design; views and privileged roles require care.",
+      "implementation_action": "Test user/moderator/partner/public permissions including graph joins and private caches.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "E04",
+      "name": "Codex worktrees",
+      "url": "https://developers.openai.com/codex/app/worktrees/",
+      "verification_status": "documentation_checked",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "engineering",
+      "reuse_status": "Official page redirects to ChatGPT Learn worktrees documentation",
+      "finding": "Worktrees support independent parallel chats/checkouts in a Git repository.",
+      "implementation_action": "Use one branch/worktree per task, a shared contract commit and an integration owner.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "S01",
+      "name": "UN SDG 11",
+      "url": "https://sdgs.un.org/goals/goal11",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "sdg",
+      "reuse_status": "Cite UN target text",
+      "finding": "Target 11.7 concerns safe, inclusive, accessible public spaces.",
+      "implementation_action": "State alignment of intent, not measured reduction in harm.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    },
+    {
+      "id": "S02",
+      "name": "UN SDG 5",
+      "url": "https://sdgs.un.org/goals/goal5",
+      "verification_status": "page_read",
+      "checked_date": "2026-09-12",
+      "areas": [
+        "hounslow_town_centre",
+        "camden_town",
+        "west_croydon"
+      ],
+      "kind": "sdg",
+      "reuse_status": "Cite UN target text",
+      "finding": "Target 5.2 concerns violence against women and girls.",
+      "implementation_action": "Keep user-centred focus without declaring causal impact.",
+      "connector_status": "not_implemented",
+      "automation_enabled": false
+    }
+  ]
+}

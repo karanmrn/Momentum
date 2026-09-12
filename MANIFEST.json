@@ -1,0 +1,159 @@
+{
+  "prepared_date": "2026-09-12",
+  "source_count": 40,
+  "prompt_count": 11,
+  "specified_application_acceptance_scenarios": 104,
+  "artifact_type": "implementation planning package",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 2906,
+      "sha256": "859cd962680243827896c6ce76bcb38fc7cb48a6f86e0bbc5b565b534934ca0d"
+    },
+    {
+      "path": "PACKAGE_VALIDATION.json",
+      "bytes": 4139,
+      "sha256": "a6ca9e82c8fbf77e925fcf6de85eb392225559cbca15dafd966a4a04c8cad355"
+    },
+    {
+      "path": "START_HERE.md",
+      "bytes": 3882,
+      "sha256": "942ec8510ac81a02a0c54247525253a940e5d8158e4535c7c884860c415a4909"
+    },
+    {
+      "path": "config/ENVIRONMENT_NOTES.md",
+      "bytes": 1648,
+      "sha256": "c7d315461b682db6db2f796b97c64bb00dcd1f8d5f501eebfc1946a4a8cf9758"
+    },
+    {
+      "path": "config/feature_flags.json",
+      "bytes": 493,
+      "sha256": "a3b38eb3448bc32bc0e73f3d6c0db44a71b62f62d4f9c49348a68a2a506fa1ad"
+    },
+    {
+      "path": "config/pilot_areas.json",
+      "bytes": 3078,
+      "sha256": "68932e568fac9ae8d3349da3cedd06e3340f46b3647299fc75f0b3954b7d0862"
+    },
+    {
+      "path": "contracts/API_RULES.md",
+      "bytes": 4211,
+      "sha256": "937c26398a6032e8413943776a2cacaa3cc8af94879e59841fffd318e9f70467"
+    },
+    {
+      "path": "contracts/domain.ts",
+      "bytes": 5751,
+      "sha256": "c18c3bc5829d0bd59952b65ffef326cf8d6f1aee8623a312fecdeb9ddfecdfde"
+    },
+    {
+      "path": "docs/correlation_protocol.md",
+      "bytes": 8177,
+      "sha256": "371bcdd51fa0985a33ba3b6129e06391840076b5e3e17e0b75668fa260bcb859"
+    },
+    {
+      "path": "docs/knowledge_graph.md",
+      "bytes": 10099,
+      "sha256": "6a530f05e08773fbad76b78c59e9915afdbcade912ad05b659df2ff917893fc9"
+    },
+    {
+      "path": "docs/privacy_threat_model.md",
+      "bytes": 5325,
+      "sha256": "2db1adbe9266cdaadc7a6af0977d30234efcd1d9d514ae444e826fb92e4d9921"
+    },
+    {
+      "path": "fixtures/synthetic/demo.json",
+      "bytes": 5776,
+      "sha256": "e9de9d35d6c49661746940bbad93fb18cdd982440309b6c36cde932340dd3003"
+    },
+    {
+      "path": "generalist.md",
+      "bytes": 54459,
+      "sha256": "250b087225ea8149e1d649896c39735a33d0caf6aea28d2d78a0e2ec45bd50a9"
+    },
+    {
+      "path": "prompts/00-integration-architect.md",
+      "bytes": 3584,
+      "sha256": "de5849c6ca2fb70d6c77ff12d381f15fe112ef88da32585e0d15af193ab0a1f3"
+    },
+    {
+      "path": "prompts/01-geography-source-registry.md",
+      "bytes": 3420,
+      "sha256": "0eb21c05b089217342db4de84d8e84200462620d1a25b62ab1df904142815245"
+    },
+    {
+      "path": "prompts/02-historical-police-data.md",
+      "bytes": 3684,
+      "sha256": "9d23930db663a85924c6fb0cd7981ef2088c7a2b1d3299e216a954f1d52307c8"
+    },
+    {
+      "path": "prompts/03-transport-civic-help.md",
+      "bytes": 3760,
+      "sha256": "fdb1bf2e820bc5bee747f3e15592f963727b547ed313e10245dca2173c5a9d3c"
+    },
+    {
+      "path": "prompts/04-community-moderation.md",
+      "bytes": 3743,
+      "sha256": "a4ec13632ca35f09195e0d62213ad35c3ce7f5aec3471543f41b9f76600a6ba0"
+    },
+    {
+      "path": "prompts/05-knowledge-graph.md",
+      "bytes": 3610,
+      "sha256": "1c4c210aa3bb08929e899c5f0de2032666e34db79b6fb5d00b57acab1a0b226e"
+    },
+    {
+      "path": "prompts/06-personalization-alerts.md",
+      "bytes": 3686,
+      "sha256": "16a48cd2024d18095d733104e9c7b9f06798c6dd15006a269971b66f5f93d991"
+    },
+    {
+      "path": "prompts/07-consumer-map-experience.md",
+      "bytes": 3683,
+      "sha256": "96a858e298ac6c1a86c36c091cefe7edf83c5376fa60a51eed1bc8e503ad517a"
+    },
+    {
+      "path": "prompts/08-correlation-analytics.md",
+      "bytes": 3641,
+      "sha256": "088e0bfeee88b23ee00c32b94f8cd0cf062665f779b5182acb2bc43a019110c0"
+    },
+    {
+      "path": "prompts/09-security-privacy.md",
+      "bytes": 3471,
+      "sha256": "5d08cabb567f41c9ead7aaa6cb6de515084633a8f8d87b840294a25e5ca0adb6"
+    },
+    {
+      "path": "prompts/10-qa-deployment.md",
+      "bytes": 3498,
+      "sha256": "c274538ffb8aa3c2077238ba1feb292f3716e4c7ce4cfaf46ffd4f6d53289a27"
+    },
+    {
+      "path": "research/endpoint_probes.json",
+      "bytes": 5858,
+      "sha256": "a841c8064eb86017fa0db600e16fa60e2c4fd3250231dbb1496f6b76872fdec8"
+    },
+    {
+      "path": "research/research_notes.md",
+      "bytes": 4136,
+      "sha256": "e40998ea31e8a95ef0ac581fdf0d1390a4244553799edc1201d33198810577c3"
+    },
+    {
+      "path": "research/source_registry.json",
+      "bytes": 28737,
+      "sha256": "2ffd3c1b551790544d871f4861c3ed4f876729d96147d567920c379cd0e86268"
+    },
+    {
+      "path": "research/sources.md",
+      "bytes": 13868,
+      "sha256": "68d73ae646416bf8fbf97f5f7f5e492a128d1bbde6f89a3d78aace9d350ed9e6"
+    },
+    {
+      "path": "tests/README.md",
+      "bytes": 463,
+      "sha256": "ec3e7374eddfd9d2b694eb782a2e6040dad99689558041a2886eb50870f5d13c"
+    },
+    {
+      "path": "tests/acceptance_matrix.json",
+      "bytes": 32041,
+      "sha256": "2c71e4fc3502b4133a9cb70a4c059b26fc1f875a93f9ed32221d0dab7984c1f9"
+    }
+  ]
+}
