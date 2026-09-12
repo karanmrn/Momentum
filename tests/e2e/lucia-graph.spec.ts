@@ -7,7 +7,12 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/?workspace=graph&public=1&area=camden_town");
-    const node = page.locator(".gc-node").first();
+    await expect(page.locator(".gc-node").first()).toBeVisible();
+    const label = await page
+      .locator(".gc-node")
+      .first()
+      .getAttribute("aria-label");
+    const node = page.getByRole("button", { name: label!, exact: true });
     await expect(node).toBeVisible();
     await node.focus();
     await page.keyboard.press("Enter");
