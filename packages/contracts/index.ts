@@ -205,6 +205,7 @@ export interface HistoricalCoverage {
 }
 export interface DemoState {
   schemaVersion: "1.0";
+  camdenStudy?: import("../camden-evidence/session.js").CamdenStudy;
   reports: Report[];
   notices: Notice[];
   preferences: Record<Persona, Preferences>;
