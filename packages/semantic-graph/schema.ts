@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { caseProjectionError } from "./case-validation.js";
 import { pilotSchema } from "../contracts/index.js";
 
 const nodeTypes = [
@@ -151,6 +152,8 @@ export const semanticGraphSchema = z
         message: "Graph identifiers must be unique.",
       });
     }
+    const caseError = caseProjectionError(graph);
+    if (caseError) ctx.addIssue({ code: "custom", message: caseError });
     for (const node of graph.nodes) {
       if (node.type.startsWith("Fictional") && !node.synthetic)
         ctx.addIssue({
