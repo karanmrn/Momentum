@@ -1,3 +1,4 @@
+import { DatasetCoverage } from "./DatasetCoverage";
 import { ResearchPanel } from "../packages/recruitment/ResearchPanel";
 import {
   useEffect,
@@ -799,10 +800,12 @@ function Dashboard({
                 </p>
               )}
               {data.history.availableMonths?.length ? (
-                <p>
-                  <strong>Available periods:</strong>{" "}
-                  {data.history.availableMonths.join(", ")}
-                </p>
+                <details className="published-periods">
+                  <summary>
+                    {data.history.availableMonths.length} published months
+                  </summary>
+                  <p>{data.history.availableMonths.join(", ")}</p>
+                </details>
               ) : null}
               {data.history.fetchedAt && (
                 <p className="source-fact">
@@ -820,8 +823,8 @@ function Dashboard({
                 </a>
               )}
               <p>
-                <strong>Result:</strong>{" "}
-                {data.history.status.replaceAll("_", " ")}
+                <strong>Area totals:</strong> Unavailable. Pilot boundaries
+                still need review.
               </p>
             </>
           ) : (
@@ -829,8 +832,9 @@ function Dashboard({
           )}
           <p className="subtle">
             Historical records are separate from current observations. This view
-            does not estimate a person’s risk.
+            does not estimate a person's risk.
           </p>
+          <DatasetCoverage pilotId={area.id} />
         </section>
       )}
     </>
