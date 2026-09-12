@@ -117,4 +117,58 @@ describe("Camden evidence boundaries", () => {
     excess.nodes.push({ ...excess.nodes[0] });
     expect(caseGraphSchema.safeParse(excess).success).toBe(false);
   });
+  it("rejects fictional evidence appended to a real assertion", () => {
+    const graph = buildCaseGraph("CAM-01");
+    graph.assertions
+      .find((edge) => !edge.synthetic)!
+      .evidenceRefs.push(
+        graph.nodes.find((node) => node.type === "FictionalObservation")!.id,
+      );
+    expect(caseGraphSchema.safeParse(graph).success).toBe(false);
+    const unrelated = buildCaseGraph("CAM-01");
+    unrelated.assertions[0].evidenceRefs = [
+      unrelated.nodes.find((node) => node.type === "AreaContext")!.id,
+    ];
+    expect(caseGraphSchema.safeParse(unrelated).success).toBe(false);
+  });
+  it("requires provenance on every real source type and excludes it from fictional nodes", () => {
+    const original = buildCaseGraph("CAM-01");
+    for (const node of original.nodes.filter((item) => item.provenance)) {
+      const graph = structuredClone(original);
+      delete graph.nodes.find((item) => item.id === node.id)!.provenance;
+      expect(caseGraphSchema.safeParse(graph).success, node.type).toBe(false);
+    }
+    const stripped = structuredClone(original);
+    for (const node of stripped.nodes) delete node.provenance;
+    expect(caseGraphSchema.safeParse(stripped).success).toBe(false);
+    const fictional = structuredClone(original);
+    fictional.nodes.find((node) => node.synthetic)!.provenance =
+      original.nodes[0].provenance;
+    expect(caseGraphSchema.safeParse(fictional).success).toBe(false);
+    const wrongFamily = structuredClone(original);
+    wrongFamily.nodes[0].provenance!.sourceFamilyId =
+      "streetwise-fictional-exercise";
+    expect(caseGraphSchema.safeParse(wrongFamily).success).toBe(false);
+  });
+  it("rejects stale revisions and times in corrected graph data", () => {
+    const original = buildCaseGraph("CAM-01");
+    const originalEdge = original.assertions.find((edge) => edge.synthetic)!;
+    for (const field of ["revision", "validFrom"] as const) {
+      const graph = buildCaseGraph("CAM-01", "corrected");
+      const edge = graph.assertions.find((item) => item.synthetic)!;
+      if (field === "revision") edge.revision = originalEdge.revision;
+      else edge.validFrom = originalEdge.validFrom;
+      expect(caseGraphSchema.safeParse(graph).success, field).toBe(false);
+    }
+    const staleNode = buildCaseGraph("CAM-01", "corrected");
+    staleNode.nodes.find(
+      (node) => node.type === "FictionalObservation",
+    )!.observedAt = original.nodes.find(
+      (node) => node.type === "FictionalObservation",
+    )!.observedAt;
+    expect(caseGraphSchema.safeParse(staleNode).success).toBe(false);
+    const falseState = buildCaseGraph("CAM-01");
+    falseState.state = "corrected";
+    expect(caseGraphSchema.safeParse(falseState).success).toBe(false);
+  });
 });

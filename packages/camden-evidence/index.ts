@@ -350,6 +350,79 @@ export const caseGraphSchema = z
           code: "custom",
           message: "Source classes must remain separate.",
         });
+      const sourceType = [
+        "SourceSnapshot",
+        "PoliceRecord",
+        "AreaContext",
+      ].includes(node.type);
+      if (
+        sourceType !== Boolean(node.provenance) ||
+        (!node.synthetic && node.revision !== 1)
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "Source nodes require provenance and an unchanged source revision.",
+        });
+      }
+      if (node.provenance) {
+        const allowedFamily =
+          node.type === "AreaContext"
+            ? ["police-uk", "camden-council"].includes(
+                node.provenance.sourceFamilyId,
+              )
+            : node.provenance.sourceFamilyId === "police-uk";
+        if (
+          !allowedFamily ||
+          (node.type !== "AreaContext" &&
+            node.provenance.snapshotSha256 === null)
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Source provenance has an unsuitable source family or missing snapshot.",
+          });
+        }
+      }
+      if (node.synthetic) {
+        const observationId =
+          node.type === "FictionalSummary"
+            ? node.id.replace(/:summary$/, "")
+            : node.id;
+        const scenario = fictionalScenarios.find(
+          (item) => item.id === observationId,
+        );
+        const expectedRevision = graph.state === "original" ? 1 : 2;
+        const corrected = graph.state === "corrected";
+        if (
+          !scenario ||
+          node.revision !== expectedRevision ||
+          (corrected
+            ? node.correctionNote !== scenario.correction
+            : node.correctionNote !== undefined)
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Fictional revision metadata does not match the graph state.",
+          });
+        }
+        if (
+          node.type === "FictionalObservation" &&
+          (!scenario ||
+            node.observedAt !==
+              (corrected
+                ? scenario.correctedObservedAt
+                : scenario.observedAt) ||
+            node.reportedAt !== scenario.reportedAt)
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Fictional observation times do not match the active revision.",
+          });
+        }
+      }
     }
     for (const edge of graph.assertions) {
       const from = nodes.get(edge.subjectId),
@@ -365,15 +438,51 @@ export const caseGraphSchema = z
       if (
         !valid ||
         edge.synthetic !== from?.synthetic ||
-        edge.evidenceRefs.some((id) => !nodes.has(id)) ||
-        !edge.evidenceRefs.some(
-          (id) => id === edge.subjectId || id === edge.objectId,
+        edge.evidenceRefs.length !== 1 ||
+        edge.evidenceRefs[0] !==
+          (edge.predicate === "DERIVED_FROM"
+            ? edge.objectId
+            : edge.subjectId) ||
+        edge.evidenceRefs.some(
+          (id) =>
+            !nodes.has(id) || (!edge.synthetic && nodes.get(id)?.synthetic),
         )
       )
         ctx.addIssue({
           code: "custom",
           message: "Unsupported evidence relationship.",
         });
+      const evidenceNode = edge.predicate === "DERIVED_FROM" ? to : from;
+      if (edge.synthetic) {
+        const observation = from?.type === "FictionalObservation" ? from : to;
+        if (
+          edge.revision !== from?.revision ||
+          edge.revision !== observation?.revision ||
+          edge.validFrom !== observation?.observedAt ||
+          edge.recordedAt !== observation?.reportedAt ||
+          edge.validTo !== null ||
+          edge.timePrecision !== "self_reported_unverified" ||
+          edge.spatialPrecision !== "broad_area_context" ||
+          edge.sourceFamilyId !== "streetwise-fictional-exercise" ||
+          edge.originGroupId !== observation?.id
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Fictional assertion does not match the active observation revision.",
+          });
+        }
+      } else if (
+        edge.revision !== 1 ||
+        edge.sourceFamilyId !== evidenceNode?.provenance?.sourceFamilyId ||
+        edge.recordedAt !== evidenceNode?.provenance?.fetchedAt ||
+        edge.originGroupId !== null
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Real assertion does not match its source provenance.",
+        });
+      }
       if (
         edge.validFrom &&
         edge.validTo &&
@@ -433,6 +542,13 @@ export function buildCaseGraph(
       synthetic: false,
       revision: 1,
       precision: "month_and_anonymised_point",
+      provenance: {
+        sourceUrl: policeSelection.sourceUrl,
+        sourceFamilyId: "police-uk",
+        fetchedAt: policeSelection.sourceFetchedAt,
+        snapshotSha256: policeSelection.sourceSnapshotSha256,
+        originGroupId: null,
+      },
     },
     {
       id: areaId,
