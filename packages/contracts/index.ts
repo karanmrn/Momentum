@@ -76,6 +76,11 @@ export interface TimelineEntry {
   summary: string;
 }
 export interface Notice {
+  observedInterval?: {
+    from: string;
+    to: string;
+    precision: "approximate_time" | "time_window" | "day";
+  };
   id: string;
   revision: number;
   pilotId: PilotId;
@@ -120,7 +125,7 @@ export interface Notification {
   revision: number;
   recipient: Persona;
   kind: "notice" | "correction";
-  state: "queued" | "delivered" | "suppressed";
+  state: "queued" | "delivered" | "suppressed" | "attempted" | "failed";
   createdAt: string;
   message: string;
 }
@@ -205,6 +210,9 @@ export interface HistoricalCoverage {
   recordCount?: null;
 }
 export interface DemoState {
+  personalization?: import("../personalization/schema.js").PersonalizationState;
+  communityWorkflow?: import("../community-workflow/schema.js").CommunityWorkflowState;
+  relationReview?: import("../relation-review/schema.js").RelationReviewState;
   analytics?: import("../analytics/src/index.js").AnalyticsState;
   schemaVersion: "1.0";
   camdenStudy?: import("../camden-evidence/session.js").CamdenStudy;

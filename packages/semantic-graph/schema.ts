@@ -23,6 +23,7 @@ const predicates = [
   "CONTEXTUAL_HISTORY_FOR",
   "DERIVED_FROM",
   "CONTEXTUAL_AREA_ONLY",
+  "SAME_OPERATIONAL_ISSUE_AS",
 ] as const;
 export const semanticOntology = {
   version: "1.0",
@@ -80,6 +81,13 @@ const nodeSchema = z
         acquiredUnits: z.number().int().nonnegative().nullable().optional(),
         unitLabel: text.nullable().optional(),
         observedAt: timestamp.optional(),
+        observedTo: timestamp.optional(),
+        timePrecision: z
+          .enum(["approximate_time", "time_window", "day"])
+          .optional(),
+        sourceKind: z
+          .enum(["community_firsthand", "community_other_source"])
+          .optional(),
         status: z
           .enum(["acquired", "partial", "blocked", "not_collected"])
           .optional(),
@@ -106,7 +114,28 @@ const assertionSchema = z
     ]),
     reasonCodes: z.array(text).min(1).max(5),
     evidenceRefs: z.array(text).min(1).max(3),
-    methodVersion: z.enum(["1.0", "camden-case-study/1"]),
+    methodVersion: z.enum([
+      "1.0",
+      "camden-case-study/1",
+      "fictional-relations/1",
+    ]),
+    qualification: z
+      .object({
+        reviewedAt: timestamp,
+        sourceFamilyIds: z
+          .array(
+            z.enum([
+              "streetwise-fictional-relations",
+              "streetwise-demo-community",
+            ]),
+          )
+          .length(2),
+        independence: z.literal("unknown"),
+        validFrom: timestamp,
+        validTo: timestamp,
+      })
+      .strict()
+      .optional(),
     metadata: z
       .object({
         sourceFamilyId: text,
@@ -188,21 +217,53 @@ export const semanticGraphSchema = z
               : edge.predicate === "CONTEXTUAL_HISTORY_FOR"
                 ? subject?.type === "DatasetCoverage" &&
                   object?.type === "PublishedNotice"
-                : edge.predicate === "DERIVED_FROM"
-                  ? (subject?.type === "PoliceRecord" &&
-                      object?.type === "SourceSnapshot") ||
-                    (subject?.type === "FictionalSummary" &&
-                      object?.type === "FictionalObservation")
-                  : ([
-                      "PoliceRecord",
-                      "AreaContext",
-                      "FictionalObservation",
-                    ].includes(subject?.type ?? "") &&
-                      object?.type === "ResearchArea") ||
-                    (["ResearchArea", "HelpLocation", "Place"].includes(
-                      subject?.type ?? "",
-                    ) &&
-                      object?.type === "Area");
+                : edge.predicate === "SAME_OPERATIONAL_ISSUE_AS"
+                  ? subject?.type === "PublishedNotice" &&
+                    object?.type === "PublishedNotice" &&
+                    subject.id !== object.id
+                  : edge.predicate === "DERIVED_FROM"
+                    ? (subject?.type === "PoliceRecord" &&
+                        object?.type === "SourceSnapshot") ||
+                      (subject?.type === "FictionalSummary" &&
+                        object?.type === "FictionalObservation")
+                    : ([
+                        "PoliceRecord",
+                        "AreaContext",
+                        "FictionalObservation",
+                      ].includes(subject?.type ?? "") &&
+                        object?.type === "ResearchArea") ||
+                      (["ResearchArea", "HelpLocation", "Place"].includes(
+                        subject?.type ?? "",
+                      ) &&
+                        object?.type === "Area");
+      if (edge.predicate === "SAME_OPERATIONAL_ISSUE_AS") {
+        if (
+          !edge.synthetic ||
+          !subject?.synthetic ||
+          !object?.synthetic ||
+          edge.methodVersion !== "fictional-relations/1" ||
+          edge.inferenceType !== "human_review" ||
+          !edge.qualification ||
+          Date.parse(edge.qualification.validFrom) >
+            Date.parse(edge.qualification.validTo) ||
+          edge.evidenceRefs.length !== 2 ||
+          !edge.evidenceRefs.includes(edge.subjectId) ||
+          !edge.evidenceRefs.includes(edge.objectId)
+        )
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Operational relations require current reviewed fictional notice qualifications.",
+          });
+      } else if (
+        edge.qualification ||
+        edge.methodVersion === "fictional-relations/1"
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Operational qualification requires its explicit predicate.",
+        });
+      }
       if (edge.methodVersion === "camden-case-study/1") {
         const qualification = edge.metadata;
         const evidenceNode =

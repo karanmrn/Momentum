@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { areas, type PilotId } from "../packages/contracts";
 import type { AnalyticsState, AnalysisRun } from "../packages/analytics/src";
 import "./AnalysisWorkspace.css";
@@ -29,19 +29,32 @@ export function AnalysisWorkspace({ onExit }: { onExit?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  const generation = useRef(0);
   async function reload() {
-    setState(await request<AnalyticsState>(`/api/analytics?area=${area}`));
+    const version = ++generation.current;
+    setBusy(true);
+    try {
+      const next = await request<AnalyticsState>(`/api/analytics?area=${area}`);
+      if (version === generation.current) setState(next);
+    } catch (error) {
+      if (version === generation.current) throw error;
+    } finally {
+      if (version === generation.current) setBusy(false);
+    }
   }
   useEffect(() => {
     let active = true;
+    const version = ++generation.current;
+    setSelected(null);
+    setNote("");
     setState(null);
     setError("");
     request<AnalyticsState>(`/api/analytics?area=${area}`)
       .then((value) => {
-        if (active) setState(value);
+        if (active && version === generation.current) setState(value);
       })
       .catch((e) => {
-        if (active) setError(e.message);
+        if (active && version === generation.current) setError(e.message);
       });
     return () => {
       active = false;

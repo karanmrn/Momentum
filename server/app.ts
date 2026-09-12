@@ -1,3 +1,6 @@
+import { createPersonalizationRoutes } from "./personalization.js";
+import { createCommunityWorkflowRoutes } from "./community-workflow.js";
+import { createRelationReviewRoutes } from "./relation-review.js";
 import { createAnalyticsRoutes } from "./analytics.js";
 import { createAccountRoutes } from "./account.js";
 import { getDatasetCoverage } from "../packages/datasets/src/coverage.js";
@@ -283,6 +286,9 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
       graph: async (id, pilot) => (await database()).graph(id, pilot),
     }),
   );
+  app.use("/api/personalization", createPersonalizationRoutes(store));
+  app.use("/api/community-workflow", createCommunityWorkflowRoutes(store));
+  app.use("/api/relation-review", createRelationReviewRoutes(store));
   app.use("/api/analytics", createAnalyticsRoutes(store));
   app.use("/api/camden/examples", createCamdenRoutes(store));
   app.use("/api", createRoutes(store));

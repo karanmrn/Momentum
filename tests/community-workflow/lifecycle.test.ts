@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   createDemoState,
   listPublicNotices,
@@ -57,6 +57,33 @@ function approve(
 }
 
 describe("advanced fictional community workflow", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-13T12:00:00Z"));
+  });
+  afterEach(() => vi.useRealTimers());
+  it("rejects future observations before storage and publication", () => {
+    const state = createDemoState();
+    expect(() =>
+      createWorkflow(
+        state,
+        alex,
+        {
+          ...intake,
+          observedFrom: "2030-01-01T10:00:00Z",
+          observedTo: "2030-01-01T11:00:00Z",
+        },
+        key(),
+      ),
+    ).toThrow(/already occurred/);
+    expect(state.communityWorkflow?.records ?? []).toHaveLength(0);
+    const receipt = createWorkflow(state, alex, intake, key());
+    state.communityWorkflow!.records[0].intake.observedFrom =
+      "2030-01-01T10:00:00Z";
+    state.communityWorkflow!.records[0].intake.observedTo =
+      "2030-01-01T11:00:00Z";
+    expect(() => approve(state, receipt)).toThrow(/already occurred/);
+  });
   it("keeps intake private, supports clarification, then publishes only a reviewed summary", () => {
     const state = createDemoState();
     const record = createWorkflow(state, alex, intake, key());

@@ -150,7 +150,7 @@ function current(notice: Notice, now: Date, context: NoticeContext): boolean {
     notice.status === "active" &&
     notice.reviewStatus === "publication_approved" &&
     notice.synthetic === true &&
-    notice.sourceKind === "community_firsthand" &&
+    ["community_firsthand", "community_other_source"].includes(notice.sourceKind) &&
     notice.evidence.length > 0 &&
     notice.evidence.every((e) => e.synthetic === true) &&
     context.sourceCurrent !== false &&

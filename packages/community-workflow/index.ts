@@ -88,6 +88,16 @@ function safeText(...values: string[]) {
 function validateIntake(input: unknown): Intake {
   const value = intakeSchema.parse(input);
   safeText(value.title, value.place, value.narrative, value.sourceDescription);
+  const latest = Date.now() + 5 * 60_000;
+  if (
+    Date.parse(value.observedFrom) > latest ||
+    (value.timePrecision !== "day" && Date.parse(value.observedTo) > latest)
+  )
+    throw new DomainError(
+      400,
+      "invalid_input",
+      "Choose an observation time that has already occurred.",
+    );
   return value;
 }
 function basic(input: Intake) {
@@ -420,6 +430,7 @@ export function reviewWorkflow(
       if (action.action === "review_private")
         record.status = "private_reviewed";
       if (action.action === "approve") {
+        validateIntake(record.intake);
         decideReport(state, actor.persona, report.id, {
           expectedRevision: report.revision,
           action: "approve",
@@ -433,7 +444,14 @@ export function reviewWorkflow(
           record.intake.basis === "other_source"
             ? "community_other_source"
             : "community_firsthand";
-        Object.assign(published, { sourceKind });
+        Object.assign(published, {
+          sourceKind,
+          observedInterval: {
+            from: record.intake.observedFrom,
+            to: record.intake.observedTo,
+            precision: record.intake.timePrecision,
+          },
+        });
         for (const evidence of published.evidence)
           Object.assign(evidence, {
             sourceKind,

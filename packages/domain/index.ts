@@ -1,3 +1,4 @@
+import { relationPublicationSource } from '../relation-review/publication.js';
 import { createHash, randomUUID } from 'node:crypto';
 import type {
   Category,
@@ -168,7 +169,7 @@ export function publicEvidenceGraph(state: DemoState, noticeId: string): Evidenc
     nodes: [
       { id: notice.id, type: 'notice', label: notice.title },
       { id: placeId, type: 'place', label: notice.place },
-      { id: sourceId, type: 'source', label: 'Reviewed fictional community contribution' },
+      { id: sourceId, type: 'source', label: notice.evidence[0]?.label ?? 'Reviewed fictional community contribution' },
     ],
     edges: [
       { id: `edge:${notice.id}:place`, from: notice.id, to: placeId, predicate: 'AFFECTS_PLACE', reason: 'Reviewed approximate place relation.' },
@@ -274,6 +275,11 @@ export function decideReport(state: DemoState, actor: Persona, reportId: string,
       summary: input.summary,
       place: report.place,
     }, report.observedAt, new Date().toISOString());
+    const source = relationPublicationSource(state, report);
+    if (source) {
+      approvedNotice.sourceKind = source.sourceKind;
+      for (const evidence of approvedNotice.evidence) Object.assign(evidence, source, { label: source.sourceKind === "community_other_source" ? "Reviewed fictional other-source contribution" : "Reviewed fictional firsthand contribution" });
+    }
     state.notices.push(approvedNotice);
     report.noticeId = approvedNotice.id;
     enqueueNotice(state, approvedNotice);

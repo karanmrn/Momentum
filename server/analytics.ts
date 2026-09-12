@@ -138,13 +138,19 @@ export function createAnalyticsRoutes(store: Store): Router {
             "The analysis was not found.",
           );
         scope(res, run.question.pilotId);
-        return reviewAnalysis(
+        const reviewed = reviewAnalysis(
           state,
           id,
           input.expectedRevision,
           input.decision,
           input.note,
         );
+        return {
+          ...reviewed,
+          runs: reviewed.runs.filter(
+            (row) => row.question.pilotId === run.question.pilotId,
+          ),
+        };
       });
       res.json(envelope(result));
     } catch (error) {
