@@ -42,5 +42,11 @@
   ],
   "regions": [
     "lhr1"
+  ],
+  "crons": [
+    {
+      "path": "/api/public/recent-updates/refresh",
+      "schedule": "0 6 * * *"
+    }
   ]
 }
