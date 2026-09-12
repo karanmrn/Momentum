@@ -7,12 +7,20 @@ const nodeTypes = [
   "Source",
   "PublishedNotice",
   "DatasetCoverage",
+  "SourceSnapshot",
+  "PoliceRecord",
+  "ResearchArea",
+  "AreaContext",
+  "FictionalObservation",
+  "FictionalSummary",
 ] as const;
 const predicates = [
   "WITHIN_AREA",
   "AFFECTS_PLACE",
   "ISSUED_BY",
   "CONTEXTUAL_HISTORY_FOR",
+  "DERIVED_FROM",
+  "CONTEXTUAL_AREA_ONLY",
 ] as const;
 export const semanticOntology = {
   version: "1.0",
@@ -39,6 +47,11 @@ const provenanceSchema = z
       .nullable(),
     fetchedAt: timestamp.nullable(),
     originGroupId: text.nullable(),
+    snapshotSha256: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/)
+      .nullable()
+      .optional(),
   })
   .strict();
 const nodeSchema = z
@@ -52,6 +65,11 @@ const nodeSchema = z
       .object({
         revision: z.number().int().positive().optional(),
         summary: text.optional(),
+        precision: text.optional(),
+        reportedAt: timestamp.optional(),
+        correctionNote: z.string().min(1).max(2000).optional(),
+        acquiredUnits: z.number().int().nonnegative().nullable().optional(),
+        unitLabel: text.nullable().optional(),
         observedAt: timestamp.optional(),
         status: z
           .enum(["acquired", "partial", "blocked", "not_collected"])
@@ -72,10 +90,34 @@ const assertionSchema = z
     subjectId: text,
     predicate: z.enum(predicates),
     objectId: text,
-    inferenceType: z.enum(["deterministic_join", "human_review"]),
+    inferenceType: z.enum([
+      "deterministic_join",
+      "human_review",
+      "source_statement",
+    ]),
     reasonCodes: z.array(text).min(1).max(5),
     evidenceRefs: z.array(text).min(1).max(3),
-    methodVersion: z.literal("1.0"),
+    methodVersion: z.enum(["1.0", "camden-case-study/1"]),
+    metadata: z
+      .object({
+        sourceFamilyId: text,
+        originGroupId: text.nullable(),
+        revision: z.number().int().positive(),
+        recordedAt: timestamp,
+        validFrom: timestamp.nullable(),
+        validTo: timestamp.nullable(),
+        timePrecision: z.enum([
+          "month",
+          "day",
+          "source_schedule",
+          "self_reported_unverified",
+        ]),
+        spatialPrecision: z.enum(["anonymised_point", "broad_area_context"]),
+        relationStatus: z.literal("context_only_or_source_lineage"),
+        independence: z.literal("unknown"),
+      })
+      .strict()
+      .optional(),
     synthetic: z.boolean(),
   })
   .strict();
@@ -101,6 +143,21 @@ export const semanticGraphSchema = z
         message: "Graph identifiers must be unique.",
       });
     }
+    for (const node of graph.nodes) {
+      if (node.type.startsWith("Fictional") && !node.synthetic)
+        ctx.addIssue({
+          code: "custom",
+          message: "Fictional nodes must be labelled.",
+        });
+      if (
+        ["PoliceRecord", "SourceSnapshot", "AreaContext"].includes(node.type) &&
+        (node.synthetic || !node.provenance)
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: "Source nodes require real provenance.",
+        });
+    }
     for (const edge of graph.assertions) {
       const subject = nodes.get(edge.subjectId),
         object = nodes.get(edge.objectId);
@@ -114,9 +171,55 @@ export const semanticGraphSchema = z
               ? ["PublishedNotice", "DatasetCoverage"].includes(
                   subject?.type ?? "",
                 ) && object?.type === "Source"
-              : subject?.type === "DatasetCoverage" &&
-                object?.type === "PublishedNotice";
-      if (!validPair || edge.evidenceRefs.some((id) => !nodes.has(id))) {
+              : edge.predicate === "CONTEXTUAL_HISTORY_FOR"
+                ? subject?.type === "DatasetCoverage" &&
+                  object?.type === "PublishedNotice"
+                : edge.predicate === "DERIVED_FROM"
+                  ? (subject?.type === "PoliceRecord" &&
+                      object?.type === "SourceSnapshot") ||
+                    (subject?.type === "FictionalSummary" &&
+                      object?.type === "FictionalObservation")
+                  : ([
+                      "PoliceRecord",
+                      "AreaContext",
+                      "FictionalObservation",
+                    ].includes(subject?.type ?? "") &&
+                      object?.type === "ResearchArea") ||
+                    (subject?.type === "ResearchArea" &&
+                      object?.type === "Area");
+      if (edge.methodVersion === "camden-case-study/1") {
+        const qualification = edge.metadata;
+        const evidenceNode =
+          edge.predicate === "DERIVED_FROM" ? object : subject;
+        if (
+          !qualification ||
+          edge.synthetic !== subject?.synthetic ||
+          (!edge.synthetic &&
+            (qualification.sourceFamilyId !==
+              evidenceNode?.provenance?.sourceFamilyId ||
+              qualification.recordedAt !==
+                evidenceNode?.provenance?.fetchedAt)) ||
+          (edge.synthetic &&
+            (qualification.sourceFamilyId !== "streetwise-fictional-exercise" ||
+              qualification.revision !== subject?.metadata.revision)) ||
+          (qualification.validFrom &&
+            qualification.validTo &&
+            Date.parse(qualification.validFrom) >
+              Date.parse(qualification.validTo))
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Case assertions require matching source qualification.",
+          });
+        }
+      }
+      if (
+        !validPair ||
+        edge.evidenceRefs.some((id) => !nodes.has(id)) ||
+        (!edge.synthetic &&
+          ([subject, object].some((node) => node?.synthetic) ||
+            edge.evidenceRefs.some((id) => nodes.get(id)?.synthetic)))
+      ) {
         ctx.addIssue({
           code: "custom",
           message: "The assertion has invalid node references or types.",
