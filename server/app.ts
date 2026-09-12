@@ -15,8 +15,14 @@ import {
 } from "../packages/contracts/index";
 import type { DemoDatabase } from "./database";
 import { createRoutes } from "./routes";
+import { createPublicRoutes } from "./public";
 import { getHelp, getSources } from "../services/index";
-export function createApp(db: DemoDatabase) {
+export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
+  const database = () => typeof db === "function" ? db() : Promise.resolve(db);
+  const store: Pick<DemoDatabase, "read" | "mutate"> = {
+    read: async (id) => (await database()).read(id),
+    mutate: async (id, operation) => (await database()).mutate(id, operation),
+  };
   const app = express();
   app.disable("x-powered-by");
   app.use((_req, res, next) => {
@@ -28,6 +34,11 @@ export function createApp(db: DemoDatabase) {
     });
     next();
   });
+  app.use("/api", (_request, response, next) => {
+    response.set("Cache-Control", "no-store");
+    next();
+  });
+  app.use("/api/public", createPublicRoutes());
   if (process.env.VERCEL) {
     app.use((req, res, next) => {
       const secret = process.env.DEMO_ACCESS_CODE;
@@ -56,6 +67,14 @@ export function createApp(db: DemoDatabase) {
       next();
     });
   }
+  app.get("/api/demo", (request, response) => {
+    const area = pilotSchema.safeParse(request.query.area);
+    if (!area.success) {
+      fail(response, 400, "invalid_input", "Choose a pilot area.");
+      return;
+    }
+    response.redirect(303, `/?demo=1&area=${encodeURIComponent(area.data)}`);
+  });
   app.use("/api", express.json({ limit: "8kb" }));
   const sourceCaches = new Map<string, { until: number; data: Awaited<ReturnType<typeof getSources>> }>();
   const sourceRefreshes = new Map<string, Promise<Awaited<ReturnType<typeof getSources>>>>();
@@ -104,6 +123,7 @@ export function createApp(db: DemoDatabase) {
   );
   app.use("/api", async (req, res, next) => {
     try {
+      const storage = await database();
       const token = (req.headers.cookie ?? "")
         .split(";")
         .map((x) => x.trim())
@@ -113,11 +133,11 @@ export function createApp(db: DemoDatabase) {
         token && /^[a-f0-9]{64}$/.test(token)
           ? createHash("sha256").update(token).digest("hex")
           : null;
-      let persona = id ? await db.session(id) : null;
+      let persona = id ? await storage.session(id) : null;
       if (!id || !persona) {
         const fresh = randomBytes(32).toString("hex");
         id = createHash("sha256").update(fresh).digest("hex");
-        await db.create(id);
+        await storage.create(id);
         persona = "alex";
         res.cookie("streetwise_demo", fresh, {
           httpOnly: true,
@@ -152,7 +172,7 @@ export function createApp(db: DemoDatabase) {
       fail(res, 400, "invalid_input", "Choose a demonstration persona.");
       return;
     }
-    await db.setPersona(res.locals.sessionId, parsed.data);
+    await (await database()).setPersona(res.locals.sessionId, parsed.data);
     ok(res, {
       persona: parsed.data,
       synthetic: true,
@@ -221,7 +241,7 @@ export function createApp(db: DemoDatabase) {
     }
     ok(res, getDatasetCoverage(area.data), false);
   });
-  app.use("/api", createRoutes(db));
+  app.use("/api", createRoutes(store));
   app.use("/api", (_req, res) =>
     fail(res, 404, "not_found", "This item is not available."),
   );
