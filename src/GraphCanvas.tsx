@@ -204,30 +204,41 @@ export function GraphCanvas({
       return [key, { x: point.x + offset.x, y: point.y + offset.y }];
     }),
   );
-  useEffect(() => {
-    setOffsets({});
-    nodeDrag.current = null;
-    suppressClick.current = null;
-  }, [datasetKey]);
   const selectedNode =
     selection?.kind === "node"
       ? nodes.find((node) => node.id === selection.id)
       : undefined;
   const selectedPoint = selectedNode ? points.get(selectedNode.id) : undefined;
+  const previousLayout = useRef("");
+  const layoutKey = JSON.stringify([datasetKey, width, height]);
   useEffect(() => {
-    if (selection?.kind !== "node") return;
-    const base = basePoints.get(selection.id);
-    if (!base) return;
-    const offset = offsets[selection.id] ?? { x: 0, y: 0 };
-    setView((previous) => ({
-      scale: previous.scale,
-      x:
-        width * (width < 540 ? 0.5 : 0.38) -
-        (base.x + offset.x) * previous.scale,
-      y: height * 0.38 - (base.y + offset.y) * previous.scale,
-    }));
-    // Focus only on selection changes. Dragging must not recenter the camera.
-  }, [selection?.kind, selection?.id]);
+    const changedLayout = previousLayout.current !== layoutKey;
+    previousLayout.current = layoutKey;
+    if (changedLayout) {
+      setOffsets({});
+      nodeDrag.current = null;
+      suppressClick.current = null;
+    }
+    const base =
+      selection?.kind === "node" ? basePoints.get(selection.id) : undefined;
+    if (!base) {
+      if (changedLayout) setView({ x: 0, y: 0, scale: 1 });
+      return;
+    }
+    const offset =
+      !changedLayout && selection
+        ? (offsets[selection.id] ?? { x: 0, y: 0 })
+        : { x: 0, y: 0 };
+    setView((previous) => {
+      const scale = changedLayout ? 1 : previous.scale;
+      return {
+        scale,
+        x: width * (width < 540 ? 0.5 : 0.38) - (base.x + offset.x) * scale,
+        y: height * 0.38 - (base.y + offset.y) * scale,
+      };
+    });
+    // View and offsets are intentionally excluded: panning and dragging do not refocus selection.
+  }, [layoutKey, selection?.kind, selection?.id]);
   const cardDetails =
     selectedNode?.details
       ?.filter(([label]) =>
@@ -251,7 +262,6 @@ export function GraphCanvas({
       window.removeEventListener("resize", resize);
     };
   }, []);
-  useEffect(() => setView({ x: 0, y: 0, scale: 1 }), [nodeIds, width]);
   const nodeById = useMemo(
     () => new Map(nodes.map((node) => [node.id, node])),
     [nodes],

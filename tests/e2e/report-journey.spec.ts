@@ -102,6 +102,32 @@ for (const width of [320, 1440]) {
     await expect(
       page.getByText("Your report graph", { exact: true }),
     ).toBeVisible();
+    const selectedReport = page.locator('.gc-node[aria-pressed="true"]');
+    await expect(selectedReport).toHaveAttribute(
+      "aria-label",
+      `Inspect ${title}, PrivateObservation, fictional`,
+    );
+    await expect
+      .poll(async () => {
+        const circle = await selectedReport
+          .locator(".gc-node-shape")
+          .boundingBox();
+        const viewport = await page.locator(".gc-viewport").boundingBox();
+        if (!circle || !viewport) return false;
+        const horizontalAnchor = viewport.width < 540 ? 0.5 : 0.38;
+        return (
+          Math.abs(
+            circle.x +
+              circle.width / 2 -
+              viewport.x -
+              viewport.width * horizontalAnchor,
+          ) < 3 &&
+          Math.abs(
+            circle.y + circle.height / 2 - viewport.y - viewport.height * 0.38,
+          ) < 3
+        );
+      })
+      .toBe(true);
     expect(page.url()).not.toContain(saved.report.id);
     expect(page.url()).toContain("returnTo=presentation");
     expect(page.url()).toContain("slide=4");
