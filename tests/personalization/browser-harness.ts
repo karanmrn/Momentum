@@ -5,7 +5,10 @@ import { createServer } from "vite";
 import { createDatabase } from "../../server/database";
 import { createDemoState } from "../../packages/domain";
 import { createPersonalizationRoutes } from "../../server/personalization";
-const db = await createDatabase(createDemoState, { path: "memory://" });
+const db = await createDatabase(
+  () => ({ ...createDemoState(), notifications: [] }),
+  { path: "memory://" },
+);
 const app = express();
 app.use(express.json({ limit: "20kb" }));
 app.use("/api", async (request, response, next) => {

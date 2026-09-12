@@ -39,7 +39,10 @@ async function data(response: Response) {
   return (await response.json()).data;
 }
 beforeAll(async () => {
-  db = await createDatabase(() => createDemoState(now), { path: "memory://" });
+  db = await createDatabase(
+    () => ({ ...createDemoState(now), notifications: [] }),
+    { path: "memory://" },
+  );
   const app = express();
   app.use(express.json({ limit: "20kb" }));
   // This identity selector exists only in the test server. Production supplies trusted session locals.

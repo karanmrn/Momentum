@@ -9,6 +9,7 @@ import {
   settingsInputSchema,
   revisionInputSchema,
   personalizationStateSchema,
+  deliverySchema,
   type Settings,
   type TimeWindow,
   type Delivery,
@@ -56,6 +57,82 @@ export function defaultSettings(state: DemoState, actor: Member): Settings {
     historicalDigest: false,
   };
 }
+/** Migrate known receipts once. Missing retry history never grants new delivery attempts. */
+function migrateLegacyInbox(state: DemoState, actor: Member): Delivery[] {
+  const rows = new Map<string, Delivery>();
+  const priority = { queued: 0, suppressed: 1, delivered: 2 } as const;
+  for (const receipt of state.notifications) {
+    if (receipt.recipient !== actor) continue;
+    const notice = state.notices.find((row) => row.id === receipt.noticeId);
+    const created = Date.parse(receipt.createdAt);
+    // Corrections use their original queue time. Observations keep their source expiry.
+    const expiry = !notice
+      ? created
+      : receipt.kind === "correction"
+        ? created + 24 * 3600000
+        : expiresAt(notice, {});
+    const pending = receipt.state === "queued" && Boolean(notice);
+    const status =
+      receipt.state === "delivered"
+        ? "delivered"
+        : pending
+          ? "queued"
+          : "suppressed";
+    const item = deliverySchema.parse({
+      id: `${receipt.noticeId}:${receipt.revision}:${receipt.kind}:in_app`,
+      noticeId: receipt.noticeId,
+      noticeRevision: receipt.revision,
+      kind: receipt.kind,
+      channel: "in_app",
+      state: status,
+      createdAt: receipt.createdAt,
+      expiresAt: new Date(
+        Number.isFinite(expiry) ? expiry : created,
+      ).toISOString(),
+      nextAttemptAt: null,
+      attempts: 0,
+      history: [],
+      // This suppression describes the migration guard. Legacy retry reasons were not stored.
+      reason:
+        status === "delivered"
+          ? "delivered"
+          : status === "queued"
+            ? "queued"
+            : !notice
+              ? "notice_changed"
+              : "settings_changed",
+      message:
+        receipt.kind === "correction"
+          ? "A saved update has changed. Open its current status."
+          : "An update matches your selected settings.",
+    });
+    const old = rows.get(item.id);
+    if (!old) rows.set(item.id, item);
+    else {
+      const preferred =
+        priority[item.state as keyof typeof priority] >
+        priority[old.state as keyof typeof priority]
+          ? item
+          : old;
+      rows.set(item.id, {
+        ...preferred,
+        createdAt:
+          Date.parse(old.createdAt) <= created ? old.createdAt : item.createdAt,
+        expiresAt:
+          Date.parse(old.expiresAt) <= Date.parse(item.expiresAt)
+            ? old.expiresAt
+            : item.expiresAt,
+      });
+    }
+    if (rows.size > 300)
+      throw new PersonalizationError(
+        429,
+        "capacity",
+        "This inbox exceeds the migration limit. Existing receipts were not changed.",
+      );
+  }
+  return [...rows.values()];
+}
 export function readPersonalization(
   state: PersonalizationHost,
 ): PersonalizationState {
@@ -75,7 +152,10 @@ export function readPersonalization(
             deleted: false,
           },
         },
-        outbox: { alex: [], sam: [] },
+        outbox: {
+          alex: migrateLegacyInbox(state, "alex"),
+          sam: migrateLegacyInbox(state, "sam"),
+        },
       };
 }
 function persist(state: PersonalizationHost, data: PersonalizationState) {
@@ -150,7 +230,9 @@ function current(notice: Notice, now: Date, context: NoticeContext): boolean {
     notice.status === "active" &&
     notice.reviewStatus === "publication_approved" &&
     notice.synthetic === true &&
-    ["community_firsthand", "community_other_source"].includes(notice.sourceKind) &&
+    ["community_firsthand", "community_other_source"].includes(
+      notice.sourceKind,
+    ) &&
     notice.evidence.length > 0 &&
     notice.evidence.every((e) => e.synthetic === true) &&
     context.sourceCurrent !== false &&

@@ -18,7 +18,8 @@ import {
 } from "../../packages/personalization/index";
 const now = new Date("2026-09-12T20:00:00Z");
 function setup() {
-  return createDemoState(now) as PersonalizationHost;
+  // Fresh delivery fixtures exclude historical receipts. Migration has a separate suite.
+  return { ...createDemoState(now), notifications: [] } as PersonalizationHost;
 }
 function save(
   state: PersonalizationHost,
