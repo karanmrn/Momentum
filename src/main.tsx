@@ -969,6 +969,12 @@ function Dashboard({
               view does not estimate a person's risk.
             </p>
             <DatasetCoverage pilotId={area.id} />
+            <a
+              className="button secondary"
+              href={`/?enrichment=1&area=${area.id}${isPublic ? "&public=1" : "&demo=1"}`}
+            >
+              Explore data context
+            </a>
             {area.id === "camden_town" && (
               <a
                 className="button secondary"
@@ -2037,9 +2043,21 @@ const CamdenEvidence = lazy(() =>
     default: module.CamdenEvidence,
   })),
 );
+const EnrichmentContext = lazy(() =>
+  import("./EnrichmentContext").then((module) => ({ default: module.EnrichmentContext })),
+);
 function Entry() {
   const query = new URLSearchParams(window.location.search);
   const entry = entryArea(window.location.search);
+  if (query.get("enrichment") === "1" && !entry.invalid) {
+    return <Suspense fallback={<main className="map-fallback">Loading data context...</main>}>
+      <EnrichmentContext initialPilot={entry.areaId} onExit={() => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("enrichment");
+        window.location.assign(url.href);
+      }} />
+    </Suspense>;
+  }
   if (query.get("evidence") === "camden") {
     return (
       <Suspense
