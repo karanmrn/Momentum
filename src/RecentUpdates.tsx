@@ -104,7 +104,7 @@ export function RecentUpdates({
     <main className="recent-updates">
       <header className="ru-heading">
         <h1>Local updates</h1>
-        {onExit && <button onClick={onExit}>Back to Streetwise</button>}
+        {onExit && <button onClick={onExit}>Back to Momentum</button>}
       </header>
       <p className="ru-boundary">
         Published coverage from the past 30 days. These are not live incident

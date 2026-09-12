@@ -136,7 +136,7 @@ test("unavailable storage offers an explicit saved sample and keeps the selected
   await expect(
     page.getByText("The feed is unavailable.", { exact: false }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Back to Streetwise" }).click();
+  await page.getByRole("button", { name: "Back to Momentum" }).click();
   await expect(page).toHaveURL(/area=camden_town/);
   expect(page.url()).not.toContain("updates=");
 });
