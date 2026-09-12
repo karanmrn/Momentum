@@ -109,7 +109,7 @@ export const api = {
       publicPath(`/api/history?area=${encodeURIComponent(area)}`),
     ),
   reports: () => request<Report[]>("/api/reports"),
-  submitReport: (input: ReportInput, idempotencyKey = newIdempotencyKey()) =>
+  submitReport: (input: ReportInput, idempotencyKey: string = newIdempotencyKey()) =>
     request<Report>("/api/reports", {
       method: "POST",
       headers: { "Idempotency-Key": idempotencyKey },

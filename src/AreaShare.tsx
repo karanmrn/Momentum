@@ -92,7 +92,7 @@ export function AreaShare({ areaId, canonicalOrigin }: AreaShareProps) {
   async function share() {
     if (!url) return;
     try {
-      await navigator.share({ title: `Streetwise: ${area?.name}`, url });
+      await navigator.share({ title: `Momentum: ${area?.name}`, url });
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "AbortError")) {
         setMessage("Could not share. Copy the link instead.");
@@ -182,7 +182,7 @@ export function AreaShare({ areaId, canonicalOrigin }: AreaShareProps) {
                       src={qr.image}
                       width="256"
                       height="256"
-                      alt={`QR code for ${area?.name} on Streetwise`}
+                      alt={`QR code for ${area?.name} on Momentum`}
                     />
                     <p>Scan to open {area?.name}.</p>
                     <a

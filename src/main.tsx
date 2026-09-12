@@ -171,11 +171,15 @@ function Modal({
   };
   useEffect(() => {
     if (!inertBackground) return;
-    const backdrop = dialogRef.current?.parentElement;
-    const siblings = [...(backdrop?.parentElement?.children ?? [])].filter(
-      (element): element is HTMLElement =>
-        element instanceof HTMLElement && element !== backdrop,
-    );
+    const siblings: HTMLElement[] = [];
+    let branch = dialogRef.current?.parentElement;
+    while (branch?.parentElement && branch.parentElement !== document.body) {
+      for (const sibling of branch.parentElement.children) {
+        if (sibling instanceof HTMLElement && sibling !== branch)
+          siblings.push(sibling);
+      }
+      branch = branch.parentElement;
+    }
     const previous = siblings.map(
       (element) => [element, element.inert] as const,
     );
@@ -550,7 +554,7 @@ function ReportForm({
             This synthetic observation is not public. A moderator must review a
             summary before a notice can appear.
           </p>
-          <button className="button" onClick={onClose}>
+          <button className="button" disabled={saving} onClick={onClose}>
             Close
           </button>
         </div>
@@ -983,7 +987,7 @@ function Dashboard({
               </div>
               <p className="source-fact">
                 61016 is for non-emergency rail incidents. These links open
-                official services; Streetwise does not send a report.
+                official services; Momentum does not send a report.
               </p>
             </section>
             <div className="grid section">
@@ -1213,8 +1217,8 @@ function Reports({
       <section className="panel history section">
         <h2>Official reporting</h2>
         <p>
-          Streetwise Safety does not send an official report. Use the relevant
-          route yourself if you choose to report an issue.
+          Momentum does not send an official report. Use the relevant route
+          yourself if you choose to report an issue.
         </p>
         <a
           className="button secondary"
@@ -1847,7 +1851,7 @@ function App() {
         <div>
           <RefreshCw />
           <p>
-            <strong>Opening Streetwise Safety</strong>
+            <strong>Opening Momentum</strong>
           </p>
           <p>Loading local information.</p>
         </div>
@@ -1858,7 +1862,7 @@ function App() {
       <main className="map-fallback">
         <div>
           <p>
-            <strong>Streetwise Safety is unavailable</strong>
+            <strong>Momentum is unavailable</strong>
           </p>
           <p>{error || "The session did not return any pilot areas."}</p>
           <button className="button" onClick={() => void reload()}>
@@ -1886,7 +1890,7 @@ function App() {
           <span className="brand-mark">
             <Compass size={20} />
           </span>
-          Streetwise Safety
+          Momentum
         </div>
         <nav className="nav" aria-label="Website navigation">
           {(publicBrowse
@@ -1948,7 +1952,7 @@ function App() {
           >
             Account
           </button>
-          <div className="mobile-brand">Streetwise Safety</div>
+          <div className="mobile-brand">Momentum</div>
           <div className="area-control">
             <span className="eyebrow">Pilot area</span>
             <select
