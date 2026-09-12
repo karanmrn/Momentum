@@ -6,6 +6,10 @@ const sources = {
   C01: 'https://www.camden.gov.uk/staying-safe-at-night',
   C02: 'https://www.camden.gov.uk/safe-havens',
 } as const;
+const reviewedFinalUrls: {[sourceId in keyof typeof sources]: readonly string[]} = {
+  C01: [sources.C01],
+  C02: [sources.C02],
+};
 const responseSchema = z.object({
   success: z.literal(true), markdown: z.string().trim().min(1).max(200_000),
   url: z.string().url(),
@@ -16,11 +20,12 @@ const responseSchema = z.object({
 });
 export function validateContextResponse(input: unknown, sourceId: keyof typeof sources) {
   const data = responseSchema.parse(input);
-  if (data.url !== sources[sourceId] || (data.metadata && new URL(data.metadata.finalUrl).hostname !== 'www.camden.gov.uk')) {
+  const finalUrl = data.metadata?.finalUrl ?? data.url;
+  if (data.url !== sources[sourceId] || !reviewedFinalUrls[sourceId].includes(finalUrl)) {
     throw new Error('Source redirect is not allowed.');
   }
   return {
-    sourceId, sourceUrl: sources[sourceId], retrievedAt: new Date().toISOString(),
+    sourceId, sourceUrl: sources[sourceId], finalUrl, retrievedAt: new Date().toISOString(),
     sourcePublishedAt: data.metadata?.publishedTime ?? null,
     sourceModifiedAt: data.metadata?.modifiedTime ?? null,
     providerCache: data.cache_metadata ?? null,

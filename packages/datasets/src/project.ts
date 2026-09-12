@@ -2,8 +2,14 @@ import { z } from 'zod';
 import { type PilotId } from '../../contracts/index';
 import { parseDatasetCoverage, type DatasetCoverageRecord } from './coverage';
 const text=z.string();const time=z.string().datetime();const month=z.string().regex(/^20\d{2}-(0[1-9]|1[0-2])$/);
-const policeArea=z.object({areaId:text,status:z.enum(['downloaded','partial','unavailable']),downloadedMonths:z.array(month).max(36),retrievedAt:time.nullable()});
-const policeSchema=z.object({areas:z.array(policeArea)});
+const policeArea=z.object({areaId:text,status:z.enum(['downloaded','partial','unavailable']),downloadedMonths:z.array(month).max(36),retrievedAt:time.nullable()}).superRefine((area,ctx)=>{
+ if(new Set(area.downloadedMonths).size!==area.downloadedMonths.length)ctx.addIssue({code:z.ZodIssueCode.custom,message:'Downloaded months must be unique.',path:['downloadedMonths']});
+ if(area.status==='downloaded'&&(!area.downloadedMonths.length||!area.retrievedAt))ctx.addIssue({code:z.ZodIssueCode.custom,message:'Downloaded areas require months and a retrieval time.'});
+ if(area.status==='unavailable'&&(area.downloadedMonths.length||area.retrievedAt))ctx.addIssue({code:z.ZodIssueCode.custom,message:'Unavailable areas cannot retain downloaded source data.'});
+});
+const policeSchema=z.object({areas:z.array(policeArea)}).superRefine((value,ctx)=>{
+ if(new Set(value.areas.map(area=>area.areaId)).size!==value.areas.length)ctx.addIssue({code:z.ZodIssueCode.custom,message:'Police areas must be unique.',path:['areas']});
+});
 const station=z.object({pilotId:text,name:text,id:text});
 const tflSchema=z.object({fetchedAt:time,live:z.object({status:z.literal('collected'),stations:z.array(station).min(1),requests:z.array(z.object({fetchedAt:time})).min(1)}),
  staticFallback:z.object({sourceUrl:z.string().url(),identities:z.array(z.object({pilotId:text})).min(1)})});

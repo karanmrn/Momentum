@@ -28,11 +28,13 @@ describe('source boundaries', () => {
   await expect(getSources('london' as never)).rejects.toThrow(); expect(fetch).not.toHaveBeenCalled();
  });
  it('keeps Context output under review and retains source date', () => {
-  const result = validateContextResponse({success:true, markdown:'Council listing', url:'https://www.camden.gov.uk/staying-safe-at-night'}, 'C01');
+  const result = validateContextResponse({success:true, markdown:'Council listing', url:'https://www.camden.gov.uk/staying-safe-at-night',metadata:{finalUrl:'https://www.camden.gov.uk/staying-safe-at-night'}}, 'C01');
   expect(result.publicationAllowed).toBe(false); expect(result.sourcePublishedAt).toBeNull();
+  expect(result.finalUrl).toBe('https://www.camden.gov.uk/staying-safe-at-night');
  });
  it('rejects empty Context output and unapproved redirects', () => {
   expect(() => validateContextResponse({success:true, markdown:'', url:'https://www.camden.gov.uk/staying-safe-at-night'}, 'C01')).toThrow();
   expect(() => validateContextResponse({success:true, markdown:'Text', url:'https://www.camden.gov.uk/staying-safe-at-night',metadata:{finalUrl:'https://example.com'}}, 'C01')).toThrow();
+  expect(() => validateContextResponse({success:true, markdown:'Text', url:'https://www.camden.gov.uk/staying-safe-at-night',metadata:{finalUrl:'https://www.camden.gov.uk/unrelated-page'}}, 'C01')).toThrow();
  });
 });
