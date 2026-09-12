@@ -512,3 +512,33 @@ it("accepts opaque command keys without prototype collisions", () => {
   expect(revision(state)).toBe(2);
   expect(state.reports).toHaveLength(9);
 });
+
+it("can ungroup retired report references without restoring their content", () => {
+  const state = setup(),
+    ids = op(state).participants.map((p) => p.reportId);
+  mergeReviewCluster(
+    state,
+    "moderator",
+    { area, expectedRevision: 3, reportIds: ids, reason: "Review grouping." },
+    "retired-merge",
+  );
+  const group = view(state).clusters[0];
+  withdrawReport(state, "alex", ids[0], 1);
+  splitReviewCluster(
+    state,
+    "moderator",
+    group.id,
+    {
+      area,
+      expectedRevision: 4,
+      partitions: ids.map((id) => [id]),
+      reason: "Remove the retired grouping.",
+    },
+    "retired-split",
+  );
+  expect(view(state).clusters).toEqual([]);
+  expect(
+    state.reports.find((report) => report.id === ids[0])?.description,
+  ).toBe("[withdrawn]");
+  expect(approvedOperationalRelations(state, area)).toEqual([]);
+});

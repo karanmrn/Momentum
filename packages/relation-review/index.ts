@@ -584,7 +584,9 @@ export function splitReviewCluster(
       );
       if (!cluster) notFound();
       const ids = action.partitions.flat();
-      reportIdsAllowed(state, action.area, ids);
+      // Splitting changes stored grouping only. Retired source references can still be removed.
+      if (new Set(ids).size !== ids.length)
+        throw new DomainError(400, "invalid_input", "Use each report once.");
       if ([...ids].sort().join(",") !== [...cluster.reportIds].sort().join(","))
         conflict("The split must include every current member exactly once.");
       const after = action.partitions
