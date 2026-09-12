@@ -10,6 +10,8 @@ import {
 import "./transport-panel.css";
 
 const POLL_MS = 30_000;
+const MIN_POLL_MS = 1_000;
+const EXPIRY_MARGIN_MS = 25;
 const REQUEST_TIMEOUT_MS = 15_000;
 const envelopeSchema = z.object({
   schemaVersion: z.literal("1.0"),
@@ -60,6 +62,8 @@ export function useLocalTransport(area: PilotId, enabled = true) {
     let transportController: AbortController | undefined;
     let cameraController: AbortController | undefined;
     let camerasRequested = false;
+    let scheduleGeneration = 0;
+    let expiredRetryMs = MIN_POLL_MS;
 
     async function readSnapshot(path: string, controller: AbortController) {
       const deadline = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -106,7 +110,9 @@ export function useLocalTransport(area: PilotId, enabled = true) {
             transport: snapshot,
             error: null,
           }));
+          return Date.parse(snapshot.expiresAt);
         }
+        return null;
       } catch {
         if (
           !stopped &&
@@ -119,6 +125,7 @@ export function useLocalTransport(area: PilotId, enabled = true) {
             error: "Transport status is unavailable.",
           }));
         }
+        return null;
       } finally {
         if (!stopped && transportController === controller) {
           setState((current) => ({ ...current, loading: false }));
@@ -172,17 +179,40 @@ export function useLocalTransport(area: PilotId, enabled = true) {
       }
     }
 
-    function schedule() {
+    async function schedule() {
       clearTimeout(timer);
+      const generation = ++scheduleGeneration;
       if (stopped || document.visibilityState !== "visible") return;
-      void readTransport();
+      const transportRead = readTransport();
       if (!camerasRequested) void readCameras();
-      timer = setTimeout(schedule, POLL_MS);
+      const expiresAt = await transportRead;
+      if (
+        stopped ||
+        generation !== scheduleGeneration ||
+        document.visibilityState !== "visible"
+      )
+        return;
+      // A shared cache can return a snapshot with only milliseconds left.
+      // Wait past its expiry, with a minimum delay for repeated expired responses.
+      const alreadyExpired = expiresAt !== null && expiresAt <= Date.now();
+      const delay =
+        expiresAt === null
+          ? POLL_MS
+          : alreadyExpired
+            ? expiredRetryMs
+            : Math.max(
+                MIN_POLL_MS,
+                Math.min(POLL_MS, expiresAt - Date.now() + EXPIRY_MARGIN_MS),
+              );
+      expiredRetryMs = alreadyExpired
+        ? Math.min(POLL_MS, expiredRetryMs * 2)
+        : MIN_POLL_MS;
+      timer = setTimeout(() => void schedule(), delay);
     }
 
     function visibilityChanged() {
       if (document.visibilityState === "visible") {
-        schedule();
+        void schedule();
       } else {
         clearTimeout(timer);
         transportController?.abort();
@@ -194,7 +224,7 @@ export function useLocalTransport(area: PilotId, enabled = true) {
     }
 
     document.addEventListener("visibilitychange", visibilityChanged);
-    schedule();
+    void schedule();
     return () => {
       stopped = true;
       clearTimeout(timer);

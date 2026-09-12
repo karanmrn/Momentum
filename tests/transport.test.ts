@@ -250,3 +250,28 @@ describe('traffic camera metadata', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 });
+
+it('shows a repeated operator reason once while retaining every current severity',async()=>{
+  const reason='Piccadilly Line: Severe delays on one branch. Minor delays elsewhere.';
+  const fetchImpl:typeof fetch=vi.fn(async input=>Response.json(String(input).includes('/Line/')?[{
+    id:'piccadilly',name:'Piccadilly',lineStatuses:[
+      {statusSeverity:9,statusSeverityDescription:'Minor Delays',reason},
+      {statusSeverity:6,statusSeverityDescription:'Severe Delays',reason:reason.replaceAll(' ','  ')},
+      {statusSeverity:6,statusSeverityDescription:'Severe Delays',reason},
+    ],
+  }]:[]));
+  const result=await client(fetchImpl).getTransport('hounslow_town_centre');
+  expect(result.lines[0].description).toBe(`Minor Delays; Severe Delays: ${reason}`);
+});
+
+it('retains distinct operator explanations and excludes expired severity entries',async()=>{
+  const fetchImpl:typeof fetch=vi.fn(async input=>Response.json(String(input).includes('/Line/')?[{
+    id:'piccadilly',name:'Piccadilly',lineStatuses:[
+      {statusSeverity:9,statusSeverityDescription:'Minor Delays',reason:'Fictional eastern branch delay.'},
+      {statusSeverity:6,statusSeverityDescription:'Severe Delays',reason:'Fictional western branch delay.'},
+      {statusSeverity:5,statusSeverityDescription:'Part Closure',reason:'Expired explanation.',validityPeriods:[{fromDate:'2026-09-12T12:00:00Z',toDate:'2026-09-12T13:00:00Z'}]},
+    ],
+  }]:[]));
+  const result=await client(fetchImpl).getTransport('hounslow_town_centre');
+  expect(result.lines[0].description).toBe('Minor Delays: Fictional eastern branch delay. Severe Delays: Fictional western branch delay.');
+});
