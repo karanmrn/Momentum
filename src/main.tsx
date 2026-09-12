@@ -1453,7 +1453,7 @@ function App() {
           <p>
             <strong>Opening Streetwise</strong>
           </p>
-          <p>Creating an isolated demonstration session…</p>
+          <p>Loading local information.</p>
         </div>
       </main>
     );
@@ -1508,16 +1508,16 @@ function App() {
           })}
         </nav>
         <div className="side-note">
-          <strong>Synthetic environment</strong>
+          <strong>Report trial</strong>
           <br />
-          All reports, notices, relationships, and operator actions are
-          fictional.
+          Community reports and operator actions are fictional. Local sources
+          have their own dates and links.
         </div>
       </aside>
       <main className="main">
         <div className="synthetic" role="status">
-          <CircleAlert size={17} /> Synthetic demonstration. Do not use this
-          service for an emergency or as a live safety warning.
+          <CircleAlert size={17} /> Community reports and reviews are fictional.
+          This is not an emergency service.
         </div>
         <header className="topbar">
           <div className="mobile-brand">Streetwise</div>
