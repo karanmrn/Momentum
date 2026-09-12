@@ -1,4 +1,9 @@
 import { test, expect } from "@playwright/test";
+test.beforeEach(async ({ page }) => {
+  await page.route(/\/api\/public\/(transport|traffic-cameras)\?/, (route) =>
+    route.abort(),
+  );
+});
 
 test("malformed dataset responses show unavailable state and support retry", async ({
   page,

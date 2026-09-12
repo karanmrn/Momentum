@@ -1,6 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 // Automated checks use the accessible list. Do not repeatedly fetch public map tiles.
 test.beforeEach(async ({ page }) => {
+  await page.route(/\/api\/public\/(transport|traffic-cameras)\?/, (route) =>
+    route.abort(),
+  );
   await page.route(/https:\/\/[^/]*tile\.openstreetmap\.org\//, (route) =>
     route.abort(),
   );
@@ -324,8 +327,11 @@ test("mobile map sizes correctly after list view and names help markers", async 
   await page.getByLabel("Choose pilot area").selectOption("camden_town");
   await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
   await page.getByRole("button", { name: "Map view", exact: true }).click();
-  const markers = page.locator(".leaflet-marker-icon[role=button]");
-  await expect(markers).toHaveCount(5);
+  await expect(
+    page.getByRole("heading", { name: "Camden Town", exact: true }),
+  ).toBeVisible();
+  const markers = page.locator(".leaflet-marker-icon button");
+  await expect(markers).toHaveCount(4);
   await expect
     .poll(async () =>
       markers.evaluateAll((items) => {
@@ -349,9 +355,12 @@ test("mobile map sizes correctly after list view and names help markers", async 
   for (const marker of await markers.all())
     await expect(marker).toHaveAccessibleName(/.+/);
   await page
+    .locator(".leaflet-marker-icon")
     .getByRole("button", { name: /Castlehaven Community Centre/ })
     .click();
-  await expect(page.locator(".leaflet-popup")).toContainText("unconfirmed");
+  await expect(
+    page.getByRole("region", { name: /Castlehaven Community Centre details/ }),
+  ).toContainText("unconfirmed");
 });
 
 test("dataset acquisition is visible for every area and failures never become zero", async ({

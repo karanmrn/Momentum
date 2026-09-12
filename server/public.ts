@@ -1,3 +1,4 @@
+import { getTransport, getTrafficCameras } from "../services/transport.js";
 import { randomUUID } from "node:crypto";
 import { Router, type Response } from "express";
 import {
@@ -70,7 +71,14 @@ export function createPublicRoutes(): Router {
     next();
   });
   router.get("/areas", (_request, response) => ok(response, areas));
-  const readers = { sources, help, history, datasets };
+  const readers = {
+    sources,
+    help,
+    history,
+    datasets,
+    transport: getTransport,
+    "traffic-cameras": getTrafficCameras,
+  };
   for (const [path, read] of Object.entries(readers)) {
     router.get(`/${path}`, async (request, response) => {
       const area = pilotSchema.safeParse(request.query.area);
@@ -134,11 +142,9 @@ function fail(
   code: string,
   message: string,
 ) {
-  response
-    .status(status)
-    .json({
-      schemaVersion: "1.0",
-      error: { code, message },
-      requestId: randomUUID(),
-    });
+  response.status(status).json({
+    schemaVersion: "1.0",
+    error: { code, message },
+    requestId: randomUUID(),
+  });
 }
