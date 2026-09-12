@@ -1,0 +1,190 @@
+{
+  "schemaVersion": "1.0",
+  "methodVersion": "police-outcomes/1",
+  "collectedAt": "2026-09-12T14:44:01.541Z",
+  "sourceDocumentation": "https://data.police.uk/docs/method/outcomes-for-crime/",
+  "sourceFamilyId": "police-uk",
+  "synthetic": false,
+  "results": [
+    {
+      "expectedCrime": {
+        "exampleId": "CAM-01",
+        "persistentId": "af916967a50816b3734866b8de71cd2bee5fc80c9d07804ea781ce29801234d9",
+        "category": "violent-crime",
+        "month": "2026-07"
+      },
+      "sourceUrl": "https://data.police.uk/api/outcomes-for-crime/af916967a50816b3734866b8de71cd2bee5fc80c9d07804ea781ce29801234d9",
+      "fetchedAt": "2026-09-12T14:44:01.084Z",
+      "sourceFamilyId": "police-uk",
+      "originGroupId": null,
+      "synthetic": false,
+      "alertEligible": false,
+      "containsPersonIdentifiers": false,
+      "status": "available",
+      "httpStatus": 200,
+      "sourceSnapshotSha256": "95288cbc245226dc0b84bb987d16b35f3084f138d80301fc822ea32750fba528",
+      "responseBytes": 445,
+      "lineage": "exact_persistent_id_category_and_month",
+      "outcomes": [
+        {
+          "id": "08f17bb98eb487f7d82b33af66e3442d81f52a6d62de1d75b56b23eda9a156c7",
+          "sourceIndex": 0,
+          "sourceSnapshotSha256": "95288cbc245226dc0b84bb987d16b35f3084f138d80301fc822ea32750fba528",
+          "categoryCode": "under-investigation",
+          "categoryName": "Under investigation",
+          "month": "2026-07",
+          "timePrecision": "month",
+          "synthetic": false
+        }
+      ]
+    },
+    {
+      "expectedCrime": {
+        "exampleId": "CAM-02",
+        "persistentId": "16b13c14c4dbc1e1227167bae8b1bdb4ae57a5b175499156287cc2bc0fa9ac11",
+        "category": "violent-crime",
+        "month": "2026-07"
+      },
+      "sourceUrl": "https://data.police.uk/api/outcomes-for-crime/16b13c14c4dbc1e1227167bae8b1bdb4ae57a5b175499156287cc2bc0fa9ac11",
+      "fetchedAt": "2026-09-12T14:44:01.230Z",
+      "sourceFamilyId": "police-uk",
+      "originGroupId": null,
+      "synthetic": false,
+      "alertEligible": false,
+      "containsPersonIdentifiers": false,
+      "status": "available",
+      "httpStatus": 200,
+      "sourceSnapshotSha256": "3dcd48910199704b66dff46b9aab3300bcc9e79befb16033c1fe9313ff540884",
+      "responseBytes": 571,
+      "lineage": "exact_persistent_id_category_and_month",
+      "outcomes": [
+        {
+          "id": "1da7ef57422598f187d1d1c66b25aa09c9c7d0273d4b8d27675d89f39d6e2815",
+          "sourceIndex": 0,
+          "sourceSnapshotSha256": "3dcd48910199704b66dff46b9aab3300bcc9e79befb16033c1fe9313ff540884",
+          "categoryCode": "under-investigation",
+          "categoryName": "Under investigation",
+          "month": "2026-07",
+          "timePrecision": "month",
+          "synthetic": false
+        },
+        {
+          "id": "b98fb8a1ad6712498c439225258092afd6f44d7b18703211d82b23a25128ce80",
+          "sourceIndex": 1,
+          "sourceSnapshotSha256": "3dcd48910199704b66dff46b9aab3300bcc9e79befb16033c1fe9313ff540884",
+          "categoryCode": "unable-to-prosecute",
+          "categoryName": "Unable to prosecute suspect",
+          "month": "2026-07",
+          "timePrecision": "month",
+          "synthetic": false
+        }
+      ]
+    },
+    {
+      "expectedCrime": {
+        "exampleId": "CAM-03",
+        "persistentId": "4e5ec260e51464d84490c805f66976197eac4e11c994b80010ccf1c1ff87a23e",
+        "category": "violent-crime",
+        "month": "2026-07"
+      },
+      "sourceUrl": "https://data.police.uk/api/outcomes-for-crime/4e5ec260e51464d84490c805f66976197eac4e11c994b80010ccf1c1ff87a23e",
+      "fetchedAt": "2026-09-12T14:44:01.280Z",
+      "sourceFamilyId": "police-uk",
+      "originGroupId": null,
+      "synthetic": false,
+      "alertEligible": false,
+      "containsPersonIdentifiers": false,
+      "status": "available",
+      "httpStatus": 200,
+      "sourceSnapshotSha256": "2e692ff1bb564ded8c4f5bfa5c194d562fae50c3f646005e520d1aeb77b44c38",
+      "responseBytes": 456,
+      "lineage": "exact_persistent_id_category_and_month",
+      "outcomes": [
+        {
+          "id": "617c31b271165d3c5a6aaef062503f71c53b000a0534fa9c2242a18ae2c1a1aa",
+          "sourceIndex": 0,
+          "sourceSnapshotSha256": "2e692ff1bb564ded8c4f5bfa5c194d562fae50c3f646005e520d1aeb77b44c38",
+          "categoryCode": "under-investigation",
+          "categoryName": "Under investigation",
+          "month": "2026-07",
+          "timePrecision": "month",
+          "synthetic": false
+        }
+      ]
+    },
+    {
+      "expectedCrime": {
+        "exampleId": "CAM-04",
+        "persistentId": "df7d92229574044be37961fd94bdec681ff6ebd723dbaec044b94312805ba33e",
+        "category": "violent-crime",
+        "month": "2026-07"
+      },
+      "sourceUrl": "https://data.police.uk/api/outcomes-for-crime/df7d92229574044be37961fd94bdec681ff6ebd723dbaec044b94312805ba33e",
+      "fetchedAt": "2026-09-12T14:44:01.344Z",
+      "sourceFamilyId": "police-uk",
+      "originGroupId": null,
+      "synthetic": false,
+      "alertEligible": false,
+      "containsPersonIdentifiers": false,
+      "status": "available",
+      "httpStatus": 200,
+      "sourceSnapshotSha256": "ee1b55ee422c87b7840558743c0be4110be98acb7cf09e5d221aaff407db31ce",
+      "responseBytes": 449,
+      "lineage": "exact_persistent_id_category_and_month",
+      "outcomes": [
+        {
+          "id": "494366b4e56fa67dd08eb168b7b445f20a942c869e47f45794849342b0f8d50e",
+          "sourceIndex": 0,
+          "sourceSnapshotSha256": "ee1b55ee422c87b7840558743c0be4110be98acb7cf09e5d221aaff407db31ce",
+          "categoryCode": "under-investigation",
+          "categoryName": "Under investigation",
+          "month": "2026-07",
+          "timePrecision": "month",
+          "synthetic": false
+        }
+      ]
+    },
+    {
+      "expectedCrime": {
+        "exampleId": "CAM-05",
+        "persistentId": "3246c174df75d7addd537a4e5b10190cdeb3316c5f2ee179061c073d06286667",
+        "category": "violent-crime",
+        "month": "2026-07"
+      },
+      "sourceUrl": "https://data.police.uk/api/outcomes-for-crime/3246c174df75d7addd537a4e5b10190cdeb3316c5f2ee179061c073d06286667",
+      "fetchedAt": "2026-09-12T14:44:01.437Z",
+      "sourceFamilyId": "police-uk",
+      "originGroupId": null,
+      "synthetic": false,
+      "alertEligible": false,
+      "containsPersonIdentifiers": false,
+      "status": "available",
+      "httpStatus": 200,
+      "sourceSnapshotSha256": "d0b1cfe9b0d10483f3584679e0de4eaa6e2d841a91309b7c03378bcc7682b3bc",
+      "responseBytes": 456,
+      "lineage": "exact_persistent_id_category_and_month",
+      "outcomes": [
+        {
+          "id": "42f9cf9638f0e43fb4c2ea7cf0d2d856e14e23818cb04182d397a687bad56cc9",
+          "sourceIndex": 0,
+          "sourceSnapshotSha256": "d0b1cfe9b0d10483f3584679e0de4eaa6e2d841a91309b7c03378bcc7682b3bc",
+          "categoryCode": "under-investigation",
+          "categoryName": "Under investigation",
+          "month": "2026-07",
+          "timePrecision": "month",
+          "synthetic": false
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Exact persistent ID links public outcome history to the selected police record. It is not a police case reference.",
+    "Outcome dates have month precision. Source order cannot establish the sequence of events within one month.",
+    "Repeated outcome rows are retained. They do not establish the number of people involved.",
+    "No person identifiers, identity nodes, incident narratives or exact event times are retained.",
+    "Unavailable history remains unknown. An empty published history does not establish that no action occurred.",
+    "Police.uk history shares the police source family. It is not independent corroboration of a community report.",
+    "A published outcome does not identify the offence subtype or disclose the evidence collected.",
+    "Source response hashes include original bytes. Only the redacted, normalized fields are persisted."
+  ]
+}

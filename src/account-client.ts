@@ -95,6 +95,64 @@ export function createAccountClient(provider: SupabaseClient): AccountClient {
   }
 
   return {
+    async requestData(path, options) {
+      const method = options.method ?? "GET";
+      const allowed =
+        (method === "GET" &&
+          ["/follows", "/inbox", "/scopes", "/export"].includes(path)) ||
+        (method === "PUT" && path === "/follows") ||
+        (method === "PATCH" && /^\/inbox\/[0-9a-f-]{36}$/i.test(path)) ||
+        (method === "DELETE" && path === "");
+      if (!allowed) throw new Error("Account operation unavailable.");
+      const expectedRevision = revision;
+      const { data, error } = await provider.auth.getSession();
+      if (
+        error ||
+        !data.session ||
+        data.session.user.id !== options.accountId ||
+        revision !== expectedRevision
+      )
+        throw new Error("Account session changed. Sign in again.");
+      const response = await fetch(`/api/account/data${path}`, {
+        method,
+        credentials: "omit",
+        cache: "no-store",
+        redirect: "error",
+        headers: {
+          Authorization: `Bearer ${data.session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        ...(options.body === undefined
+          ? {}
+          : { body: JSON.stringify(options.body) }),
+      });
+      const result: unknown = await response.json();
+      if (expectedRevision !== revision)
+        throw new Error("Account session changed. Sign in again.");
+      if (!response.ok) {
+        const code = z
+          .object({ error: z.object({ code: z.string() }) })
+          .safeParse(result);
+        if (code.success && code.data.error.code === "EXPORT_LIMIT")
+          throw new Error(
+            "This export exceeds the supported size. Your data has not been deleted.",
+          );
+        if (code.success && code.data.error.code === "ACCOUNT_DELETED")
+          throw new Error("This account's application data was deleted.");
+        throw new Error(
+          response.status === 401
+            ? "Sign in again to access account data."
+            : "Account data is unavailable. Try again.",
+        );
+      }
+      return z
+        .object({
+          schemaVersion: z.literal("1.0"),
+          synthetic: z.literal(false),
+          data: z.unknown(),
+        })
+        .parse(result).data;
+    },
     async getSession() {
       const expectedRevision = revision;
       const { data, error } = await provider.auth.getSession();

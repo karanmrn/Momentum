@@ -202,7 +202,7 @@ export function CamdenEvidence({ onExit }: { onExit?: () => void } = {}) {
         </div>
         {onExit && (
           <button onClick={onExit} className="ce-button">
-            Back to Streetwise
+            Back to Momentum
           </button>
         )}
       </header>

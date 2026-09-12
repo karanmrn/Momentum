@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import "./AccountPanel.css";
+import { AccountDataPanel } from "./AccountDataPanel";
 import { loadAccountClient } from "./account-client";
 
 export interface AccountSession {
@@ -17,6 +18,14 @@ export type AccountSignupResult =
   | { status: "confirmation_required" };
 
 export interface AccountClient {
+  requestData?(
+    path: string,
+    options: {
+      accountId: string;
+      method?: "GET" | "PUT" | "PATCH" | "DELETE";
+      body?: unknown;
+    },
+  ): Promise<unknown>;
   getSession(): Promise<AccountSession | null>;
   signIn(credentials: AccountCredentials): Promise<AccountSession>;
   signUp(credentials: AccountCredentials): Promise<AccountSignupResult>;
@@ -245,6 +254,20 @@ export function AccountPanel({ client, embedded = false }: AccountPanelProps) {
         <div className="account-session">
           <p>Logged in{session.email ? ` as ${session.email}` : ""}.</p>
           <p>Community reports remain in the fictional demo.</p>
+          {client.requestData && (
+            <AccountDataPanel
+              key={session.id}
+              client={client}
+              accountId={session.id}
+              onDeleted={async () => {
+                await client.signOut();
+                setSession(null);
+                setMessage(
+                  "Your application data was deleted. You are logged out.",
+                );
+              }}
+            />
+          )}
           <button
             className="button secondary"
             type="button"
@@ -291,8 +314,8 @@ export function AccountPanel({ client, embedded = false }: AccountPanelProps) {
             onSubmit={submit}
             aria-label={
               mode === "login"
-                ? "Log in to Streetwise"
-                : "Create a Streetwise account"
+                ? "Log in to Momentum"
+                : "Create a Momentum account"
             }
           >
             <label htmlFor={emailId}>Email</label>

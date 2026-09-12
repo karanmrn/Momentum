@@ -1,0 +1,39 @@
+.account-data {
+  margin: 24px 0;
+  border-top: 1px solid #d5d8ca;
+  min-width: 0;
+}
+.account-data h3 {
+  margin: 24px 0 12px;
+}
+.account-data fieldset {
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid #81958a;
+  border-radius: 8px;
+}
+.account-data .account-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
+.account-data .account-check input {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  margin: 0;
+  flex: 0 0 20px;
+}
+.account-data li {
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.account-data li span,
+.account-data time {
+  display: block;
+  margin-bottom: 8px;
+}
+.account-data > .button {
+  width: 100%;
+}

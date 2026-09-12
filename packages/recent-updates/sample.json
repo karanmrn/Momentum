@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "1.0",
+  "checkedAt": "2026-09-12T14:44:43.282Z",
+  "sources": [
+    {
+      "id": "bbc_london",
+      "name": "BBC News London",
+      "url": "https://feeds.bbci.co.uk/news/england/london/rss.xml",
+      "status": "success",
+      "lastCheckedAt": "2026-09-12T14:44:43.282Z",
+      "lastSuccessAt": "2026-09-12T14:44:43.282Z"
+    }
+  ],
+  "items": [
+    {
+      "id": "4da24a294f94fcda9552706f72dd385120f5a17b17c27785de45d45379f3a67a",
+      "sourceId": "bbc_london",
+      "sourceKind": "news",
+      "title": "Fire on 17th floor of tower block under control",
+      "url": "https://www.bbc.co.uk/news/articles/clye9j9r53no",
+      "publishedAt": "2026-09-12T08:24:24.000Z",
+      "occurredAt": null,
+      "areaIds": [],
+      "scope": "london",
+      "scopeLabel": "London coverage; exact location unverified"
+    },
+    {
+      "id": "e3d6f98a4bfc678d22d52a3323e83f109cc72b3c70082ce9927874b30cec101b",
+      "sourceId": "bbc_london",
+      "sourceKind": "news",
+      "title": "Man admits encouraging assault on sleeping woman",
+      "url": "https://www.bbc.co.uk/news/articles/cp3kvkxz5zpo",
+      "publishedAt": "2026-09-11T16:23:29.000Z",
+      "occurredAt": null,
+      "areaIds": [],
+      "scope": "london",
+      "scopeLabel": "London coverage; exact location unverified"
+    },
+    {
+      "id": "06bdde18b535fc4306e4ab5417b8b897ed8378ebcf372227072f6bb250aee699",
+      "sourceId": "bbc_london",
+      "sourceKind": "news",
+      "title": "Man jailed for unprovoked murder of family man",
+      "url": "https://www.bbc.co.uk/news/articles/c74e0rwkxvno",
+      "publishedAt": "2026-09-11T15:54:24.000Z",
+      "occurredAt": null,
+      "areaIds": [],
+      "scope": "london",
+      "scopeLabel": "London coverage; exact location unverified"
+    },
+    {
+      "id": "366ff0acdf07c010f33b241021a288c10d414a6f10ae837f876334a242551c23",
+      "sourceId": "bbc_london",
+      "sourceKind": "news",
+      "title": "Eight held over Bromley KFC multiple stabbing",
+      "url": "https://www.bbc.co.uk/news/articles/cn0jr86ykzyo",
+      "publishedAt": "2026-09-11T13:36:42.000Z",
+      "occurredAt": null,
+      "areaIds": [],
+      "scope": "london",
+      "scopeLabel": "London coverage; exact location unverified"
+    },
+    {
+      "id": "2f69e03650d6987dba9caff66a8345f38559ee59e6ec1174e7125de27dfb8b7e",
+      "sourceId": "bbc_london",
+      "sourceKind": "news",
+      "title": "Drug gangs exploited and raped us as teens, then police failed us, women tell BBC",
+      "url": "https://www.bbc.co.uk/news/articles/c9w41v2r742o",
+      "publishedAt": "2026-09-09T04:59:08.000Z",
+      "occurredAt": null,
+      "areaIds": [],
+      "scope": "london",
+      "scopeLabel": "London coverage; exact location unverified"
+    },
+    {
+      "id": "4e177f4bed0858872e8baed155614312f672ea3076b16915b17886939d9f0f5d",
+      "sourceId": "bbc_london",
+      "sourceKind": "news",
+      "title": "Police failed me for decades, says abuse survivor",
+      "url": "https://www.bbc.co.uk/news/articles/cp80183vrdgo",
+      "publishedAt": "2026-09-03T04:54:22.000Z",
+      "occurredAt": null,
+      "areaIds": [],
+      "scope": "london",
+      "scopeLabel": "London coverage; exact location unverified"
+    }
+  ],
+  "status": "current"
+}
