@@ -1,3 +1,4 @@
+import { publicBrowse } from "./entry";
 import type {
   Area,
   DecisionInput,
@@ -51,31 +52,35 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 const newIdempotencyKey = () =>
   globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 
+const publicPath = (path: string) => publicBrowse ? path.replace("/api/", "/api/public/") : path;
+
 export const api = {
-  session: () => request<SessionView>("/api/session"),
+  session: () => publicBrowse
+    ? Promise.resolve<SessionView>({persona: "alex", synthetic: true, moderatorAreas: []})
+    : request<SessionView>("/api/session"),
   setPersona: (persona: Persona) =>
     request<SessionView>("/api/session", {
       method: "POST",
       body: JSON.stringify({ persona }),
     }),
-  areas: () => request<Area[]>("/api/areas"),
+  areas: () => request<Area[]>(publicPath("/api/areas")),
   feed: (area: string) =>
-    request<Notice[]>(`/api/feed?area=${encodeURIComponent(area)}`),
+    request<Notice[]>(publicPath(`/api/feed?area=${encodeURIComponent(area)}`)),
   notice: (id: string) =>
     request<Notice>(`/api/notices/${encodeURIComponent(id)}`),
   evidence: (id: string) =>
     request<EvidenceGraph>(`/api/notices/${encodeURIComponent(id)}/evidence`),
   help: (area: string) =>
-    request<HelpCard[]>(`/api/help?area=${encodeURIComponent(area)}`),
+    request<HelpCard[]>(publicPath(`/api/help?area=${encodeURIComponent(area)}`)),
   datasets: (area: string) =>
     request<DatasetCoverageRecord[]>(
-      `/api/datasets?area=${encodeURIComponent(area)}`,
+      publicPath(`/api/datasets?area=${encodeURIComponent(area)}`),
     ),
   sources: (area: string) =>
-    request<SourceCard[]>(`/api/sources?area=${encodeURIComponent(area)}`),
+    request<SourceCard[]>(publicPath(`/api/sources?area=${encodeURIComponent(area)}`)),
   history: (area: string) =>
     request<HistoricalCoverage>(
-      `/api/history?area=${encodeURIComponent(area)}`,
+      publicPath(`/api/history?area=${encodeURIComponent(area)}`),
     ),
   reports: () => request<Report[]>("/api/reports"),
   submitReport: (input: ReportInput) =>

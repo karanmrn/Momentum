@@ -11,3 +11,4 @@ playwright-report/
 research/acquisition/
 scripts/backfill/live-probe.json
 docs/release/screenshots/
+.vercel

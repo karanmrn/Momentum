@@ -1040,7 +1040,7 @@ function Reports({
       <section className="panel history section">
         <h2>Official reporting</h2>
         <p>
-          Streetwise does not send an official report. Use the relevant route
+          Streetwise Safety does not send an official report. Use the relevant route
           yourself if you choose to report an issue.
         </p>
         <a
@@ -1552,7 +1552,7 @@ function App() {
         <div>
           <RefreshCw />
           <p>
-            <strong>Opening Streetwise</strong>
+            <strong>Opening Streetwise Safety</strong>
           </p>
           <p>Loading local information.</p>
         </div>
@@ -1563,7 +1563,7 @@ function App() {
       <main className="map-fallback">
         <div>
           <p>
-            <strong>Streetwise is unavailable</strong>
+            <strong>Streetwise Safety is unavailable</strong>
           </p>
           <p>{error || "The session did not return any pilot areas."}</p>
           <button className="button" onClick={() => void reload()}>
@@ -1591,7 +1591,7 @@ function App() {
           <span className="brand-mark">
             <Compass size={20} />
           </span>
-          Streetwise
+          Streetwise Safety
         </div>
         <nav className="nav" aria-label="Website navigation">
           {navItems.map((item) => {
@@ -1621,7 +1621,7 @@ function App() {
           This is not an emergency service.
         </div>
         <header className="topbar">
-          <div className="mobile-brand">Streetwise</div>
+          <div className="mobile-brand">Streetwise Safety</div>
           <div className="area-control">
             <span className="eyebrow">Pilot area</span>
             <select
