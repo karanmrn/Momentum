@@ -32,8 +32,7 @@ Dataset coverage shows dated acquisition snapshots and missing sources separatel
 ## Verification
 
 The integrated release passed nine Playwright journeys and the production build.
-The unit and integration suite passed 126 tests before the final presentation-only fixes.
-The final browser journeys covered those presentation fixes.
+The final unit and integration suite passed 154 tests.
 
 Independent visual review passed at 320, 390, and 1440 pixels.
 It verified map sizing, marker names, 48-pixel form controls, graph labels, and source placement.
