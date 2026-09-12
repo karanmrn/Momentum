@@ -32,3 +32,10 @@ No live public intake, external sending, or Nextdoor personal dataset is enabled
 The police collection contains 108 monthly source files and 134,305 normalized source records.
 The three research circles are not approved pilot boundaries. These counts are not pilot crime totals.
 Read `docs/dataset-inventory.md` for the area breakdown and source limits.
+
+## Deployed runtime check
+
+The first deployment returned HTTP 500 because native Node ESM rejected extensionless server imports.
+Server imports now use explicit JavaScript paths. JSON imports specify their type.
+`npm run test:server` compiles and loads the server with native Node, without development module loaders.
+It checks all three public dataset routes and the private storage gate.

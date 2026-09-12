@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { pilotSchema, type PilotId } from '../../contracts/index';
-import snapshot from '../../../research/datasets/coverage.json';
+import { pilotSchema, type PilotId } from '../../contracts/index.js';
+import snapshot from '../../../research/datasets/coverage.json' with { type: "json" };
 
 const month=z.string().regex(/^20\d{2}-(0[1-9]|1[0-2])$/);
 export const datasetCoverageSchema=z.object({

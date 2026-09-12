@@ -1,5 +1,5 @@
-import { getDatasetCoverage } from '../packages/datasets/src/coverage';
-import { getHistoricalCoverage } from '../packages/history/src/coverage';
+import { getDatasetCoverage } from '../packages/datasets/src/coverage.js';
+import { getHistoricalCoverage } from '../packages/history/src/coverage.js';
 import express from "express";
 import {
   createHash,
@@ -12,11 +12,11 @@ import {
   personaSchema,
   pilotSchema,
   type Envelope,
-} from "../packages/contracts/index";
-import type { DemoDatabase } from "./database";
-import { createRoutes } from "./routes";
-import { createPublicRoutes } from "./public";
-import { getHelp, getSources } from "../services/index";
+} from "../packages/contracts/index.js";
+import type { DemoDatabase } from "./database.js";
+import { createRoutes } from "./routes.js";
+import { createPublicRoutes } from "./public.js";
+import { getHelp, getSources } from "../services/index.js";
 export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
   const database = () => typeof db === "function" ? db() : Promise.resolve(db);
   const store: Pick<DemoDatabase, "read" | "mutate"> = {

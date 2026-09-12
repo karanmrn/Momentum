@@ -1,4 +1,4 @@
-import type { HelpCard, SourceCard } from '../../packages/contracts/index';
+import type { HelpCard, SourceCard } from '../../packages/contracts/index.js';
 
 // Selected factual directory entries, checked against the council map on 12 September 2026.
 // This is a curated projection, not a copy of the raw directory response.

@@ -1,6 +1,6 @@
-import { createDatabase, type DemoDatabase } from "../server/database";
-import { createDemoState } from "../packages/domain/index";
-import { createApp } from "../server/app";
+import { createDatabase, type DemoDatabase } from "../server/database.js";
+import { createDemoState } from "../packages/domain/index.js";
+import { createApp } from "../server/app.js";
 import type { Request, Response } from "express";
 
 let database: Promise<DemoDatabase> | undefined;
