@@ -1171,7 +1171,7 @@ textarea {
 }
 
 @media (max-width: 759px) {
-  .presentation-entry {
+  .presentation-entry:not(.presentation-return) {
     display: none;
   }
 }
