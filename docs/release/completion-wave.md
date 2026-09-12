@@ -36,6 +36,7 @@ The first browser run passed 95 of 100 tests. Header overlap and shared test lim
 The final browser run passed all 101 tests in 1.3 minutes.
 It used five isolated servers.
 An unrestricted concurrent unit run hit a database startup timeout. The final unit run used four workers. Changed TypeScript and CSS files passed formatting checks.
+A final public-view guard rejects local DatasetRecord payloads. All 15 affected graph browser tests passed after this guard.
 TypeScript, production build, native ESM startup, and focused review checks passed.
 
 ## Remaining boundaries

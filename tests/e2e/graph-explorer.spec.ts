@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { projectSemanticGraph } from "../../packages/semantic-graph";
+import {
+  projectSemanticGraph,
+  semanticGraphSchema,
+} from "../../packages/semantic-graph";
 import { getDatasetCoverage } from "../../packages/datasets/src/coverage";
 import type { PilotId } from "../../packages/contracts";
 
@@ -123,6 +126,7 @@ for (const failure of [
   "private node",
   "synthetic envelope",
   "synthetic node",
+  "local dataset record",
 ] as const) {
   test(`Public graph rejects ${failure} without exposing records`, async ({
     page,
@@ -141,6 +145,18 @@ for (const failure of [
       if (failure === "synthetic node")
         body.data.nodes.find((node) => node.type === "Source")!.synthetic =
           true;
+      if (failure === "local dataset record") {
+        const source = body.data.nodes.find(
+          (node) => node.provenance !== null,
+        )!;
+        body.data.nodes.push({
+          ...source,
+          id: "local-only-record",
+          type: "DatasetRecord",
+          synthetic: false,
+        });
+        semanticGraphSchema.parse(body.data);
+      }
       body.data.nodes[0].label = "PRIVATE_PAYLOAD_MUST_NOT_RENDER";
       return route.fulfill({ json: body });
     });

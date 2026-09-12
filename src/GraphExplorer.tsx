@@ -101,7 +101,9 @@ export function GraphExplorer({
           next.pilotId !== area ||
           (!examples &&
             (body.synthetic !== false ||
-              next.nodes.some((n) => n.synthetic) ||
+              next.nodes.some(
+                (n) => n.synthetic || n.type === "DatasetRecord",
+              ) ||
               next.assertions.some((e) => e.synthetic)))
         )
           throw new Error("scope");
