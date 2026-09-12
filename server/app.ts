@@ -1,3 +1,8 @@
+import { createRecentUpdatesService } from "../services/recent-updates.js";
+import {
+  createPostgresRecentUpdatesStore,
+  createRecentUpdatesRouter,
+} from "./recent-updates.js";
 import { createAccountRoutes } from "./account.js";
 import { getDatasetCoverage } from "../packages/datasets/src/coverage.js";
 import { getHistoricalCoverage } from "../packages/history/src/coverage.js";
@@ -43,6 +48,23 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
   });
   app.use("/api/account", createAccountRoutes());
   app.use("/api/public/graph", createSemanticRoutes());
+  const updatesConnection = process.env.RECENT_UPDATES_DATABASE_URL;
+  const updatesStore = updatesConnection
+    ? createPostgresRecentUpdatesStore(updatesConnection)
+    : {
+        async read() {
+          throw new Error("Updates storage is unavailable.");
+        },
+        async write() {
+          throw new Error("Updates storage is unavailable.");
+        },
+      };
+  app.use(
+    "/api/public/recent-updates",
+    createRecentUpdatesRouter({
+      service: createRecentUpdatesService({ store: updatesStore }),
+    }),
+  );
   app.use("/api/public", createPublicRoutes());
   if (process.env.VERCEL) {
     app.use((req, res, next) => {
