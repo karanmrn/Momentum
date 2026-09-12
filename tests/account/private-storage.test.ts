@@ -276,3 +276,108 @@ describe("actual PostgreSQL role and RLS boundaries", () => {
     ).rejects.toThrow(/row-level security/);
   });
 });
+
+describe("deletion with a non-bypass migration owner", () => {
+  it("clears owned rows under FORCE RLS and rejects missing or repeated deletion", async () => {
+    const db = new PGlite();
+    try {
+      await db.exec(`CREATE ROLE migration_owner NOLOGIN NOSUPERUSER NOBYPASSRLS;
+    CREATE ROLE streetwise_account_app NOLOGIN NOSUPERUSER NOBYPASSRLS;
+    CREATE SCHEMA private_accounts AUTHORIZATION migration_owner;
+    SET ROLE migration_owner;`);
+      await db.exec(
+        await readFile(
+          new URL(
+            "../../supabase/migrations/20260912160000_private_accounts.sql",
+            import.meta.url,
+          ),
+          "utf8",
+        ),
+      );
+      await db.exec("RESET ROLE");
+      const owner = (
+        await db.query<{ rolsuper: boolean; rolbypassrls: boolean }>(
+          `SELECT rolsuper,rolbypassrls FROM pg_roles WHERE rolname='migration_owner'`,
+        )
+      ).rows[0];
+      expect(owner).toEqual({ rolsuper: false, rolbypassrls: false });
+      expect(
+        (
+          await db.query<{ owner: string }>(
+            `SELECT p.proowner::regrole::text AS owner FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='private_accounts' AND p.proname='delete_owned_data'`,
+          )
+        ).rows[0]?.owner,
+      ).toBe("migration_owner");
+      await db.query(
+        "INSERT INTO private_accounts.accounts(owner) VALUES($1),($2)",
+        [a, b],
+      );
+      for (const id of [a, b]) {
+        await db.query(
+          `INSERT INTO private_accounts.reports(id,owner,pilot_id,title,description,source_basis,client_request_id) VALUES($1,$1,'camden_town','Fixture','Private fixture description','firsthand',$1)`,
+          [id],
+        );
+        await db.query(
+          `INSERT INTO private_accounts.follows(owner,pilot_ids,categories,paused) VALUES($1,ARRAY['camden_town'],ARRAY['community'],false)`,
+          [id],
+        );
+        await db.query(
+          `INSERT INTO private_accounts.inbox(id,owner,pilot_id,notice_id) VALUES($1,$1,'camden_town','notice')`,
+          [id],
+        );
+        await db.query(
+          `INSERT INTO private_accounts.scopes(owner,pilot_id,role,expires_at) VALUES($1,'camden_town','partner',now()+interval '1 day')`,
+          [id],
+        );
+      }
+      async function remove(id: string) {
+        return db.transaction(async (tx) => {
+          await tx.query("SELECT set_config('app.account_id',$1,true)", [id]);
+          await tx.exec("SET LOCAL ROLE streetwise_account_app");
+          await tx.query("SELECT private_accounts.delete_owned_data()");
+        });
+      }
+      await remove(a);
+      for (const table of ["reports", "follows", "inbox", "scopes"]) {
+        expect(
+          (
+            await db.query(
+              `SELECT owner FROM private_accounts.${table} WHERE owner=$1`,
+              [a],
+            )
+          ).rows,
+        ).toEqual([]);
+        expect(
+          (
+            await db.query(
+              `SELECT owner FROM private_accounts.${table} WHERE owner=$1`,
+              [b],
+            )
+          ).rows,
+        ).toHaveLength(1);
+      }
+      const tombstone = (
+        await db.query<{ deleted_at: Date | null }>(
+          "SELECT deleted_at FROM private_accounts.accounts WHERE owner=$1",
+          [a],
+        )
+      ).rows[0];
+      expect(tombstone?.deleted_at).not.toBeNull();
+      await expect(remove(a)).rejects.toThrow("Active account was not found");
+      await expect(remove(randomUUID())).rejects.toThrow(
+        "Active account was not found",
+      );
+      await expect(remove("")).rejects.toThrow("Account required");
+      expect(
+        (
+          await db.query(
+            "SELECT deleted_at FROM private_accounts.accounts WHERE owner=$1",
+            [a],
+          )
+        ).rows[0],
+      ).toEqual(tombstone);
+    } finally {
+      await db.close();
+    }
+  });
+});

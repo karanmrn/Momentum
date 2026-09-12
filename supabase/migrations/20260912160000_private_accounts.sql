@@ -4,7 +4,11 @@ DO $$ BEGIN
     CREATE ROLE streetwise_account_app NOLOGIN NOSUPERUSER NOBYPASSRLS;
   END IF;
 END $$;
-CREATE SCHEMA IF NOT EXISTS private_accounts;
+DO $$ BEGIN
+ IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname='private_accounts') THEN
+  CREATE SCHEMA private_accounts;
+ END IF;
+END $$;
 REVOKE ALL ON SCHEMA private_accounts FROM PUBLIC;
 GRANT USAGE ON SCHEMA private_accounts TO streetwise_account_app;
 CREATE TABLE private_accounts.accounts (
@@ -44,6 +48,8 @@ DO $$ DECLARE t text; BEGIN
  EXECUTE format('ALTER TABLE private_accounts.%I ENABLE ROW LEVEL SECURITY',t);
  EXECUTE format('ALTER TABLE private_accounts.%I FORCE ROW LEVEL SECURITY',t);
  EXECUTE format('CREATE POLICY own_rows ON private_accounts.%I TO streetwise_account_app USING (owner = nullif(current_setting(''app.account_id'',true),'''')::uuid) WITH CHECK (owner = nullif(current_setting(''app.account_id'',true),'''')::uuid)',t);
+ -- The function owner must obey ownership checks even with FORCE RLS.
+ EXECUTE format($policy$CREATE POLICY function_owner_rows ON private_accounts.%I TO CURRENT_USER USING (owner = nullif(current_setting('app.account_id',true),'')::uuid) WITH CHECK (owner = nullif(current_setting('app.account_id',true),'')::uuid)$policy$,t);
  EXECUTE format('REVOKE ALL ON private_accounts.%I FROM PUBLIC',t);
  END LOOP;
 END $$;
@@ -57,13 +63,17 @@ GRANT UPDATE(read_at) ON private_accounts.inbox TO streetwise_account_app;
 CREATE FUNCTION private_accounts.delete_owned_data() RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog AS $$
 DECLARE account uuid := nullif(current_setting('app.account_id',true),'')::uuid;
+ changed integer;
 BEGIN
  IF account IS NULL THEN RAISE EXCEPTION 'Account required'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(account::text,0));
  DELETE FROM private_accounts.reports WHERE owner=account;
  DELETE FROM private_accounts.follows WHERE owner=account;
  DELETE FROM private_accounts.inbox WHERE owner=account;
  DELETE FROM private_accounts.scopes WHERE owner=account;
- UPDATE private_accounts.accounts SET deleted_at=now() WHERE owner=account;
+ UPDATE private_accounts.accounts SET deleted_at=now() WHERE owner=account AND deleted_at IS NULL;
+ GET DIAGNOSTICS changed = ROW_COUNT;
+ IF changed <> 1 THEN RAISE EXCEPTION 'Active account was not found'; END IF;
 END $$;
 REVOKE ALL ON FUNCTION private_accounts.delete_owned_data() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION private_accounts.delete_owned_data() TO streetwise_account_app;
