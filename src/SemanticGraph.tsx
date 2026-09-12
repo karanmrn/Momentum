@@ -37,6 +37,12 @@ function nodeDetails(
   if (meta.revision !== undefined)
     details.push(["Revision", String(meta.revision)]);
   if (meta.observedAt) details.push(["Observed time", meta.observedAt]);
+  if (meta.observedTo)
+    details.push(["Observation interval end", meta.observedTo]);
+  if (meta.timePrecision)
+    details.push(["Observation precision", readable(meta.timePrecision)]);
+  if (meta.sourceKind)
+    details.push(["Source basis", readable(meta.sourceKind)]);
   if (meta.reportedAt) details.push(["Reported time", meta.reportedAt]);
   if (meta.correctionNote) details.push(["Correction", meta.correctionNote]);
   if (meta.sourceRecordKey)
@@ -104,6 +110,16 @@ function assertionDetails(
       ["Spatial precision", readable(meta.spatialPrecision)],
       ["Relationship status", readable(meta.relationStatus)],
       ["Source independence", meta.independence],
+    );
+  }
+  if (edge.qualification) {
+    const q = edge.qualification;
+    details.push(
+      ["Review time", q.reviewedAt],
+      ["Source families", q.sourceFamilyIds.join(", ")],
+      ["Source independence", q.independence],
+      ["Reported overlap from", q.validFrom],
+      ["Reported overlap to", q.validTo],
     );
   }
   return details;

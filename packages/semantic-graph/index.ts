@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { approvedOperationalRelations } from "../relation-review/index.js";
 import { localContextGraph } from "./local-context.js";
 import { buildCaseGraph } from "../camden-evidence/index.js";
 import {
@@ -342,7 +343,14 @@ export function projectSemanticGraph(
             metadata: {
               revision: notice.revision,
               summary: notice.summary,
-              observedAt: notice.observedAt,
+              observedAt: notice.observedInterval?.from ?? notice.observedAt,
+              sourceKind: notice.sourceKind,
+              ...(notice.observedInterval
+                ? {
+                    observedTo: notice.observedInterval.to,
+                    timePrecision: notice.observedInterval.precision,
+                  }
+                : {}),
             },
           },
           {
@@ -407,6 +415,29 @@ export function projectSemanticGraph(
       )
     )
       break;
+  }
+  if (state) {
+    const visible = new Set(graph.nodes.map((node) => node.id));
+    for (const relation of approvedOperationalRelations(state, pilotId)) {
+      if (
+        visible.has(relation.subjectId) &&
+        visible.has(relation.objectId) &&
+        relation.qualification.reviewedAt
+      ) {
+        add(
+          [],
+          [
+            {
+              ...relation,
+              qualification: {
+                ...relation.qualification,
+                reviewedAt: relation.qualification.reviewedAt,
+              },
+            },
+          ],
+        );
+      }
+    }
   }
   graph.limitations = [...new Set(graph.limitations)].slice(0, 100);
   return semanticGraphSchema.parse(graph);

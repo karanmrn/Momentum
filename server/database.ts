@@ -50,6 +50,7 @@ export async function createDatabase(
       "001_demo_sessions.sql",
       "002_semantic_graph.sql",
       "003_camden_graph.sql",
+      "004_reviewed_relations.sql",
     ])
       await lite.exec(
         await readFile(

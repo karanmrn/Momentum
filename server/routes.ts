@@ -1,3 +1,12 @@
+import {
+  relevantNotices,
+  dispatchPersonalUpdates,
+  personalInbox,
+  readPersonalSettings,
+  savePersonalSettings,
+  type Delivery,
+} from "../packages/personalization/index.js";
+import { assertStandardWorkflowAllowed } from "../packages/community-workflow/index.js";
 import { randomUUID } from "node:crypto";
 import {
   Router,
@@ -7,6 +16,7 @@ import {
 } from "express";
 import { z } from "zod";
 import {
+  pilotSchema,
   decisionSchema,
   preferencesSchema,
   reportInputSchema,
@@ -114,12 +124,33 @@ export function createRoutes(store: Store): Router {
     try {
       const current = actor(request);
       requireJson(request);
-      const input = parse(z.discriminatedUnion("action", [withdrawalSchema, reportEditSchema]), request.body);
-      const result = await store.mutate(current.sessionId, (state) =>
-        input.action === "edit"
-          ? editReport(state, current.persona, idParam(request), input)
-          : withdrawReport(state, current.persona, idParam(request), input.expectedRevision),
+      const input = parse(
+        z.discriminatedUnion("action", [withdrawalSchema, reportEditSchema]),
+        request.body,
       );
+      const result = await store.mutate(current.sessionId, (state) => {
+        if (current.persona === "moderator")
+          throw new DomainError(
+            403,
+            "unauthorised",
+            "This action requires a demo member session.",
+          );
+        if (
+          !reportsForOwner(state, current.persona).some(
+            (report) => report.id === idParam(request),
+          )
+        )
+          throw new DomainError(404, "not_found", "Record was not found.");
+        assertStandardWorkflowAllowed(state, idParam(request));
+        return input.action === "edit"
+          ? editReport(state, current.persona, idParam(request), input)
+          : withdrawReport(
+              state,
+              current.persona,
+              idParam(request),
+              input.expectedRevision,
+            );
+      });
       response.json(envelope(result));
     } catch (error) {
       next(error);
@@ -130,6 +161,7 @@ export function createRoutes(store: Store): Router {
     try {
       const current = actor(request);
       const state = await store.read(current.sessionId);
+      requireModerationArea(response, queryText(request, "area"));
       response.json(
         envelope(
           moderationQueue(state, current.persona, queryText(request, "area")),
@@ -146,15 +178,26 @@ export function createRoutes(store: Store): Router {
       requireJson(request);
       const input = parse(decisionSchema, request.body);
       const reportId = idParam(request);
+      if (current.persona !== "moderator")
+        throw new DomainError(
+          403,
+          "unauthorised",
+          "This action requires the demo moderator session.",
+        );
       const key = idempotencyKey(request);
-      const result = await store.mutate(current.sessionId, (state) =>
-        replayOrRecord(
+      const result = await store.mutate(current.sessionId, (state) => {
+        const report = state.reports.find((row) => row.id === reportId);
+        if (!report)
+          throw new DomainError(404, "not_found", "Record was not found.");
+        requireModerationArea(response, report.pilotId);
+        assertStandardWorkflowAllowed(state, reportId);
+        return replayOrRecord(
           state,
           `moderation:${current.persona}:${reportId}:${key}`,
           fingerprint(input),
           () => decideReport(state, current.persona, reportId, input),
-        ),
-      );
+        );
+      });
       response.json(envelope(result));
     } catch (error) {
       next(error);
@@ -165,7 +208,13 @@ export function createRoutes(store: Store): Router {
     try {
       const current = actor(request);
       const state = await store.read(current.sessionId);
-      response.json(envelope(readPreferences(state, current.persona)));
+      response.json(
+        envelope(
+          state.personalization && current.persona !== "moderator"
+            ? legacyPreference(state, current.persona)
+            : readPreferences(state, current.persona),
+        ),
+      );
     } catch (error) {
       next(error);
     }
@@ -177,6 +226,19 @@ export function createRoutes(store: Store): Router {
       requireJson(request);
       const input = parse(preferencesSchema, request.body);
       const result = await store.mutate(current.sessionId, (state) => {
+        if (state.personalization && current.persona !== "moderator") {
+          const record = readPersonalSettings(state, current.persona);
+          savePersonalSettings(state, current.persona, {
+            expectedRevision: input.expectedRevision,
+            settings: {
+              ...record.settings,
+              areas: input.areas,
+              categories: input.categories,
+              inAppEnabled: input.inAppEnabled,
+            },
+          });
+          return legacyPreference(state, current.persona);
+        }
         const currentPreferences = readPreferences(state, current.persona);
         if (currentPreferences.revision !== input.expectedRevision) {
           throw new DomainError(
@@ -202,7 +264,13 @@ export function createRoutes(store: Store): Router {
     try {
       const current = actor(request);
       const state = await store.read(current.sessionId);
-      response.json(envelope(personalisedFeed(state, current.persona)));
+      response.json(
+        envelope(
+          state.personalization && current.persona !== "moderator"
+            ? relevantNotices(state, current.persona).map((row) => row.notice)
+            : personalisedFeed(state, current.persona),
+        ),
+      );
     } catch (error) {
       next(error);
     }
@@ -212,7 +280,16 @@ export function createRoutes(store: Store): Router {
     try {
       const current = actor(request);
       const state = await store.read(current.sessionId);
-      response.json(envelope(notificationsFor(state, current.persona)));
+      response.json(
+        envelope(
+          state.personalization && current.persona !== "moderator"
+            ? legacyInbox(
+                personalInbox(state, current.persona),
+                current.persona,
+              )
+            : notificationsFor(state, current.persona),
+        ),
+      );
     } catch (error) {
       next(error);
     }
@@ -223,7 +300,11 @@ export function createRoutes(store: Store): Router {
       const current = actor(request);
       requireJson(request);
       const result = await store.mutate(current.sessionId, (state) =>
-        dispatchNotifications(state, current.persona),
+        state.personalization && current.persona !== "moderator"
+          ? dispatchPersonalUpdates(state, current.persona).then((items) =>
+              legacyInbox(items, current.persona),
+            )
+          : dispatchNotifications(state, current.persona),
       );
       response.json(envelope(result));
     } catch (error) {
@@ -236,39 +317,33 @@ export function createRoutes(store: Store): Router {
       const requestId =
         request.header("X-Request-Id")?.slice(0, 128) || randomUUID();
       if (error instanceof DomainError) {
-        response
-          .status(error.status)
-          .json({
-            schemaVersion: "1.0",
-            error: { code: error.code, message: error.message },
-            requestId,
-          });
+        response.status(error.status).json({
+          schemaVersion: "1.0",
+          error: { code: error.code, message: error.message },
+          requestId,
+        });
         return;
       }
       if (error instanceof z.ZodError) {
-        response
-          .status(400)
-          .json({
-            schemaVersion: "1.0",
-            error: {
-              code: "invalid_input",
-              message: "Request input is invalid.",
-            },
-            requestId,
-          });
-        return;
-      }
-      response
-        .status(500)
-        .json({
+        response.status(400).json({
           schemaVersion: "1.0",
           error: {
-            code: "internal_error",
-            message:
-              "The synthetic demonstration could not complete the request.",
+            code: "invalid_input",
+            message: "Request input is invalid.",
           },
           requestId,
         });
+        return;
+      }
+      response.status(500).json({
+        schemaVersion: "1.0",
+        error: {
+          code: "internal_error",
+          message:
+            "The synthetic demonstration could not complete the request.",
+        },
+        requestId,
+      });
     },
   );
   return router;
@@ -342,4 +417,50 @@ function envelope<T>(data: T): Envelope<T> {
     data,
     coverage: [],
   };
+}
+
+function legacyPreference(state: DemoState, persona: Persona) {
+  const record = readPersonalSettings(state, persona);
+  return {
+    revision: record.revision,
+    areas: record.settings.areas,
+    categories: record.settings.categories,
+    inAppEnabled: record.settings.inAppEnabled,
+  };
+}
+function legacyInbox(items: Delivery[], recipient: Persona) {
+  return items.map((item) => ({
+    id: item.id,
+    noticeId: item.noticeId,
+    revision: item.noticeRevision,
+    recipient,
+    kind: item.kind,
+    state: item.state,
+    createdAt: item.createdAt,
+    message: item.message,
+  }));
+}
+
+function requireModerationArea(response: Response, area: string) {
+  if (response.locals.persona !== "moderator")
+    throw new DomainError(
+      403,
+      "unauthorised",
+      "This action requires the demo moderator session.",
+    );
+  const parsed = pilotSchema.safeParse(area);
+  const allowed = z
+    .array(pilotSchema)
+    .safeParse(response.locals.moderatorAreas);
+  if (
+    response.locals.persona !== "moderator" ||
+    !parsed.success ||
+    !allowed.success ||
+    !allowed.data.includes(parsed.data)
+  )
+    throw new DomainError(
+      404,
+      "not_found",
+      "This review area is not available.",
+    );
 }

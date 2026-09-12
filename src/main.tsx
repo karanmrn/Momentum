@@ -1,3 +1,4 @@
+import { WorkflowLinks } from "./WorkflowLinks";
 import { ReportEditor } from "./ReportEditor";
 import { ScenarioPicker, type ScenarioDraft } from "./ScenarioPicker";
 import { DatasetCoverage } from "./DatasetCoverage";
@@ -1813,8 +1814,10 @@ function App() {
         ? data.notices.filter(
             (item) =>
               item.category === "community" ||
-              item.evidence.some(
-                (evidence) => evidence.sourceKind === "community_firsthand",
+              item.evidence.some((evidence) =>
+                ["community_firsthand", "community_other_source"].includes(
+                  evidence.sourceKind,
+                ),
               ),
           )
         : data.notices,
@@ -2043,6 +2046,7 @@ function App() {
             </div>
           )}
         </header>
+        {!publicBrowse && <WorkflowLinks area={areaId} />}
         {error && (
           <div className="error" role="alert">
             {error}{" "}
@@ -2276,9 +2280,73 @@ const EnrichmentContext = lazy(() =>
     default: module.EnrichmentContext,
   })),
 );
+const AnalysisWorkspace = lazy(() =>
+  import("./AnalysisWorkspace").then((m) => ({ default: m.AnalysisWorkspace })),
+);
+const RelationReview = lazy(() =>
+  import("./RelationReview").then((m) => ({ default: m.RelationReview })),
+);
+const CommunityEntry = lazy(() =>
+  import("./CommunityEntry").then((m) => ({ default: m.CommunityEntry })),
+);
+const PersonalizationWorkspace = lazy(() =>
+  import("./PersonalizationWorkspace").then((m) => ({
+    default: m.PersonalizationWorkspace,
+  })),
+);
 function Entry() {
   const query = new URLSearchParams(window.location.search);
   const entry = entryArea(window.location.search);
+  if (query.get("workspace") === "preferences")
+    return (
+      <Suspense fallback={<main>Loading personal preferences...</main>}>
+        <PersonalizationWorkspace
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("workspace");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
+  if (query.get("workspace") === "community")
+    return (
+      <Suspense fallback={<main>Loading community...</main>}>
+        <CommunityEntry
+          initialArea={entry.areaId}
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("workspace");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
+  if (query.get("workspace") === "relations")
+    return (
+      <Suspense fallback={<main>Loading relation review...</main>}>
+        <RelationReview
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("workspace");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
+  if (query.get("workspace") === "analysis")
+    return (
+      <Suspense fallback={<main>Loading research...</main>}>
+        <AnalysisWorkspace
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("workspace");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
+
   if (query.get("enrichment") === "1" && !entry.invalid) {
     return (
       <Suspense
