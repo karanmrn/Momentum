@@ -35,7 +35,14 @@ const provenanceSchema = z
   .object({
     sourceId: text,
     sourceFamilyId: text,
-    sourceUrl: z.string().url().nullable(),
+    sourceUrl: z
+      .string()
+      .url()
+      .refine((value) => {
+        const url = new URL(value);
+        return url.protocol === "https:" && !url.username && !url.password;
+      }, "Source links must use HTTPS without credentials.")
+      .nullable(),
     fetchedAt: timestamp.nullable(),
     originGroupId: text.nullable(),
   })

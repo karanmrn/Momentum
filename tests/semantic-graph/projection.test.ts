@@ -185,3 +185,27 @@ describe("semantic projection of existing public records", () => {
     expect(semanticGraphSchema.safeParse(graph).success).toBe(true);
   });
 });
+
+it("rejects unsafe source links before they reach the graph UI", () => {
+  expect(() =>
+    projectSemanticGraph(null, pilot, [
+      { ...coverage, sourceUrl: "https://user:password@data.police.uk/" },
+    ]),
+  ).toThrow();
+  const graph = projectSemanticGraph(null, pilot, [coverage]);
+  const source = graph.nodes.find((node) => node.provenance)!;
+  expect(
+    semanticGraphSchema.safeParse({
+      ...graph,
+      nodes: [
+        {
+          ...source,
+          provenance: {
+            ...source.provenance,
+            sourceUrl: "javascript:alert(1)",
+          },
+        },
+      ],
+    }).success,
+  ).toBe(false);
+});
