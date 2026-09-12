@@ -1,0 +1,379 @@
+{
+  "schemaVersion": "1.0",
+  "methodVersion": "ons-anchor-containment/1",
+  "checkedAt": "2026-09-12T14:48:52.841Z",
+  "status": "partial",
+  "observations": [
+    {
+      "pilotId": "camden_town",
+      "level": "LSOA",
+      "anchor": [
+        -0.1426,
+        51.5392
+      ],
+      "anchorPrecision": "research_anchor_four_decimal_degrees",
+      "status": "verified_containment",
+      "selectedPostcodeArea": {
+        "code": "E01000863",
+        "name": "Camden 021A"
+      },
+      "selectedAreaRelation": "inside",
+      "selectedAreaBoundaryDistanceMetres": 43.16,
+      "containingArea": {
+        "code": "E01000863",
+        "name": "Camden 021A"
+      },
+      "selectionComparison": "matches_postcode_target",
+      "boundaryEvidence": [
+        {
+          "url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Lower_layer_Super_Output_Areas_December_2021_Boundaries_EW_BFC_V10/FeatureServer/0/query?f=geojson&outFields=LSOA21CD%2CLSOA21NM&returnGeometry=true&outSR=4326&resultRecordCount=10&where=LSOA21CD+IN+%28%27E01000863%27%2C%27E01033083%27%2C%27E01034143%27%29",
+          "sha256": "6f6590d70a9a3a16dca30995e72be7f6f1372c2aa1cdb95ed4e7887dc9659c52",
+          "bytes": 32573,
+          "retrievedAt": "2026-09-12T14:48:53.454Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/LSOA-selected-boundaries.geojson"
+        }
+      ],
+      "population": {
+        "status": "available",
+        "geographyCode": "E01000863",
+        "usualResidents": 1476,
+        "period": "2021-03-21",
+        "scope": "whole_statistical_area",
+        "evidence": {
+          "url": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
+          "sha256": "4c93b2c48d78cc20e227ecdd77e3119207e4f53f5bfe8e7dd8237a068fdb0709",
+          "bytes": 2210,
+          "retrievedAt": "2026-09-12T14:48:54.562Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/ts001-containing-areas.csv"
+        }
+      },
+      "sourcePrecision": "2021_full_resolution_boundary_anchor_containment_only",
+      "geographyVintage": 2021,
+      "sourceCrs": "EPSG:27700",
+      "geometryCrs": "EPSG:4326",
+      "boundaryVersion": "BFC_V10",
+      "boundaryToleranceMetres": 10,
+      "pilotPopulation": null,
+      "pilotBoundaryApproved": false,
+      "crimeRateDenominatorEligible": false,
+      "alertEligible": false,
+      "synthetic": false,
+      "checkedAt": "2026-09-12T14:48:52.841Z",
+      "errorCode": null
+    },
+    {
+      "pilotId": "camden_town",
+      "level": "MSOA",
+      "anchor": [
+        -0.1426,
+        51.5392
+      ],
+      "anchorPrecision": "research_anchor_four_decimal_degrees",
+      "status": "verified_containment",
+      "selectedPostcodeArea": {
+        "code": "E02000186",
+        "name": "Camden 021"
+      },
+      "selectedAreaRelation": "inside",
+      "selectedAreaBoundaryDistanceMetres": 43.16,
+      "containingArea": {
+        "code": "E02000186",
+        "name": "Camden 021"
+      },
+      "selectionComparison": "matches_postcode_target",
+      "boundaryEvidence": [
+        {
+          "url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Middle_layer_Super_Output_Areas_December_2021_Boundaries_EW_BFC_V7/FeatureServer/0/query?f=geojson&outFields=MSOA21CD%2CMSOA21NM&returnGeometry=true&outSR=4326&resultRecordCount=10&where=MSOA21CD+IN+%28%27E02000186%27%2C%27E02000543%27%2C%27E02000213%27%29",
+          "sha256": "dfb4dd3cee3514218f87bcef460c9769325b6767ee7348f6d24d6a93185728fe",
+          "bytes": 151942,
+          "retrievedAt": "2026-09-12T14:48:54.315Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/MSOA-selected-boundaries.geojson"
+        }
+      ],
+      "population": {
+        "status": "available",
+        "geographyCode": "E02000186",
+        "usualResidents": 6223,
+        "period": "2021-03-21",
+        "scope": "whole_statistical_area",
+        "evidence": {
+          "url": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
+          "sha256": "4c93b2c48d78cc20e227ecdd77e3119207e4f53f5bfe8e7dd8237a068fdb0709",
+          "bytes": 2210,
+          "retrievedAt": "2026-09-12T14:48:54.562Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/ts001-containing-areas.csv"
+        }
+      },
+      "sourcePrecision": "2021_full_resolution_boundary_anchor_containment_only",
+      "geographyVintage": 2021,
+      "sourceCrs": "EPSG:27700",
+      "geometryCrs": "EPSG:4326",
+      "boundaryVersion": "BFC_V7",
+      "boundaryToleranceMetres": 10,
+      "pilotPopulation": null,
+      "pilotBoundaryApproved": false,
+      "crimeRateDenominatorEligible": false,
+      "alertEligible": false,
+      "synthetic": false,
+      "checkedAt": "2026-09-12T14:48:52.841Z",
+      "errorCode": null
+    },
+    {
+      "pilotId": "hounslow_town_centre",
+      "level": "LSOA",
+      "anchor": [
+        -0.3618,
+        51.4683
+      ],
+      "anchorPrecision": "research_anchor_four_decimal_degrees",
+      "status": "verified_containment",
+      "selectedPostcodeArea": {
+        "code": "E01033083",
+        "name": "Hounslow 018F"
+      },
+      "selectedAreaRelation": "inside",
+      "selectedAreaBoundaryDistanceMetres": 47.68,
+      "containingArea": {
+        "code": "E01033083",
+        "name": "Hounslow 018F"
+      },
+      "selectionComparison": "matches_postcode_target",
+      "boundaryEvidence": [
+        {
+          "url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Lower_layer_Super_Output_Areas_December_2021_Boundaries_EW_BFC_V10/FeatureServer/0/query?f=geojson&outFields=LSOA21CD%2CLSOA21NM&returnGeometry=true&outSR=4326&resultRecordCount=10&where=LSOA21CD+IN+%28%27E01000863%27%2C%27E01033083%27%2C%27E01034143%27%29",
+          "sha256": "6f6590d70a9a3a16dca30995e72be7f6f1372c2aa1cdb95ed4e7887dc9659c52",
+          "bytes": 32573,
+          "retrievedAt": "2026-09-12T14:48:53.454Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/LSOA-selected-boundaries.geojson"
+        }
+      ],
+      "population": {
+        "status": "available",
+        "geographyCode": "E01033083",
+        "usualResidents": 2217,
+        "period": "2021-03-21",
+        "scope": "whole_statistical_area",
+        "evidence": {
+          "url": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
+          "sha256": "4c93b2c48d78cc20e227ecdd77e3119207e4f53f5bfe8e7dd8237a068fdb0709",
+          "bytes": 2210,
+          "retrievedAt": "2026-09-12T14:48:54.562Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/ts001-containing-areas.csv"
+        }
+      },
+      "sourcePrecision": "2021_full_resolution_boundary_anchor_containment_only",
+      "geographyVintage": 2021,
+      "sourceCrs": "EPSG:27700",
+      "geometryCrs": "EPSG:4326",
+      "boundaryVersion": "BFC_V10",
+      "boundaryToleranceMetres": 10,
+      "pilotPopulation": null,
+      "pilotBoundaryApproved": false,
+      "crimeRateDenominatorEligible": false,
+      "alertEligible": false,
+      "synthetic": false,
+      "checkedAt": "2026-09-12T14:48:52.841Z",
+      "errorCode": null
+    },
+    {
+      "pilotId": "hounslow_town_centre",
+      "level": "MSOA",
+      "anchor": [
+        -0.3618,
+        51.4683
+      ],
+      "anchorPrecision": "research_anchor_four_decimal_degrees",
+      "status": "verified_containment",
+      "selectedPostcodeArea": {
+        "code": "E02000543",
+        "name": "Hounslow 018"
+      },
+      "selectedAreaRelation": "inside",
+      "selectedAreaBoundaryDistanceMetres": 99.18,
+      "containingArea": {
+        "code": "E02000543",
+        "name": "Hounslow 018"
+      },
+      "selectionComparison": "matches_postcode_target",
+      "boundaryEvidence": [
+        {
+          "url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Middle_layer_Super_Output_Areas_December_2021_Boundaries_EW_BFC_V7/FeatureServer/0/query?f=geojson&outFields=MSOA21CD%2CMSOA21NM&returnGeometry=true&outSR=4326&resultRecordCount=10&where=MSOA21CD+IN+%28%27E02000186%27%2C%27E02000543%27%2C%27E02000213%27%29",
+          "sha256": "dfb4dd3cee3514218f87bcef460c9769325b6767ee7348f6d24d6a93185728fe",
+          "bytes": 151942,
+          "retrievedAt": "2026-09-12T14:48:54.315Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/MSOA-selected-boundaries.geojson"
+        }
+      ],
+      "population": {
+        "status": "available",
+        "geographyCode": "E02000543",
+        "usualResidents": 14001,
+        "period": "2021-03-21",
+        "scope": "whole_statistical_area",
+        "evidence": {
+          "url": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
+          "sha256": "4c93b2c48d78cc20e227ecdd77e3119207e4f53f5bfe8e7dd8237a068fdb0709",
+          "bytes": 2210,
+          "retrievedAt": "2026-09-12T14:48:54.562Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/ts001-containing-areas.csv"
+        }
+      },
+      "sourcePrecision": "2021_full_resolution_boundary_anchor_containment_only",
+      "geographyVintage": 2021,
+      "sourceCrs": "EPSG:27700",
+      "geometryCrs": "EPSG:4326",
+      "boundaryVersion": "BFC_V7",
+      "boundaryToleranceMetres": 10,
+      "pilotPopulation": null,
+      "pilotBoundaryApproved": false,
+      "crimeRateDenominatorEligible": false,
+      "alertEligible": false,
+      "synthetic": false,
+      "checkedAt": "2026-09-12T14:48:52.841Z",
+      "errorCode": null
+    },
+    {
+      "pilotId": "west_croydon",
+      "level": "LSOA",
+      "anchor": [
+        -0.1023,
+        51.3784
+      ],
+      "anchorPrecision": "research_anchor_four_decimal_degrees",
+      "status": "boundary_ambiguous",
+      "selectedPostcodeArea": {
+        "code": "E01034143",
+        "name": "Croydon 020H"
+      },
+      "selectedAreaRelation": "boundary_ambiguous",
+      "selectedAreaBoundaryDistanceMetres": 4.8,
+      "containingArea": null,
+      "selectionComparison": "unknown",
+      "boundaryEvidence": [
+        {
+          "url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Lower_layer_Super_Output_Areas_December_2021_Boundaries_EW_BFC_V10/FeatureServer/0/query?f=geojson&outFields=LSOA21CD%2CLSOA21NM&returnGeometry=true&outSR=4326&resultRecordCount=10&where=LSOA21CD+IN+%28%27E01000863%27%2C%27E01033083%27%2C%27E01034143%27%29",
+          "sha256": "6f6590d70a9a3a16dca30995e72be7f6f1372c2aa1cdb95ed4e7887dc9659c52",
+          "bytes": 32573,
+          "retrievedAt": "2026-09-12T14:48:53.454Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/LSOA-selected-boundaries.geojson"
+        }
+      ],
+      "population": {
+        "status": "not_applicable",
+        "geographyCode": null,
+        "usualResidents": null,
+        "period": "2021-03-21",
+        "scope": "whole_statistical_area",
+        "evidence": null
+      },
+      "sourcePrecision": "2021_full_resolution_boundary_anchor_containment_only",
+      "geographyVintage": 2021,
+      "sourceCrs": "EPSG:27700",
+      "geometryCrs": "EPSG:4326",
+      "boundaryVersion": "BFC_V10",
+      "boundaryToleranceMetres": 10,
+      "pilotPopulation": null,
+      "pilotBoundaryApproved": false,
+      "crimeRateDenominatorEligible": false,
+      "alertEligible": false,
+      "synthetic": false,
+      "checkedAt": "2026-09-12T14:48:52.841Z",
+      "errorCode": null
+    },
+    {
+      "pilotId": "west_croydon",
+      "level": "MSOA",
+      "anchor": [
+        -0.1023,
+        51.3784
+      ],
+      "anchorPrecision": "research_anchor_four_decimal_degrees",
+      "status": "verified_containment",
+      "selectedPostcodeArea": {
+        "code": "E02000213",
+        "name": "Croydon 020"
+      },
+      "selectedAreaRelation": "inside",
+      "selectedAreaBoundaryDistanceMetres": 117.66,
+      "containingArea": {
+        "code": "E02000213",
+        "name": "Croydon 020"
+      },
+      "selectionComparison": "matches_postcode_target",
+      "boundaryEvidence": [
+        {
+          "url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Middle_layer_Super_Output_Areas_December_2021_Boundaries_EW_BFC_V7/FeatureServer/0/query?f=geojson&outFields=MSOA21CD%2CMSOA21NM&returnGeometry=true&outSR=4326&resultRecordCount=10&where=MSOA21CD+IN+%28%27E02000186%27%2C%27E02000543%27%2C%27E02000213%27%29",
+          "sha256": "dfb4dd3cee3514218f87bcef460c9769325b6767ee7348f6d24d6a93185728fe",
+          "bytes": 151942,
+          "retrievedAt": "2026-09-12T14:48:54.315Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/MSOA-selected-boundaries.geojson"
+        }
+      ],
+      "population": {
+        "status": "available",
+        "geographyCode": "E02000213",
+        "usualResidents": 12798,
+        "period": "2021-03-21",
+        "scope": "whole_statistical_area",
+        "evidence": {
+          "url": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2021_1/data.csv?geography=E01000863%2CE02000186%2CE01033083%2CE02000543%2CE02000213&c2021_restype_3=0&measures=20100&date=2021",
+          "sha256": "4c93b2c48d78cc20e227ecdd77e3119207e4f53f5bfe8e7dd8237a068fdb0709",
+          "bytes": 2210,
+          "retrievedAt": "2026-09-12T14:48:54.562Z",
+          "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/ts001-containing-areas.csv"
+        }
+      },
+      "sourcePrecision": "2021_full_resolution_boundary_anchor_containment_only",
+      "geographyVintage": 2021,
+      "sourceCrs": "EPSG:27700",
+      "geometryCrs": "EPSG:4326",
+      "boundaryVersion": "BFC_V7",
+      "boundaryToleranceMetres": 10,
+      "pilotPopulation": null,
+      "pilotBoundaryApproved": false,
+      "crimeRateDenominatorEligible": false,
+      "alertEligible": false,
+      "synthetic": false,
+      "checkedAt": "2026-09-12T14:48:52.841Z",
+      "errorCode": null
+    }
+  ],
+  "metadataEvidence": [
+    {
+      "url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Lower_layer_Super_Output_Areas_December_2021_Boundaries_EW_BFC_V10/FeatureServer/0?f=json",
+      "sha256": "9797a42e3b0eff266cf9cbc9b84ef11319f36572a78892a06f35438cf1bf8613",
+      "bytes": 9760,
+      "retrievedAt": "2026-09-12T14:48:52.986Z",
+      "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/LSOA-metadata.json"
+    },
+    {
+      "url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Middle_layer_Super_Output_Areas_December_2021_Boundaries_EW_BFC_V7/FeatureServer/0?f=json",
+      "sha256": "9017c62a1e48fe170c7cbece16dc2ef9e8d07a3fe3b4314d378b2f338455f7e9",
+      "bytes": 9675,
+      "retrievedAt": "2026-09-12T14:48:53.762Z",
+      "rawPath": ".data/enrichment/ons-geography/2026-09-12T14-48-52-841Z/MSOA-metadata.json"
+    }
+  ],
+  "attribution": [
+    "Source: Office for National Statistics licensed under the Open Government Licence v.3.0.",
+    "Contains OS data © Crown copyright and database right 2026.",
+    "Census 2021 usual residents: Office for National Statistics, via Nomis."
+  ],
+  "documentation": [
+    "https://www.arcgis.com/sharing/rest/content/items/2bbaef5230694f3abae4f9145a3a9800/info/metadata/metadata.xml?format=default&output=html",
+    "https://www.data.gov.uk/dataset/b9d6e8eb-95a8-4a32-832f-e8a746252f43/middle-layer-super-output-areas-december-2021-boundaries-ew-bfc-v7",
+    "https://developers.arcgis.com/rest/services-reference/enterprise/query-feature-service-layer/",
+    "https://www.ons.gov.uk/methodology/geography/licences",
+    "https://www.nomisweb.co.uk/datasets/c2021ts001"
+  ],
+  "limitations": [
+    "Containment applies to a research anchor, not the pilot circle or an incident location.",
+    "Population counts cover the whole named statistical area on Census Day, 21 March 2021.",
+    "LSOA and MSOA populations overlap. Do not sum them or use them as pilot crime-rate denominators.",
+    "No pilot boundary is approved. Pilot population remains unknown.",
+    "Counts do not represent current population, visitors, night-time footfall, or personal risk.",
+    "A 10 metre ambiguity buffer covers four-decimal anchor rounding and local projection uncertainty. It is not a surveyed accuracy claim.",
+    "ONS BFC boundaries retain full source resolution and are clipped to the coastline. ArcGIS transforms source EPSG:27700 to EPSG:4326.",
+    "Census disclosure control can produce small count differences between tables."
+  ]
+}
