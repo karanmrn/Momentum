@@ -7,6 +7,7 @@ const nodeTypes = [
   "Source",
   "PublishedNotice",
   "DatasetCoverage",
+  "HelpLocation",
   "SourceSnapshot",
   "PoliceRecord",
   "ResearchArea",
@@ -66,6 +67,13 @@ const nodeSchema = z
         revision: z.number().int().positive().optional(),
         summary: text.optional(),
         precision: text.optional(),
+        sourceRecordKey: text.optional(),
+        availability: z.enum(["unconfirmed", "unknown"]).optional(),
+        schedule: text.nullable().optional(),
+        address: text.optional(),
+        coordinates: z
+          .tuple([z.number().min(-90).max(90), z.number().min(-180).max(180)])
+          .optional(),
         reportedAt: timestamp.optional(),
         correctionNote: z.string().min(1).max(2000).optional(),
         acquiredUnits: z.number().int().nonnegative().nullable().optional(),
@@ -168,9 +176,12 @@ export const semanticGraphSchema = z
           : edge.predicate === "AFFECTS_PLACE"
             ? subject?.type === "PublishedNotice" && object?.type === "Place"
             : edge.predicate === "ISSUED_BY"
-              ? ["PublishedNotice", "DatasetCoverage"].includes(
-                  subject?.type ?? "",
-                ) && object?.type === "Source"
+              ? [
+                  "PublishedNotice",
+                  "DatasetCoverage",
+                  "HelpLocation",
+                  "Place",
+                ].includes(subject?.type ?? "") && object?.type === "Source"
               : edge.predicate === "CONTEXTUAL_HISTORY_FOR"
                 ? subject?.type === "DatasetCoverage" &&
                   object?.type === "PublishedNotice"
@@ -185,7 +196,9 @@ export const semanticGraphSchema = z
                       "FictionalObservation",
                     ].includes(subject?.type ?? "") &&
                       object?.type === "ResearchArea") ||
-                    (subject?.type === "ResearchArea" &&
+                    (["ResearchArea", "HelpLocation", "Place"].includes(
+                      subject?.type ?? "",
+                    ) &&
                       object?.type === "Area");
       if (edge.methodVersion === "camden-case-study/1") {
         const qualification = edge.metadata;

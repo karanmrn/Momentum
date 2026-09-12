@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { localContextGraph } from "./local-context.js";
 import { buildCaseGraph } from "../camden-evidence/index.js";
 import {
   camdenExampleIds,
@@ -213,6 +214,10 @@ export function projectSemanticGraph(
         "Police source coverage is unavailable. Missing data does not mean no incidents.",
       );
     graph.limitations.push(...row.limitations);
+  }
+  if (noticeId === undefined) {
+    const context = localContextGraph(pilotId);
+    add(context.nodes, context.assertions);
   }
   if (pilotId === "camden_town" && noticeId === undefined) {
     const study = state

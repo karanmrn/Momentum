@@ -31,3 +31,9 @@ It does not run Graphify extraction or create another authoritative database.
 
 Run `npx vitest run tests/semantic-graph tests/camden-evidence` for projection and session checks.
 Run `npm run test:server` to check native server imports.
+
+`localContextGraph` adds five curated Camden help listings and dated canonical TfL station identities.
+It uses local records only. Help availability remains unconfirmed; station operation remains unknown.
+The Safety Bus preserves the dated KOKO location exception. It receives no invented coordinates.
+Directory coordinates identify listed places. Station identities do not establish exact entrances.
+Other detailed acquired datasets remain coverage records until a reviewed source projection exists.
