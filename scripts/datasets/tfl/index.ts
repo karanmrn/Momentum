@@ -51,6 +51,14 @@ export async function boundedFetch(url:string,limit:number) {
 export async function collect(root:string) {
  const output=join(root,'.data/datasets/tfl'); await mkdir(output,{recursive:true,mode:0o700});
  const fetchedAt=new Date().toISOString();
+ await mkdir(join(root,'research/datasets'),{recursive:true});
+ // Invalidate the previous projection before a refresh can fail or stop.
+ await writeFile(join(root,'research/datasets/tfl-status.json'),JSON.stringify({
+  schemaVersion:'1.0',fetchedAt,synthetic:false,publicationAllowed:false,
+  live:{status:'unavailable',code:'refresh_incomplete',liveStatusCollected:false},
+  staticFallback:{status:'unavailable',sourceUrl:DATA_URL,code:'refresh_incomplete'},
+  limitations:['Transport refresh has not completed. Current source coverage is unavailable.'],
+ },null,2));
  const liveUrl='https://api.tfl.gov.uk/StopPoint/Search?query=Camden%20Town';
  let live:Record<string,unknown>;
  try {const result=await boundedFetch(liveUrl,1_000_000);await writeFile(join(output,'tfl-search-response.bin'),result.bytes,{mode:0o600});live={sourceUrl:liveUrl,httpStatus:result.response.status,checksum:createHash('sha256').update(result.bytes).digest('hex'),status:result.response.ok?'search_response_only':'blocked',code:result.response.status===403?'http_403':'http_response',liveStatusCollected:false};}
@@ -61,7 +69,7 @@ export async function collect(root:string) {
  await writeFile(join(output,'naptan.csv'),bytes,{mode:0o600});
  await writeFile(join(output,'selected-stops.json'),JSON.stringify({sourceUrl:DATA_URL,fetchedAt,synthetic:false,live:false,publicationAllowed:false,records:selected},null,2),{mode:0o600});
  const status={schemaVersion:'1.0',fetchedAt,synthetic:false,publicationAllowed:false,live,staticFallback:{sourceId:'DFT-NAPTAN',publisher:'Department for Transport',sourceUrl:DATA_URL,licence:'UK Open Government Licence',licenceEvidence:LICENCE_URL,attribution:'Contains public sector information licensed under the Open Government Licence.',httpStatus:response.status,checksum:createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length,sourceRows:rows.length,selectedRecords:selected.length,lastModified:response.headers.get('last-modified'),dataKind:'static_transport_access_nodes',identities:selected.map(s=>({pilotId:s.pilotId,id:s.record.ATCOCode,name:s.record.CommonName,stopType:s.record.StopType,longitude:Number(s.record.Longitude),latitude:Number(s.record.Latitude),modified:s.record.ModificationDateTime??null,match:s.match})),rawPath:'.data/datasets/tfl/naptan.csv',selectedPath:'.data/datasets/tfl/selected-stops.json'},limitations:['Static stop registration does not confirm current service, staffing, accessibility, or working facilities.','Bounds validate named identity vicinity. They are not approved pilot boundaries.','National Rail and tram categories contain national rows. Only named anchor records are selected.','TfL live source remains unavailable. No denial bypass or alternate identity was used.']};
- await mkdir(join(root,'research/datasets'),{recursive:true});await writeFile(join(root,'research/datasets/tfl-status.json'),JSON.stringify(status,null,2));
+ await writeFile(join(root,'research/datasets/tfl-status.json'),JSON.stringify(status,null,2));
  return status;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href) collect(process.cwd()).then(s=>console.log(JSON.stringify({selected:s.staticFallback.selectedRecords,live:s.live.status,sourceRows:s.staticFallback.sourceRows}))).catch(()=>{console.error('Transport collection failed. No successful status is implied.');process.exitCode=1;});

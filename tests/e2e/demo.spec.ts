@@ -177,14 +177,16 @@ test("map failure keeps the list usable and keyboard focus stays in dialogs", as
   });
 });
 
-test("fictional research consent and withdrawal work on mobile", async () => {
+test("fictional research consent and withdrawal work on mobile", async ({
+  baseURL,
+}) => {
   const { execFile } = await import("node:child_process");
   const { promisify } = await import("node:util");
   const result = await promisify(execFile)(
     process.execPath,
     ["tests/recruitment/browser.mjs"],
     {
-      env: { ...process.env, RESEARCH_TEST_URL: "http://127.0.0.1:4174" },
+      env: { ...process.env, RESEARCH_TEST_URL: baseURL },
       timeout: 40000,
     },
   );

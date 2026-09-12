@@ -51,12 +51,12 @@ Only executable tests and recorded runs establish implementation evidence.
 ## Vercel preparation
 
 The repository includes Vercel build and API configuration.
-No public deployment has been performed.
 Use a separate PostgreSQL database for the invited demonstration.
 Apply `supabase/migrations/001_demo_sessions.sql` using its database administrator.
 Use a dedicated database administrator connection that can assume `streetwise_demo_app` and delete expired demo sessions.
 Set `DATABASE_URL` and a random `DEMO_ACCESS_CODE` with at least 16 characters.
-API access uses HTTP Basic authentication with username `demo`.
+Hosted demonstration API access uses HTTP Basic authentication with username `demo`.
+Public source routes under `/api/public` allow reading without authentication.
 Static application assets contain no private report data.
 Keep keys server-only. Do not prefix secrets with `VITE_`.
 Test hosted routing, cookies, and storage before inviting users.
