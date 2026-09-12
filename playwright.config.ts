@@ -9,7 +9,8 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: {
-    command: "PORT=4174 DEMO_DB_PATH=memory:// npm run dev",
+    command:
+      "PORT=4174 DEMO_DB_PATH=memory:// VITE_PUBLIC_SITE_URL=https://streetwise-safety.vercel.app npm run dev",
     url: "http://127.0.0.1:4174/api/health",
     reuseExistingServer: false,
     timeout: 60000,
