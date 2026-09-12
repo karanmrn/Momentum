@@ -211,3 +211,15 @@ describe("verified account identity", () => {
     expect(provider).toHaveBeenCalledTimes(2);
   });
 });
+
+it("keeps private data unavailable without dedicated storage", async () => {
+  vi.stubEnv("ACCOUNT_DATABASE_URL", "");
+  await start();
+  const response = await directFetch(`${base}/api/account/data/follows`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  expect(response.status).toBe(503);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+  expect((await response.json()).error.code).toBe("storage_unavailable");
+  expect(database).not.toHaveBeenCalled();
+});

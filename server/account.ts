@@ -1,3 +1,4 @@
+import { createPrivateAccountRoutes } from "./private-account-routes.js";
 import { createClient } from "@supabase/supabase-js";
 import { Router, type RequestHandler, type Response } from "express";
 import { randomUUID } from "node:crypto";
@@ -51,13 +52,11 @@ function failure(
   code: string,
   message: string,
 ) {
-  response
-    .status(status)
-    .json({
-      schemaVersion: "1.0",
-      error: { code, message },
-      requestId: randomUUID(),
-    });
+  response.status(status).json({
+    schemaVersion: "1.0",
+    error: { code, message },
+    requestId: randomUUID(),
+  });
 }
 function ok<T>(response: Response, data: T) {
   const body: Envelope<T> = {
@@ -216,6 +215,7 @@ export function createAccountRoutes(): Router {
   router.get("/session", requireAccount(config), (_request, response) =>
     ok(response, response.locals.account as AccountIdentity),
   );
+  router.use("/data", createPrivateAccountRoutes(requireAccount(config)));
   router.use((request, response) => {
     if (!["GET", "HEAD"].includes(request.method)) {
       response.set("Allow", "GET, HEAD");
