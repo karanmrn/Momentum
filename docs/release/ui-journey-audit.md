@@ -1,7 +1,7 @@
 # UI and journey audit
 
 Reviewed the live public app and an isolated local demo on 12 September 2026.
-Base: `95a9a5c`. Visible product name: Momentum. The existing public URL remains unchanged pending domain verification.
+Initial base: `95a9a5c`. Integrated main: `092e1f9`. Visible product name: Momentum. The existing public URL remains unchanged pending domain verification.
 
 ## Fixed findings
 
@@ -35,6 +35,18 @@ Source links now name their destination. Source dates, uncertainty, and fictiona
 Browser automation uses isolated servers for core, public features, and mutations.
 This prevents unrelated tests from exhausting the demo request budget. Product rate limits are unchanged.
 Set `PLAYWRIGHT_BASE_PORT` when another task uses the default test ports.
+
+## Validation
+
+- `npm test`: 552 tests passed across 56 files.
+- `PLAYWRIGHT_BASE_PORT=49325 npx playwright test --workers=1`: 65 tests passed.
+- `npm run build`: passed.
+- `npm run test:server`: passed.
+- `git diff --check`: passed.
+- Independent code review found no blockers.
+
+These results include the new account controls, stored Camden evidence, and Local updates page.
+GitHub Actions cannot run while account billing blocks jobs. Local validation results are reported separately.
 
 ## Limits
 
