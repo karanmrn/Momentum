@@ -5,11 +5,16 @@ for (const width of [320, 1440]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/?demo=1&workspace=community&area=camden_town");
+    await page.goto(
+      "/?demo=1&workspace=community&area=camden_town&returnTo=presentation&slide=4",
+    );
     await page
       .getByRole("navigation", { name: "Community sections" })
       .getByRole("button", { name: "Share observation", exact: true })
       .click();
+    await page
+      .getByRole("radio", { name: "Access barrier", exact: true })
+      .check();
     const title = `Fictional journey ${width}`;
     await page.getByLabel("Short title", { exact: true }).fill(title);
     await page
@@ -18,6 +23,21 @@ for (const width of [320, 1440]) {
     await page
       .getByLabel("Factual narrative (optional)", { exact: true })
       .fill("PRIVATE_JOURNEY_SENTINEL stays private.");
+    await page
+      .getByRole("button", { name: "Review observation", exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Review before saving", exact: true }),
+    ).toBeFocused();
+    await page
+      .getByRole("button", { name: "Back to fields", exact: true })
+      .click();
+    await expect(
+      page.getByRole("textbox", {
+        name: "Factual narrative (optional)",
+        exact: true,
+      }),
+    ).toBeFocused();
     await page
       .getByRole("button", { name: "Review observation", exact: true })
       .click();
@@ -30,6 +50,7 @@ for (const width of [320, 1440]) {
       .getByRole("button", { name: "Confirm private submission", exact: true })
       .click();
     const saved = (await (await response).json()).data;
+    expect(saved.intake.category).toBe("access");
     const receipt = page.getByRole("region", {
       name: "Private report receipt",
     });
@@ -75,6 +96,24 @@ for (const width of [320, 1440]) {
     await expect(
       receipt.getByRole("button", { name: "Withdraw observation" }),
     ).toBeEnabled();
+    await receipt
+      .getByRole("button", { name: "View report in graph", exact: true })
+      .click();
+    await expect(
+      page.getByText("Your report graph", { exact: true }),
+    ).toBeVisible();
+    expect(page.url()).not.toContain(saved.report.id);
+    expect(page.url()).toContain("returnTo=presentation");
+    expect(page.url()).toContain("slide=4");
+    await expect(
+      page.getByRole("heading", { name: title, exact: true }),
+    ).toBeVisible();
+    await page
+      .getByRole("link", { name: "Back to My reports", exact: true })
+      .click();
+    await expect(
+      receipt.getByRole("heading", { name: title, exact: true }),
+    ).toBeVisible();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

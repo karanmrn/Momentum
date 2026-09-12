@@ -255,3 +255,54 @@
   min-height: 48px;
   padding: 10px 0;
 }
+
+.cw-incident-types {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.cw-incident-types legend {
+  font-weight: 650;
+  margin-bottom: 10px;
+}
+.cw-form .cw-incident-types label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #9cab9b;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 64px;
+}
+.cw-form .cw-incident-types input {
+  width: 18px;
+  min-height: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #183e33;
+}
+.cw-incident-selected {
+  background: #e5eee5;
+}
+
+.cw-composer {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.cw-composer .cw-form {
+  gap: 18px;
+}
+.cw-composer textarea {
+  min-height: 148px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+.cw-composer .cw-actions {
+  border-top: 1px solid #ccd3c5;
+  padding-top: 16px;
+  justify-content: flex-end;
+}

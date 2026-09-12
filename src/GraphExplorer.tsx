@@ -6,7 +6,14 @@ import {
   Download,
   RefreshCw,
 } from "lucide-react";
-import { areas, type PilotId } from "../packages/contracts";
+import {
+  areas,
+  pilotSchema,
+  personaSchema,
+  type PilotId,
+} from "../packages/contracts";
+import { z } from "zod";
+import { workflowRecordSchema } from "../packages/community-workflow/schema";
 import {
   semanticGraphSchema,
   type SemanticGraph,
@@ -22,6 +29,27 @@ import {
   compareGraphRecords,
 } from "./graph-explorer-model";
 import "./GraphExplorer.css";
+
+const reportContextKey = "momentum:report-graph-context";
+const reportContextSchema = z.object({
+  version: z.literal(1),
+  reportId: z.string().uuid(),
+  pilotId: pilotSchema,
+  persona: personaSchema,
+});
+const graphReceiptSchema = workflowRecordSchema
+  .extend({
+    report: z.object({ id: z.string().uuid(), owner: personaSchema }),
+  })
+  .strip();
+type GraphReceipt = z.infer<typeof graphReceiptSchema>;
+function clearReportContext() {
+  try {
+    sessionStorage.removeItem(reportContextKey);
+  } catch {
+    /* Storage can be unavailable. */
+  }
+}
 
 type Selection = { kind: "node" | "edge"; id: string } | null;
 const shortType = (value: string) => value.replace(/([a-z])([A-Z])/g, "$1 $2");
@@ -43,6 +71,10 @@ export function GraphExplorer({
   const [baseError, setError] = useState("");
   const [research, setResearch] = useState<ResearchGraphState | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [privateReceipt, setPrivateReceipt] = useState<GraphReceipt | null>(
+    null,
+  );
+  const [receiptState, setReceiptState] = useState("");
   const [query, setQuery] = useState("");
   const [type, setType] = useState("");
   const [inspectorOpen, setInspectorOpen] = useState(false);
@@ -59,10 +91,79 @@ export function GraphExplorer({
       ? loaded.graph
       : null;
   const error = researchActive ? research.error : baseError;
-  const network = useMemo(
+  const sourceNetwork = useMemo(
     () => (graph ? buildExplorerNetwork(graph) : { nodes: [], edges: [] }),
     [graph],
   );
+  const shownReceipt =
+    examples && !researchActive && privateReceipt?.intake.pilotId === area
+      ? privateReceipt
+      : null;
+  const privateNodeId = shownReceipt
+    ? `private-report:${shownReceipt.report.id}`
+    : null;
+  const network = useMemo(() => {
+    if (!shownReceipt || !privateNodeId) return sourceNetwork;
+    const areaNode = sourceNetwork.nodes.find((node) => node.type === "Area");
+    const privateNode = {
+      id: privateNodeId,
+      type: "PrivateObservation",
+      synthetic: true,
+      label: shownReceipt.intake.title,
+      details: [
+        [
+          "Status",
+          `${shownReceipt.status.replaceAll("_", " ")} · private trial report`,
+        ],
+        ["Category", shownReceipt.intake.category],
+        ["Source basis", shownReceipt.intake.basis.replaceAll("_", " ")],
+        ["Narrative", shownReceipt.intake.narrative || "Not supplied"],
+        ["Observed time", shownReceipt.intake.observedFrom],
+        ["Approximate place", shownReceipt.intake.place],
+        [
+          "Interpretation",
+          "Saved by you. Area context does not corroborate this observation.",
+        ],
+      ] as Array<[string, string]>,
+    };
+    return {
+      nodes: [...sourceNetwork.nodes, privateNode],
+      edges: [
+        ...sourceNetwork.edges,
+        ...(areaNode
+          ? [
+              {
+                id: `private-context:${shownReceipt.report.id}`,
+                from: privateNodeId,
+                to: areaNode.id,
+                label: "Area context only",
+                synthetic: true,
+                details: [
+                  [
+                    "Meaning",
+                    "Same selected area only. No matching incident or verification is implied.",
+                  ],
+                ] as Array<[string, string]>,
+              },
+            ]
+          : []),
+      ],
+    };
+  }, [sourceNetwork, shownReceipt, privateNodeId]);
+  const receiptReturnParams = new URLSearchParams({
+    demo: "1",
+    workspace: "community",
+    area,
+  });
+  const presentationParams = new URLSearchParams(location.search);
+  if (presentationParams.get("returnTo") === "presentation") {
+    receiptReturnParams.set("returnTo", "presentation");
+    const slide = Number(presentationParams.get("slide"));
+    receiptReturnParams.set(
+      "slide",
+      String(Number.isInteger(slide) && slide >= 1 && slide <= 10 ? slide : 1),
+    );
+  }
   const areaName = areas.find((a) => a.id === area)!.name;
   const comparison = useMemo(
     () =>
@@ -71,6 +172,107 @@ export function GraphExplorer({
         : null,
     [compare, graph, first, second],
   );
+  useEffect(() => {
+    const recheck = () => {
+      setPrivateReceipt(null);
+      setAttempt((value) => value + 1);
+    };
+    window.addEventListener("focus", recheck);
+    return () => window.removeEventListener("focus", recheck);
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    setPrivateReceipt(null);
+    setReceiptState("");
+    if (
+      !examples ||
+      new URLSearchParams(location.search).get("public") === "1"
+    ) {
+      clearReportContext();
+      return;
+    }
+    let context: z.infer<typeof reportContextSchema>;
+    try {
+      const stored = sessionStorage.getItem(reportContextKey);
+      if (!stored) return;
+      context = reportContextSchema.parse(JSON.parse(stored));
+      if (context.pilotId !== area) {
+        clearReportContext();
+        return;
+      }
+    } catch {
+      clearReportContext();
+      return;
+    }
+    setReceiptState("Loading your saved trial report...");
+    async function loadReceipt() {
+      try {
+        const sessionResponse = await fetch("/api/session", {
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!sessionResponse.ok) throw new Error("unavailable");
+        const session = z
+          .object({ data: z.object({ persona: personaSchema }) })
+          .parse(await sessionResponse.json());
+        if (session.data.persona !== context.persona) {
+          clearReportContext();
+          if (!controller.signal.aborted)
+            setReceiptState(
+              "The account changed. Open the report again from My reports.",
+            );
+          return;
+        }
+        const response = await fetch(`/api/community-workflow?area=${area}`, {
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("unavailable");
+        const body = z
+          .object({ data: z.object({ reports: z.array(graphReceiptSchema) }) })
+          .parse(await response.json());
+        const receipt = body.data.reports.find(
+          (row) =>
+            row.report.id === context.reportId &&
+            row.report.owner === context.persona &&
+            row.intake.pilotId === area,
+        );
+        if (controller.signal.aborted) return;
+        if (!receipt) {
+          clearReportContext();
+          setReceiptState(
+            "This saved report is not available to this account.",
+          );
+          return;
+        }
+        if (["withdrawn", "retracted"].includes(receipt.status)) {
+          clearReportContext();
+          setReceiptState(
+            "This report was withdrawn or retracted. It is not shown in the graph.",
+          );
+          return;
+        }
+        setPrivateReceipt(receipt);
+        setReceiptState(
+          "Your private trial report is shown with area context. It is not corroborated by nearby source records.",
+        );
+        setSelection({
+          kind: "node",
+          id: `private-report:${receipt.report.id}`,
+        });
+        setInspectorOpen(true);
+      } catch {
+        if (!controller.signal.aborted)
+          setReceiptState(
+            "Your saved report is unavailable. Retry the graph or return to My reports.",
+          );
+      }
+    }
+    void loadReceipt();
+    return () => controller.abort();
+  }, [area, examples, attempt]);
   useEffect(() => {
     const controller = new AbortController();
     setError("");
@@ -147,7 +349,7 @@ export function GraphExplorer({
         .includes(query.toLowerCase()),
   );
   const matches = new Set(matching.map((n) => n.id));
-  // Retain one-hop context for search matches; every rendered link is a stored assertion.
+  // Retain one-hop source assertions and explicitly labelled private area context.
   const visibleIds = new Set(matches);
   if (query || type)
     for (const edge of network.edges)
@@ -193,7 +395,7 @@ export function GraphExplorer({
       </header>
       <div className="gx-heading">
         <div>
-          <span className="eyebrow">Graphify · connected evidence</span>
+          <span className="eyebrow">Area sources</span>
           <h1>Area graph</h1>
         </div>
         <div className="gx-areas" aria-label="Graph area">
@@ -230,6 +432,13 @@ export function GraphExplorer({
           Fictional reports are demonstration data. They do not describe actual
           incidents.
         </p>
+      )}
+      {receiptState && examples && !researchActive && (
+        <div className="gx-private-report" role="status">
+          <strong>Your report graph</strong>
+          <p>{receiptState}</p>
+          <a href={`/?${receiptReturnParams}`}>Back to My reports</a>
+        </div>
       )}
       <div className="gx-tools">
         <label className="gx-search">
@@ -431,18 +640,19 @@ export function GraphExplorer({
                       Open original source
                     </a>
                   )}
-                {selection?.kind === "node" && (
-                  <button
-                    className="button secondary"
-                    onClick={() => {
-                      setFirst(selected.id);
-                      setSecond("");
-                      setCompare(true);
-                    }}
-                  >
-                    Compare this record
-                  </button>
-                )}
+                {selection?.kind === "node" &&
+                  selected.id !== privateNodeId && (
+                    <button
+                      className="button secondary"
+                      onClick={() => {
+                        setFirst(selected.id);
+                        setSecond("");
+                        setCompare(true);
+                      }}
+                    >
+                      Compare this record
+                    </button>
+                  )}
               </>
             )}
           </section>
@@ -458,7 +668,7 @@ export function GraphExplorer({
                 }}
               >
                 <option value="">Choose a record</option>
-                {network.nodes.map((n) => (
+                {sourceNetwork.nodes.map((n) => (
                   <option key={n.id} value={n.id}>
                     {n.label}
                   </option>
@@ -475,7 +685,7 @@ export function GraphExplorer({
                 }}
               >
                 <option value="">Choose another record</option>
-                {network.nodes
+                {sourceNetwork.nodes
                   .filter((n) => n.id !== first)
                   .map((n) => (
                     <option key={n.id} value={n.id}>

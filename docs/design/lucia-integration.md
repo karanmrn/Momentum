@@ -37,3 +37,17 @@ Select nodes by pointer and keyboard. Confirm camera focus, compact card, full i
 Save a fictional report. Open Report, Evidence, and Changes. Confirm that its saved data and history remain unchanged. Evidence and help links must preserve area without exposing the private report identifier or narrative.
 
 Check phone and desktop layouts, long labels, reduced motion, empty data, and existing receipt correction and withdrawal controls.
+
+## Incident to graph journey
+
+The reporter chooses an incident category before entering the observation. Use a centered composer, clear field groups, and one primary action. Keep the current source, time, privacy, and review controls.
+
+After a successful save, offer View report in graph. Carry a versioned report reference through session storage. Do not include the private reference or narrative in public links.
+
+The graph loads the reporter's receipt through the existing authenticated workflow. Show that receipt as a private, unreviewed node. Connect it to the selected area as context only. Do not infer matches to police records, community reports, or outcomes.
+
+Keep private nodes out of public exports and comparison. Clear private selection when the user switches to public mode or another area. Missing, withdrawn, unauthorized, and unavailable receipts must retain distinct states.
+
+Use Lucia's centered composer, step navigation, dark graph, and adjacent inspector. Keep Momentum's fonts, colors, source labels, and existing controls. On phones, the graph inspector follows the graph. The report action stays reachable without horizontal scrolling.
+
+Verify the complete saved-report journey at320px and1440px. Confirm the selected graph node shows the saved category and title. Confirm public links, exports, and another reporter's session cannot expose that receipt.

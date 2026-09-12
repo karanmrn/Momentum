@@ -129,6 +129,17 @@ function IntakeForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const pending = useRef(false);
+  const reviewHeading = useRef<HTMLHeadingElement>(null);
+  const narrativeField = useRef<HTMLTextAreaElement>(null);
+  const reviewedBefore = useRef(false);
+  useEffect(() => {
+    if (review) {
+      reviewedBefore.current = true;
+      reviewHeading.current?.focus();
+    } else if (reviewedBefore.current) {
+      narrativeField.current?.focus();
+    }
+  }, [review]);
   const set = <K extends keyof Intake>(key: K, value: Intake[K]) =>
     setDraft((old) => ({ ...old, [key]: value }));
   const valid = () => {
@@ -167,7 +178,7 @@ function IntakeForm({
     }
   }
   return (
-    <section className="cw-panel">
+    <section className="cw-panel cw-composer">
       <h2>{initial ? "Correct observation" : "Share an observation"}</h2>
       {error && (
         <p className="cw-error" role="alert">
@@ -176,8 +187,12 @@ function IntakeForm({
       )}
       {review ? (
         <div className="cw-review">
-          <h3>Review before saving</h3>
+          <h3 ref={reviewHeading} tabIndex={-1}>
+            Review before saving
+          </h3>
           <dl>
+            <dt>Category</dt>
+            <dd>{labels(draft.category)}</dd>
             <dt>Title</dt>
             <dd>{draft.title}</dd>
             <dt>Approximate place</dt>
@@ -219,20 +234,41 @@ function IntakeForm({
         </div>
       ) : (
         <form className="cw-form" onSubmit={prepare}>
+          <fieldset className="cw-incident-types">
+            <legend>What are you reporting?</legend>
+            {(
+              [
+                ["infrastructure", "Lighting or street damage"],
+                ["transport", "Transport issue"],
+                ["access", "Access barrier"],
+                ["community", "Community concern"],
+              ] as const
+            ).map(([value, label]) => (
+              <label
+                key={value}
+                className={
+                  draft.category === value ? "cw-incident-selected" : ""
+                }
+              >
+                <input
+                  type="radio"
+                  name="incident-type"
+                  value={value}
+                  checked={draft.category === value}
+                  onChange={() => set("category", value)}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </fieldset>
           <label>
-            Category
-            <select
-              value={draft.category}
-              onChange={(e) =>
-                set("category", e.target.value as Intake["category"])
-              }
-            >
-              {["infrastructure", "transport", "access", "community"].map(
-                (value) => (
-                  <option key={value}>{value}</option>
-                ),
-              )}
-            </select>
+            Factual narrative (optional)
+            <textarea
+              ref={narrativeField}
+              maxLength={600}
+              value={draft.narrative}
+              onChange={(e) => set("narrative", e.target.value)}
+            />
           </label>
           <label>
             Short title
@@ -315,14 +351,6 @@ function IntakeForm({
               />
             </label>
           )}
-          <label>
-            Factual narrative (optional)
-            <textarea
-              maxLength={600}
-              value={draft.narrative}
-              onChange={(e) => set("narrative", e.target.value)}
-            />
-          </label>
           <label>
             Publication preference
             <select
@@ -677,6 +705,36 @@ export function CommunityWorkspace({
         : "reports",
     );
     load()
+      .then((next) => {
+        if (active.current !== controller) return;
+        try {
+          const context = z
+            .object({
+              version: z.literal(1),
+              reportId: z.string().uuid(),
+              pilotId: z.string(),
+              persona: z.string(),
+            })
+            .safeParse(
+              JSON.parse(
+                sessionStorage.getItem("momentum:report-graph-context") ??
+                  "null",
+              ),
+            );
+          if (
+            context.success &&
+            context.data.pilotId === pilotId &&
+            context.data.persona === persona
+          ) {
+            const own = next.reports.find(
+              (item) => item.report.id === context.data.reportId,
+            );
+            if (own) setSelected(own.id);
+          }
+        } catch {
+          /* The receipt list remains usable when session storage is unavailable. */
+        }
+      })
       .catch((failure) => {
         if (active.current === controller)
           setError(
@@ -980,6 +1038,55 @@ export function CommunityWorkspace({
               <p className="cw-state">
                 {labels(record.status)} · revision {record.revision}
               </p>
+              {!moderator &&
+                !["withdrawn", "retracted"].includes(record.status) && (
+                  <button
+                    className="cw-primary"
+                    type="button"
+                    onClick={() => {
+                      try {
+                        sessionStorage.setItem(
+                          "momentum:report-graph-context",
+                          JSON.stringify({
+                            version: 1,
+                            reportId: record.report.id,
+                            pilotId,
+                            persona,
+                          }),
+                        );
+                        const graphUrl = new URL(
+                          `/?demo=1&workspace=graph&area=${pilotId}&examples=1`,
+                          location.origin,
+                        );
+                        const current = new URLSearchParams(location.search);
+                        if (
+                          current.get("returnTo") === "presentation" ||
+                          current.get("presentation") === "1"
+                        ) {
+                          graphUrl.searchParams.set("returnTo", "presentation");
+                          graphUrl.searchParams.set(
+                            "slide",
+                            String(
+                              Math.min(
+                                10,
+                                Math.max(1, Number(current.get("slide")) || 1),
+                              ),
+                            ),
+                          );
+                        }
+                        window.location.assign(
+                          graphUrl.pathname + graphUrl.search,
+                        );
+                      } catch {
+                        setError(
+                          "The report graph could not open. Allow session storage, then try again.",
+                        );
+                      }
+                    }}
+                  >
+                    View report in graph
+                  </button>
+                )}
               <nav className="cw-journey" aria-label="Report journey">
                 {(["report", "evidence", "changes"] as const).map((step) => (
                   <button
