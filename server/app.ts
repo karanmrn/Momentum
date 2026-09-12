@@ -1,3 +1,4 @@
+import { createAnalyticsRoutes } from "./analytics.js";
 import { createAccountRoutes } from "./account.js";
 import { getDatasetCoverage } from "../packages/datasets/src/coverage.js";
 import { getHistoricalCoverage } from "../packages/history/src/coverage.js";
@@ -169,6 +170,8 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
       }
       res.locals.sessionId = id;
       res.locals.persona = persona;
+      res.locals.moderatorAreas =
+        persona === "moderator" ? areas.map((a) => a.id) : [];
       next();
     } catch {
       fail(
@@ -280,6 +283,7 @@ export function createApp(db: DemoDatabase | (() => Promise<DemoDatabase>)) {
       graph: async (id, pilot) => (await database()).graph(id, pilot),
     }),
   );
+  app.use("/api/analytics", createAnalyticsRoutes(store));
   app.use("/api/camden/examples", createCamdenRoutes(store));
   app.use("/api", createRoutes(store));
   app.use("/api", (_req, res) =>

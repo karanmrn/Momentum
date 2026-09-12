@@ -57,6 +57,7 @@ export interface Evidence {
   label: string;
   sourceKind:
     | "community_firsthand"
+    | "community_other_source"
     | "official_operator"
     | "council_directory"
     | "map_inventory";
@@ -87,7 +88,7 @@ export interface Notice {
   updatedAt: string;
   synthetic: true;
   reviewStatus: "publication_approved";
-  sourceKind: "community_firsthand";
+  sourceKind: "community_firsthand" | "community_other_source";
   evidence: Evidence[];
   timeline: TimelineEntry[];
   reason?: string;
@@ -204,6 +205,7 @@ export interface HistoricalCoverage {
   recordCount?: null;
 }
 export interface DemoState {
+  analytics?: import("../analytics/src/index.js").AnalyticsState;
   schemaVersion: "1.0";
   camdenStudy?: import("../camden-evidence/session.js").CamdenStudy;
   reports: Report[];
@@ -229,13 +231,21 @@ export const reportInputSchema = z
   })
   .strict();
 export type ReportInput = z.infer<typeof reportInputSchema>;
-export const reportEditChangesSchema = reportInputSchema.omit({ pilotId: true });
+export const reportEditChangesSchema = reportInputSchema.omit({
+  pilotId: true,
+});
 export type ReportEditChanges = z.infer<typeof reportEditChangesSchema>;
-export const reportEditSchema = z.object({
-  action: z.literal("edit"),
-  expectedRevision: z.number().int().positive().max(Number.MAX_SAFE_INTEGER - 1),
-  changes: reportEditChangesSchema,
-}).strict();
+export const reportEditSchema = z
+  .object({
+    action: z.literal("edit"),
+    expectedRevision: z
+      .number()
+      .int()
+      .positive()
+      .max(Number.MAX_SAFE_INTEGER - 1),
+    changes: reportEditChangesSchema,
+  })
+  .strict();
 export type ReportEditInput = z.infer<typeof reportEditSchema>;
 
 export const decisionSchema = z

@@ -2107,9 +2107,24 @@ const CamdenEvidence = lazy(() =>
     default: module.CamdenEvidence,
   })),
 );
+const AnalysisWorkspace = lazy(() =>
+  import("./AnalysisWorkspace").then((m) => ({ default: m.AnalysisWorkspace })),
+);
 function Entry() {
   const query = new URLSearchParams(window.location.search);
   const entry = entryArea(window.location.search);
+  if (query.get("workspace") === "analysis")
+    return (
+      <Suspense fallback={<main>Loading research...</main>}>
+        <AnalysisWorkspace
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("workspace");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
   if (query.get("evidence") === "camden") {
     return (
       <Suspense

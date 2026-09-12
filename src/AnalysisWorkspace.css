@@ -1,0 +1,112 @@
+.analysis-workspace {
+  max-width: 1100px;
+  margin: auto;
+  padding: 24px;
+  overflow-wrap: anywhere;
+}
+.analysis-workspace header,
+.analysis-tools,
+.analysis-runs {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.analysis-workspace header {
+  justify-content: space-between;
+}
+.analysis-workspace h1 {
+  font-size: clamp(1.7rem, 4vw, 2.7rem);
+}
+.analysis-workspace section,
+.analysis-result {
+  margin-block: 24px;
+}
+.analysis-status,
+.analysis-result {
+  padding: 20px;
+  border: 1px solid #c5cec0;
+  border-radius: 16px;
+  background: #fffdf7;
+}
+.analysis-status {
+  border-left: 5px solid #cc884b;
+}
+.analysis-workspace label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.analysis-workspace select,
+.analysis-workspace textarea {
+  max-width: 100%;
+  border: 1px solid #9aab9e;
+  border-radius: 8px;
+  background: #fffdf7;
+  color: inherit;
+  padding: 12px;
+  min-height: 48px;
+}
+.analysis-workspace textarea {
+  width: 100%;
+  min-height: 90px;
+}
+.analysis-workspace dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.analysis-workspace dt {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.analysis-workspace dd {
+  margin: 6px 0 0;
+}
+.analysis-workspace details {
+  margin-block: 16px;
+}
+.analysis-workspace summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 12px;
+  font-weight: 600;
+}
+.analysis-table {
+  overflow: auto;
+  max-height: 380px;
+}
+.analysis-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.analysis-table td,
+.analysis-table th {
+  text-align: left;
+  border-bottom: 1px solid #c5cec0;
+  padding: 10px;
+}
+.analysis-tools {
+  margin-block: 18px;
+}
+.analysis-tools button {
+  white-space: normal;
+}
+.analysis-workspace button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+@media (max-width: 600px) {
+  .analysis-workspace {
+    padding: 16px;
+  }
+  .analysis-workspace dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .analysis-workspace .analysis-result {
+    padding: 16px;
+  }
+  .analysis-tools > * {
+    width: 100%;
+  }
+}
