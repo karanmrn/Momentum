@@ -33,8 +33,8 @@ Physical phones, screen readers, participant comprehension, hosted identity, and
 
 | Classification | Cases |
 | --- | ---: |
-| Covered | 61 |
-| Partial | 35 |
+| Covered | 62 |
+| Partial | 34 |
 | Unverified | 3 |
 | External | 5 |
 | Total | 104 |
@@ -187,7 +187,7 @@ Physical phones, screen readers, participant comprehension, hosted identity, and
 | --- | --- | --- | --- |
 | **E2E-01** Report-to-correction journey | Covered | [tests/http/journey.test.ts:51](../../tests/http/journey.test.ts#L51): `publishes only reviewed text and carries correction to the previous recipient`<br>[tests/e2e/demo.spec.ts:28](../../tests/e2e/demo.spec.ts#L28): `report, review, inbox, correction, and latest notice work in the browser` | HTTP journey includes report, moderation, evidence graph, relevant inbox, and retraction. Browser execution evidence is recorded separately. |
 | **E2E-02** Real-source honesty | Partial | [tests/datasets/project.test.ts:4](../../tests/datasets/project.test.ts#L4): `creates blocked source cards when collectors fail or return malformed data`<br>[tests/datasets/coverage.test.ts:33](../../tests/datasets/coverage.test.ts#L33): `rejects duplicate source cards and invented collection in a missing row`<br>[tests/e2e/demo.spec.ts:361](../../tests/e2e/demo.spec.ts#L361): `dataset acquisition is visible for every area and failures never become zero` | Failure/provenance status assertions exist. Source-registry reconciliation and each connector's live-tested status remain incomplete. |
-| **E2E-03** Build evidence | Partial | No direct automated assertion recorded. | Coordinator reports npm test passed 663 tests in 71 files at 9976add. This mapping did not execute that suite. Final combined browser/build/type evidence must be appended from actual results. |
+| **E2E-03** Build evidence | Covered | Coordinator ran `npm test` (675 tests across 73 files), `npm run test:e2e` (71 tests), `npm run check`, `npm run build`, and `npm run test:server`. All passed. See the execution ledger above. | Local command evidence is recorded. Hosted CI and physical devices remain separate. |
 | **E2E-04** Deployment target | External | No direct automated assertion recorded. | No deployment was performed by this audit. Verify the specifically authorized target and actual deployment result before making a live URL claim. |
 | **E2E-05** Rollback exercise | External | [tests/http/journey.test.ts:160](../../tests/http/journey.test.ts#L160): `rejects real intake, role spoofing, invalid area, and cross-site writes`<br>[tests/semantic-store/storage.test.ts:113](../../tests/semantic-store/storage.test.ts#L113): `replaces corrections and removes withdrawn nodes and relations` | Closed intake and content retraction have local tests. An operator-led hosted rollback/kill-switch exercise has no recorded result. |
 | **E2E-06** Dependency outage | Partial | [tests/e2e/map-layers.spec.ts:112](../../tests/e2e/map-layers.spec.ts#L112): `layer filters and shared selection work when map tiles fail`<br>[tests/transport.test.ts:92](../../tests/transport.test.ts#L92): `retains static station references on a complete outage without seed statuses`<br>[tests/http/public.test.ts:219](../../tests/http/public.test.ts#L219): `defers configured database access until an invited private request and retries failed initialization` | Map, source, and database failure assertions exist locally. Combined hosted outage recovery remains unverified. |
