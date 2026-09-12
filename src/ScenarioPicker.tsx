@@ -40,9 +40,10 @@ export function ScenarioPicker({
       }}
     >
       <legend>Fictional scenario (optional)</legend>
-      <label>
+      <label style={{ minWidth: 0 }}>
         Scenario for this area
         <select
+          style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}
           value={selected}
           onChange={(event) => {
             setSelected(event.target.value);

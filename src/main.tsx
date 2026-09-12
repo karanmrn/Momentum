@@ -1,3 +1,4 @@
+import { ReportEditor } from "./ReportEditor";
 import { ScenarioPicker, type ScenarioDraft } from "./ScenarioPicker";
 import { DatasetCoverage } from "./DatasetCoverage";
 import { SemanticGraph } from "./SemanticGraph";
@@ -1023,11 +1024,13 @@ function Reports({
   reports,
   area,
   report,
+  edit,
   withdraw,
 }: {
   reports: Report[];
   area: Area;
   report: () => void;
+  edit: (report: Report) => void;
   withdraw: (report: Report) => void;
 }) {
   return (
@@ -1058,6 +1061,11 @@ function Reports({
                 {item.place} · created{" "}
                 {new Date(item.createdAt).toLocaleString("en-GB")}
               </p>
+              {item.status === "submitted" && item.noticeId === null && (
+                <button className="button secondary" onClick={() => edit(item)}>
+                  Edit observation
+                </button>
+              )}
               {item.status === "submitted" && (
                 <button
                   className="button secondary warn"
@@ -1466,6 +1474,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState<Notice | null>(null);
   const [moderation, setModeration] = useState<Report[]>([]);
@@ -1482,6 +1491,7 @@ function App() {
     setNotifications([]);
     setModeration([]);
     setReportOpen(false);
+    setEditingReport(null);
   };
   const loadArea = async (id: string) => {
     const generation = ++areaRequestGeneration.current;
@@ -1838,6 +1848,7 @@ function App() {
         {!publicBrowse && view === "reports" && isMember(session.persona) && (
           <Reports
             reports={reports}
+            edit={setEditingReport}
             area={selected}
             report={() => setReportOpen(true)}
             withdraw={async (item) => {
@@ -1979,6 +1990,24 @@ function App() {
           onCreated={refreshMember}
         />
       )}
+      {!publicBrowse &&
+        editingReport &&
+        isMember(session.persona) &&
+        editingReport.owner === session.persona && (
+          <Modal
+            title="Edit observation"
+            onClose={() => setEditingReport(null)}
+          >
+            <ReportEditor
+              key={editingReport.id}
+              report={editingReport}
+              onSaved={async () => {
+                await refreshMember();
+                setEditingReport(null);
+              }}
+            />
+          </Modal>
+        )}
       {!publicBrowse && noticeOpen && (
         <Inspector notice={noticeOpen} onClose={() => setNoticeOpen(null)} />
       )}
