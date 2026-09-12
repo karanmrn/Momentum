@@ -14,18 +14,19 @@ The original `tests/acceptance_matrix.json` remains unchanged, including its his
 
 These labels describe **coverage, not individual execution results or production readiness**.
 A test name alone is not proof that the test ran.
-Browser references are existing assertions; the final combined browser run was pending when this record was prepared.
+The coordinator completed the combined browser suite after this mapping was prepared.
 Physical phones, screen readers, participant comprehension, hosted identity, and hosted database behavior require separate evidence.
 
 ## Execution evidence
 
 | Scope | Evidence | Limit |
 | --- | --- | --- |
-| Integrated unit and integration suite | Coordinator reported `npm test`: **663 passed across 71 files**, at `9976add`. | The mapping author did not run or independently observe this full command. This does not prove all acceptance cases. |
+| Integrated unit and integration suite | Coordinator ran `npm test`: **675 passed across 73 files**, at `354f51e`. | Local domain, HTTP, and SQL evidence. This does not prove all acceptance cases. |
 | Scoped relation fixes | Mapping author ran `npx vitest run tests/relation-review`: **21 passed across 3 files**. | Executed in the isolated relation worktree at `1e396f4`, before root integration. |
 | Scoped relation types | Mapping author ran `npm run check` and strict NodeNext `tsc`: passed. | This covers the scoped implementation, not the final combined build. |
 | Independent analytics browser probe | Previous reload behavior reproduced wrong-area content; current fix prevented it. | Isolated local Playwright probe. It does not replace the full browser suite. |
-| Final combined browser suite | Pending at preparation. | Add the actual result and revision after completion. Do not infer it from test files. |
+| Final combined browser suite | Coordinator ran `npm run test:e2e -- --reporter=line`: **71 passed**, at `354f51e` with the committed workspace test isolation configuration. | Chromium at mobile and desktop widths. Four isolated test servers prevent shared rate-limit contention. Production limits remain unchanged. |
+| Build and native server | Coordinator ran `npm run build` and `npm run test:server`: passed at `354f51e`. | TypeScript, production bundle, and native ESM route probes. |
 | Hosted and physical verification | No result established by this mapping. | Local PostgreSQL/PGlite and provider fixtures are not live hosted or physical-device evidence. |
 
 ## Coverage count
