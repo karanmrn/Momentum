@@ -1092,20 +1092,22 @@ function Dashboard({
               view does not estimate a person's risk.
             </p>
             <DatasetCoverage pilotId={area.id} />
-            <a
-              className="button secondary"
-              href={`/?enrichment=1&area=${area.id}${isPublic ? "&public=1" : "&demo=1"}`}
-            >
-              Explore data context
-            </a>
-            {area.id === "camden_town" && (
+            <div className="actions section">
               <a
                 className="button secondary"
-                href={`/?evidence=camden&area=camden_town${isPublic ? "&public=1" : "&demo=1"}`}
+                href={`/?enrichment=1&area=${area.id}${isPublic ? "&public=1" : "&demo=1"}`}
               >
-                Explore Camden evidence example
+                Explore data context
               </a>
-            )}
+              {area.id === "camden_town" && (
+                <a
+                  className="button secondary"
+                  href={`/?evidence=camden&area=camden_town${isPublic ? "&public=1" : "&demo=1"}`}
+                >
+                  Explore Camden evidence example
+                </a>
+              )}
+            </div>
             <SemanticGraph area={area.id} isPublic={isPublic} />
           </section>
         )}

@@ -1,13 +1,14 @@
 # UI and journey audit
 
 Reviewed the live public app and an isolated local demo on 12 September 2026.
-Initial base: `95a9a5c`. Integrated main: `092e1f9`. Visible product name: Momentum. The existing public URL remains unchanged pending domain verification.
+Initial base: `95a9a5c`. Integrated main: `fdd0e4b`. Visible product name: Momentum. The existing public URL remains unchanged pending domain verification.
 
 ## Fixed findings
 
 | Finding | Correction | Evidence |
 | --- | --- | --- |
 | The 903px layout clipped the transport panel. | Stack narrow desktop panels; use shrinkable tracks on wider screens. | Browser screenshots and eight viewport checks. |
+| Newly integrated evidence links touched. | Group links with wrapping and spacing. | Browser inspection and data-page navigation checks. |
 | Tablet header controls overlapped. | Place the area selector on its own tablet row. | Rectangle checks at 821px, 903px, and 1024px, in public and demo modes. |
 | Mobile Account appeared before the brand. | Keep the brand left and a compact Account control right. | 390px browser inspection and layout tests. |
 | Community showed transport that never loaded. | Enable transport reads for that view. | Public journey regression. |
@@ -38,14 +39,15 @@ Set `PLAYWRIGHT_BASE_PORT` when another task uses the default test ports.
 
 ## Validation
 
-- `npm test`: 552 tests passed across 56 files.
-- `PLAYWRIGHT_BASE_PORT=49325 npx playwright test --workers=1`: 65 tests passed.
+- `npm test`: 588 tests passed across 61 files.
+- `PLAYWRIGHT_BASE_PORT=49325 npx playwright test --workers=1`: 65 tests passed before the final data-page merge.
+- After the data-page merge: 20 affected browser tests passed.
 - `npm run build`: passed.
 - `npm run test:server`: passed.
 - `git diff --check`: passed.
 - Independent code review found no blockers.
 
-These results include the new account controls, stored Camden evidence, and Local updates page.
+These results include the new account controls, stored Camden evidence, Local updates page, and Data context integration.
 GitHub Actions cannot run while account billing blocks jobs. Local validation results are reported separately.
 
 ## Limits
