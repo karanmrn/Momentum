@@ -1,0 +1,169 @@
+.relation-review {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+  color: var(--ink, #253223);
+  font-family: inherit;
+}
+.relation-review * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.relation-review section {
+  border: 1px solid var(--line, #c7cebc);
+  border-radius: 16px;
+  padding: 20px;
+  margin-block: 20px;
+  background: var(--surface, #fffef8);
+}
+.relation-review h1,
+.relation-review h2,
+.relation-review h3 {
+  margin: 0 0 14px;
+}
+.rr-heading,
+.rr-toolbar,
+.rr-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.rr-heading {
+  justify-content: space-between;
+}
+.rr-toolbar {
+  margin-block: 16px;
+}
+.rr-boundary {
+  background: #f0ead7;
+  padding: 16px;
+  border-radius: 10px;
+}
+.relation-review label {
+  display: grid;
+  gap: 6px;
+  margin-block: 12px;
+}
+.relation-review button,
+.relation-review input,
+.relation-review textarea,
+.relation-review select {
+  font: inherit;
+  min-height: 44px;
+  border: 1px solid #849275;
+  border-radius: 9px;
+  padding: 10px 12px;
+  max-width: 100%;
+}
+.relation-review button {
+  color: inherit;
+  background: #edf1e3;
+  cursor: pointer;
+}
+.relation-review button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.relation-review button:focus-visible,
+.relation-review input:focus-visible,
+.relation-review select:focus-visible,
+.relation-review textarea:focus-visible {
+  outline: 3px solid #385a22;
+  outline-offset: 3px;
+}
+.relation-review textarea {
+  min-height: 90px;
+  width: 100%;
+  resize: vertical;
+}
+.rr-candidates {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.rr-candidates button {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.rr-candidates button[aria-pressed="true"] {
+  background: #dce8c8;
+  border: 2px solid #3a5625;
+}
+.rr-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.relation-review article {
+  border: 1px solid #d8ddcd;
+  border-radius: 12px;
+  padding: 14px;
+  margin-block: 12px;
+}
+.relation-review dl {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
+  gap: 8px;
+  font-size: 0.9rem;
+}
+.relation-review dt {
+  font-weight: 600;
+}
+.relation-review dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.relation-review .rr-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rr-check input {
+  width: 20px;
+  min-height: 20px;
+  flex: none;
+}
+.rr-error {
+  padding: 14px;
+  background: #fff1e9;
+  color: #732d17;
+  border: 1px solid #cc8c73;
+}
+.relation-review fieldset {
+  border: 1px solid #c7cebc;
+  border-radius: 10px;
+}
+.relation-review p,
+.relation-review li {
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 650px) {
+  .relation-review {
+    padding: 12px;
+  }
+  .relation-review section {
+    padding: 14px;
+  }
+  .rr-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rr-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .rr-actions button {
+    width: 100%;
+  }
+  .relation-review dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .relation-review dd {
+    margin-bottom: 8px;
+  }
+}
