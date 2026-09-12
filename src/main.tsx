@@ -171,19 +171,34 @@ function Modal({
   );
 }
 
-function PilotMap({ area, help }: { area: Area; help: HelpCard[] }) {
+function PilotMap({
+  area,
+  help,
+  visible,
+}: {
+  area: Area;
+  help: HelpCard[];
+  visible: boolean;
+}) {
   const element = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     if (!element.current) return;
     setFailed(false);
     let map: L.Map | undefined;
+    let resizeObserver: ResizeObserver | undefined;
     try {
       const leafletMap = L.map(element.current, { zoomControl: false }).setView(
         area.center,
         14,
       );
       map = leafletMap;
+      mapRef.current = leafletMap;
+      resizeObserver = new ResizeObserver(() => {
+        leafletMap.invalidateSize({ animate: false });
+      });
+      resizeObserver.observe(element.current);
       L.control.zoom({ position: "bottomright" }).addTo(leafletMap);
       const tiles = L.tileLayer(
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -211,62 +226,87 @@ function PilotMap({ area, help }: { area: Area; help: HelpCard[] }) {
         }
         return content;
       };
-      L.marker(area.center, {
-        icon: L.divIcon({
-          className: "",
-          html: '<div class="anchor" aria-hidden="true"></div>',
-          iconSize: [15, 15],
-          iconAnchor: [7, 7],
-        }),
-      })
-        .addTo(leafletMap)
-        .bindPopup(popup(area.shortName, "Approximate pilot-area anchor"));
+      const addMarker = (
+        coordinates: L.LatLngExpression,
+        label: string,
+        iconClass: "anchor" | "help-anchor",
+        detail: string,
+        href?: string,
+      ) => {
+        const marker = L.marker(coordinates, {
+          alt: label,
+          keyboard: true,
+          title: label,
+          icon: L.divIcon({
+            className: "",
+            html: `<div class="map-marker-hit" aria-hidden="true"><div class="${iconClass}"></div></div>`,
+            iconSize: [48, 48],
+            iconAnchor: [24, 24],
+          }),
+        })
+          .addTo(leafletMap)
+          .bindPopup(popup(label, detail, href));
+        const markerElement = marker.getElement();
+        markerElement?.setAttribute("aria-label", label);
+        markerElement?.setAttribute("role", "button");
+        markerElement?.setAttribute("title", label);
+      };
+      addMarker(
+        area.center,
+        `${area.shortName} approximate pilot-area anchor`,
+        "anchor",
+        "Approximate pilot-area anchor",
+      );
       help
         .filter((item) => item.coordinates)
         .forEach((item) => {
-          L.marker(item.coordinates!, {
-            icon: L.divIcon({
-              className: "",
-              html: '<div class="help-anchor" aria-hidden="true"></div>',
-              iconSize: [18, 18],
-              iconAnchor: [9, 9],
-            }),
-          })
-            .addTo(leafletMap)
-            .bindPopup(
-              popup(
-                item.name,
-                `${item.address || "Council-listed location"}. Availability unconfirmed.`,
-                item.url,
-              ),
-            );
+          addMarker(
+            item.coordinates!,
+            `${item.name}, council-listed help location`,
+            "help-anchor",
+            `${item.address || "Council-listed location"}. Availability unconfirmed.`,
+            item.url,
+          );
         });
     } catch {
       setFailed(true);
     }
     return () => {
+      resizeObserver?.disconnect();
+      mapRef.current = null;
       map?.remove();
     };
   }, [area, help]);
-  return failed ? (
-    <div className="map-fallback">
-      <div>
-        <MapPin size={28} />
-        <p>
-          <strong>Map tiles are unavailable</strong>
-        </p>
-        <p>
-          The list remains available. {area.shortName} is an approximate
-          pilot-area anchor.
-        </p>
-      </div>
+  useEffect(() => {
+    if (!visible || !mapRef.current) return;
+    const frame = requestAnimationFrame(() => {
+      mapRef.current?.invalidateSize({ animate: false });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [visible]);
+  return (
+    <div className="map-shell">
+      <div
+        className="map"
+        ref={element}
+        aria-label={`Map centred on the approximate ${area.name} pilot-area anchor`}
+        aria-hidden={failed || undefined}
+      />
+      {failed && (
+        <div className="map-fallback">
+          <div>
+            <MapPin size={28} />
+            <p>
+              <strong>Map tiles are unavailable</strong>
+            </p>
+            <p>
+              The list remains available. {area.shortName} is an approximate
+              pilot-area anchor.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
-  ) : (
-    <div
-      className="map"
-      ref={element}
-      aria-label={`Map centred on the approximate ${area.name} pilot-area anchor`}
-    />
   );
 }
 
@@ -309,6 +349,16 @@ function NoticeCard({
   );
 }
 
+const relationLabel = (predicate: string) =>
+  (
+    ({
+      AFFECTS_PLACE: "Applies to",
+      DERIVED_FROM: "Supported by",
+      ISSUED_BY: "Published by",
+      REPLACES: "Replaces",
+    }) as Record<string, string>
+  )[predicate] || predicate.replaceAll("_", " ").toLowerCase();
+
 function Graph({ graph }: { graph: EvidenceGraph }) {
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
   return (
@@ -327,7 +377,7 @@ function Graph({ graph }: { graph: EvidenceGraph }) {
                 </div>
                 <span
                   className="edge"
-                  aria-label={`${edge.predicate.replaceAll("_", " ")} to`}
+                  aria-label={`${relationLabel(edge.predicate)} relation`}
                 >
                   →
                 </span>
@@ -337,7 +387,7 @@ function Graph({ graph }: { graph: EvidenceGraph }) {
                   <small>{to?.type || "unknown"}</small>
                 </div>
                 <small className="edge-detail">
-                  <strong>{edge.predicate.replaceAll("_", " ")}</strong> ·{" "}
+                  <strong>{relationLabel(edge.predicate)}</strong> ·{" "}
                   {edge.reason}
                 </small>
               </div>
@@ -567,20 +617,25 @@ function ReportForm({
   );
 }
 
-function Sources({ sources }: { sources: SourceCard[] }) {
+function Sources({
+  sources,
+  compact = false,
+}: {
+  sources: SourceCard[];
+  compact?: boolean;
+}) {
   return (
     <div className="stack">
       {sources.length ? (
         sources.map((source) => (
-          <article className="source" key={source.id}>
-            <div className="tag-row">
-              <StatusTag>{source.sourceKind.replaceAll("_", " ")}</StatusTag>
-              <StatusTag
-                tone={source.status === "available" ? "dark" : "orange"}
-              >
-                {source.status === "link_only" ? "Link only" : source.status}
-              </StatusTag>
-            </div>
+          <article
+            className={`source ${compact ? "source-compact" : ""}`}
+            key={source.id}
+          >
+            <p className="source-line">
+              {source.sourceKind.replaceAll("_", " ")} ·{" "}
+              {source.status === "link_only" ? "Link only" : source.status}
+            </p>
             <h3>{source.title}</h3>
             <p>{source.summary}</p>
             {source.coverage && (
@@ -609,12 +664,12 @@ function Sources({ sources }: { sources: SourceCard[] }) {
                 ? `retrieved ${new Date(source.fetchedAt).toLocaleString("en-GB")}`
                 : "retrieval time unavailable"}
             </p>
-            {source.checkedAt && (
+            {source.checkedAt && !compact && (
               <p className="source-fact">
                 Checked {new Date(source.checkedAt).toLocaleString("en-GB")}
               </p>
             )}
-            {source.attribution && (
+            {source.attribution && !compact && (
               <p className="source-fact">{source.attribution}</p>
             )}
             <a href={source.url} target="_blank" rel="noreferrer">
@@ -702,11 +757,63 @@ function Dashboard({
           )}
         </div>
       </div>
-      {(tab === "now" || tab === "community") && (
+      {tab === "now" && (
+        <div className={`now-view ${mapOpen ? "map-open" : ""}`}>
+          <div className="now-layout">
+            <section className="panel map-panel">
+              <PilotMap area={area} help={data.help} visible={mapOpen} />
+              <div className="map-caption">
+                Approximate pilot-area anchor and council-listed help points. No
+                incident coordinates.
+              </div>
+            </section>
+            <section className="panel feed-panel source-panel">
+              <div className="panel-title">
+                <h2>Local source updates</h2>
+                <span className="count">Source-backed</span>
+              </div>
+              {loading ? (
+                <Empty title="Loading local sources">
+                  Checking source coverage.
+                </Empty>
+              ) : (
+                <Sources sources={data.sources} compact />
+              )}
+            </section>
+          </div>
+          <section className="panel feed-panel section now-community">
+            <div className="panel-title">
+              <h2>Reviewed community update</h2>
+              <span className="count">{notices.length} shown</span>
+            </div>
+            <div className="stack">
+              {loading ? (
+                <Empty title="Loading reviewed updates">
+                  Checking the current projection.
+                </Empty>
+              ) : notices.length ? (
+                notices.map((notice) => (
+                  <NoticeCard
+                    notice={notice}
+                    onInspect={inspect}
+                    key={notice.id}
+                  />
+                ))
+              ) : (
+                <Empty title="No published notices">
+                  No current item was returned. This does not show that
+                  conditions are clear.
+                </Empty>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+      {tab === "community" && (
         <>
           <div className={`dashboard ${mapOpen ? "map-open" : ""}`}>
             <section className="panel map-panel">
-              <PilotMap area={area} help={data.help} />
+              <PilotMap area={area} help={data.help} visible={mapOpen} />
               <div className="map-caption">
                 Approximate pilot-area anchor and council-listed help points. No
                 incident coordinates.
@@ -714,11 +821,7 @@ function Dashboard({
             </section>
             <section className="panel feed-panel">
               <div className="panel-title">
-                <h2>
-                  {tab === "community"
-                    ? "Reviewed community"
-                    : "Current notices"}
-                </h2>
+                <h2>Reviewed community</h2>
                 <span className="count">{notices.length} shown</span>
               </div>
               <div className="stack">
@@ -743,22 +846,16 @@ function Dashboard({
               </div>
             </section>
           </div>
-          <section className="grid section overview-grid">
-            <section className="panel feed-panel">
-              <h2>Source status</h2>
-              <Sources sources={data.sources} />
-            </section>
-            <section className="panel feed-panel">
-              <h2>What this area covers</h2>
-              <p className="subtle">
-                {area.name} is a proposed compact pilot. Its boundary and
-                station identifiers still need review.
-              </p>
-              <p className="subtle">
-                Map anchors help orientation only. They do not establish an
-                event location.
-              </p>
-            </section>
+          <section className="panel feed-panel section">
+            <h2>What this area covers</h2>
+            <p className="subtle">
+              {area.name} is a proposed compact pilot. Its boundary and station
+              identifiers still need review.
+            </p>
+            <p className="subtle">
+              Map anchors help orientation only. They do not establish an event
+              location.
+            </p>
           </section>
         </>
       )}

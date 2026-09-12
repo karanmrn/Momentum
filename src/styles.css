@@ -30,6 +30,7 @@ textarea {
 }
 button {
   cursor: pointer;
+  min-height: 48px;
 }
 button:focus-visible,
 a:focus-visible,
@@ -149,6 +150,7 @@ select {
   background: #fffdf7;
   padding: 9px 33px 9px 10px;
   font-weight: 700;
+  min-height: 48px;
 }
 .persona {
   display: flex;
@@ -247,6 +249,10 @@ h3 {
   height: 500px;
   background: #dfe6dd;
 }
+.map-shell {
+  height: 500px;
+  position: relative;
+}
 .map-caption {
   position: absolute;
   bottom: 12px;
@@ -266,6 +272,12 @@ h3 {
   height: 15px;
   border-radius: 50%;
   box-shadow: 0 1px 5px #0a291c77;
+}
+.map-marker-hit {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
 }
 .help-anchor {
   width: 18px;
@@ -421,6 +433,10 @@ textarea {
   border-radius: 8px;
   padding: 9px 10px;
 }
+.form-grid input,
+.form-grid select {
+  min-height: 48px;
+}
 textarea {
   min-height: 108px;
   resize: vertical;
@@ -442,6 +458,7 @@ textarea {
 }
 .check input {
   width: auto;
+  min-height: 0;
 }
 .modal-backdrop {
   position: fixed;
@@ -469,7 +486,12 @@ textarea {
   border: 0;
   background: transparent;
   color: #315348;
-  padding: 5px;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
 }
 .graph {
   display: grid;
@@ -520,9 +542,10 @@ textarea {
   color: #708176;
 }
 .map-fallback {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  min-height: 500px;
   padding: 30px;
   text-align: center;
   color: #395c4f;
@@ -549,7 +572,8 @@ textarea {
     grid-template-columns: 1fr;
   }
   .map-panel,
-  .map {
+  .map,
+  .map-shell {
     min-height: 355px;
     height: 355px;
   }
@@ -643,6 +667,27 @@ textarea {
   line-height: 1.4;
   text-transform: capitalize;
 }
+.source-line {
+  margin: 0 0 6px;
+  color: #547066;
+  font-size: 12px;
+  font-weight: 750;
+  text-transform: capitalize;
+}
+.now-layout {
+  display: grid;
+  grid-template-columns: minmax(330px, 1.15fr) minmax(300px, 0.85fr);
+  gap: 18px;
+}
+.source-compact {
+  padding: 14px;
+}
+.source-compact h3 {
+  margin-bottom: 5px;
+}
+.source-compact p {
+  margin: 6px 0;
+}
 
 @media (min-width: 821px) {
   .shell {
@@ -722,7 +767,7 @@ textarea {
     border-bottom: 1px solid #d8ded3;
   }
   .tabs button {
-    min-height: 40px;
+    min-height: 48px;
     padding: 9px 14px;
   }
   .area-heading {
@@ -745,8 +790,23 @@ textarea {
     align-items: stretch;
     gap: 22px;
   }
+  .now-layout {
+    grid-template-columns: minmax(430px, 1.15fr) minmax(360px, 0.85fr);
+    align-items: stretch;
+    gap: 22px;
+  }
+  .now-layout .map-panel,
+  .now-layout .map,
+  .now-layout .map-shell {
+    min-height: 570px;
+    height: 570px;
+  }
+  .now-layout .source-panel {
+    min-height: 570px;
+  }
   .map-panel,
-  .map {
+  .map,
+  .map-shell {
     min-height: 570px;
     height: 570px;
   }
@@ -820,7 +880,7 @@ textarea {
   }
   .area-control select {
     width: 100%;
-    min-height: 42px;
+    min-height: 48px;
   }
   .persona {
     align-self: center;
@@ -833,7 +893,7 @@ textarea {
   }
   .persona select {
     width: 94px;
-    min-height: 38px;
+    min-height: 48px;
     padding: 6px 23px 6px 7px;
     font-size: 12px;
   }
@@ -861,7 +921,7 @@ textarea {
     border-bottom: 1px solid #d9dfd5;
   }
   .tabs button {
-    min-height: 38px;
+    min-height: 48px;
     padding: 7px 11px;
     font-size: 13px;
   }
@@ -891,7 +951,7 @@ textarea {
     background: #eef1e9;
   }
   .map-switcher .button {
-    min-height: 42px;
+    min-height: 48px;
     border: 0;
     border-radius: 6px;
     padding: 5px 9px;
@@ -905,6 +965,27 @@ textarea {
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  .now-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .now-layout .map-panel {
+    display: none;
+  }
+  .now-view.map-open .now-layout .map-panel {
+    display: block;
+    min-height: 420px;
+    order: 0;
+  }
+  .now-view.map-open .now-layout .source-panel,
+  .now-view.map-open .now-community {
+    display: none;
+  }
+  .now-layout .source-panel {
+    order: 1;
+    padding: 14px;
   }
   .dashboard .map-panel {
     display: none;
@@ -923,7 +1004,8 @@ textarea {
     padding: 14px;
   }
   .map-panel,
-  .map {
+  .map,
+  .map-shell {
     min-height: 420px;
     height: 420px;
   }
@@ -972,7 +1054,7 @@ textarea {
     stroke-width: 2.6;
   }
   .button {
-    min-height: 44px;
+    min-height: 48px;
   }
   .overview-grid {
     margin-top: 14px;
