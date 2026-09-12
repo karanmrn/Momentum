@@ -108,7 +108,8 @@
   stroke-width: 3;
   opacity: 1;
 }
-.gc-node {
+.gc-node,
+.gc-node-overlay {
   cursor: pointer;
   outline: none;
 }
@@ -135,6 +136,7 @@
   stroke-width: 3;
 }
 .gc-node:hover .gc-node-halo,
+.gc-node-overlay:hover .gc-node-halo,
 .gc-node:focus-visible .gc-node-halo,
 .gc-selected .gc-node-halo {
   opacity: 0.25;

@@ -375,6 +375,124 @@ export function GraphCanvas({
       onSelect(value);
     }
   }
+  // Keep keyboard nodes in stable DOM order. The duplicate is a pointer/visual layer only.
+  function renderNode(node: NetworkNode, overlay = false) {
+    const point = points.get(node.id)!,
+      group = family(node);
+    const selected = selection?.kind === "node" && selection.id === node.id;
+    const active = highlightedNodes.has(node.id);
+    const showLabel = visibleLabels.has(node.id);
+    const radius = radiusFor(node.id);
+    const label =
+      node.label.length > 31 ? `${node.label.slice(0, 28)}…` : node.label;
+    return (
+      <g
+        key={node.id}
+        transform={`translate(${point.x} ${point.y})`}
+        className={`${overlay ? "gc-node-overlay" : "gc-node"} gc-${group} ${node.synthetic ? "gc-fiction" : ""} ${selected ? "gc-selected" : ""} ${hasHighlights && !active ? "gc-muted" : ""}`}
+        role={overlay ? undefined : "button"}
+        tabIndex={overlay ? undefined : 0}
+        aria-hidden={overlay || undefined}
+        aria-label={
+          overlay
+            ? undefined
+            : `Inspect ${node.label}, ${node.type}${node.synthetic ? ", fictional" : ""}`
+        }
+        aria-pressed={overlay ? undefined : selected}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          if (event.button !== 0 || nodeDrag.current) return;
+          suppressClick.current = null;
+          nodeDrag.current = {
+            id: node.id,
+            pointerId: event.pointerId,
+            x: event.clientX,
+            y: event.clientY,
+            start: offsets[node.id] ?? { x: 0, y: 0 },
+            scale: view.scale,
+            moved: false,
+          };
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={(event) => {
+          event.stopPropagation();
+          const current = nodeDrag.current;
+          if (!current || current.pointerId !== event.pointerId) return;
+          const dx = event.clientX - current.x,
+            dy = event.clientY - current.y;
+          if (!current.moved && Math.hypot(dx, dy) < 5) return;
+          current.moved = true;
+          setOffsets((previous) => ({
+            ...previous,
+            [current.id]: {
+              x: Math.max(
+                -width * 2,
+                Math.min(width * 2, current.start.x + dx / current.scale),
+              ),
+              y: Math.max(
+                -height * 2,
+                Math.min(height * 2, current.start.y + dy / current.scale),
+              ),
+            },
+          }));
+        }}
+        onPointerUp={(event) => {
+          event.stopPropagation();
+          const current = nodeDrag.current;
+          if (!current || current.pointerId !== event.pointerId) return;
+          if (current.moved) suppressClick.current = node.id;
+          nodeDrag.current = null;
+          if (event.currentTarget.hasPointerCapture(event.pointerId))
+            event.currentTarget.releasePointerCapture(event.pointerId);
+        }}
+        onPointerCancel={() => {
+          nodeDrag.current = null;
+          suppressClick.current = node.id;
+        }}
+        onLostPointerCapture={() => {
+          nodeDrag.current = null;
+        }}
+        onClick={() => {
+          if (suppressClick.current === node.id) {
+            suppressClick.current = null;
+            return;
+          }
+          onSelect({ kind: "node", id: node.id });
+        }}
+        onKeyDown={(event) => activate(event, { kind: "node", id: node.id })}
+      >
+        <title>
+          {node.label} · {node.type}
+          {node.synthetic ? " · Fictional" : ""}
+        </title>
+        <circle
+          className="gc-node-hit"
+          r={Math.max(radius + 5, 22 / view.scale)}
+        />
+        <circle className="gc-node-halo" r={radius + 6} />
+        <circle className="gc-node-shape" r={radius} />
+        <circle className="gc-node-core" r={group === "area" ? 5 : 3} />
+        {showLabel && (
+          <text
+            className="gc-node-label"
+            y={radius + 21}
+            x={
+              Math.max(
+                Math.min(node.label.length, 31) * 3.05 + 4,
+                Math.min(
+                  width - Math.min(node.label.length, 31) * 3.05 - 4,
+                  point.x,
+                ),
+              ) - point.x
+            }
+            textAnchor="middle"
+          >
+            {label}
+          </text>
+        )}
+      </g>
+    );
+  }
   return (
     <div className="graph-canvas" ref={container}>
       <div className="gc-key" aria-label="Node types">
@@ -541,150 +659,8 @@ export function GraphCanvas({
                     </g>
                   );
                 })}
-                {[...nodes]
-                  .sort(
-                    (a, b) =>
-                      Number(a.id === selectedNode?.id) -
-                      Number(b.id === selectedNode?.id),
-                  )
-                  .map((node) => {
-                    const point = points.get(node.id)!,
-                      group = family(node);
-                    const selected =
-                      selection?.kind === "node" && selection.id === node.id;
-                    const active = highlightedNodes.has(node.id);
-                    const showLabel = visibleLabels.has(node.id);
-                    const radius = radiusFor(node.id);
-                    const label =
-                      node.label.length > 31
-                        ? `${node.label.slice(0, 28)}…`
-                        : node.label;
-                    return (
-                      <g
-                        key={node.id}
-                        transform={`translate(${point.x} ${point.y})`}
-                        className={`gc-node gc-${group} ${node.synthetic ? "gc-fiction" : ""} ${selected ? "gc-selected" : ""} ${hasHighlights && !active ? "gc-muted" : ""}`}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`Inspect ${node.label}, ${node.type}${node.synthetic ? ", fictional" : ""}`}
-                        aria-pressed={selected}
-                        onPointerDown={(event) => {
-                          event.stopPropagation();
-                          if (event.button !== 0 || nodeDrag.current) return;
-                          suppressClick.current = null;
-                          nodeDrag.current = {
-                            id: node.id,
-                            pointerId: event.pointerId,
-                            x: event.clientX,
-                            y: event.clientY,
-                            start: offsets[node.id] ?? { x: 0, y: 0 },
-                            scale: view.scale,
-                            moved: false,
-                          };
-                          event.currentTarget.setPointerCapture(
-                            event.pointerId,
-                          );
-                        }}
-                        onPointerMove={(event) => {
-                          event.stopPropagation();
-                          const current = nodeDrag.current;
-                          if (!current || current.pointerId !== event.pointerId)
-                            return;
-                          const dx = event.clientX - current.x,
-                            dy = event.clientY - current.y;
-                          if (!current.moved && Math.hypot(dx, dy) < 5) return;
-                          current.moved = true;
-                          setOffsets((previous) => ({
-                            ...previous,
-                            [current.id]: {
-                              x: Math.max(
-                                -width * 2,
-                                Math.min(
-                                  width * 2,
-                                  current.start.x + dx / current.scale,
-                                ),
-                              ),
-                              y: Math.max(
-                                -height * 2,
-                                Math.min(
-                                  height * 2,
-                                  current.start.y + dy / current.scale,
-                                ),
-                              ),
-                            },
-                          }));
-                        }}
-                        onPointerUp={(event) => {
-                          event.stopPropagation();
-                          const current = nodeDrag.current;
-                          if (!current || current.pointerId !== event.pointerId)
-                            return;
-                          if (current.moved) suppressClick.current = node.id;
-                          nodeDrag.current = null;
-                          if (
-                            event.currentTarget.hasPointerCapture(
-                              event.pointerId,
-                            )
-                          )
-                            event.currentTarget.releasePointerCapture(
-                              event.pointerId,
-                            );
-                        }}
-                        onPointerCancel={() => {
-                          nodeDrag.current = null;
-                          suppressClick.current = node.id;
-                        }}
-                        onLostPointerCapture={() => {
-                          nodeDrag.current = null;
-                        }}
-                        onClick={() => {
-                          if (suppressClick.current === node.id) {
-                            suppressClick.current = null;
-                            return;
-                          }
-                          onSelect({ kind: "node", id: node.id });
-                        }}
-                        onKeyDown={(event) =>
-                          activate(event, { kind: "node", id: node.id })
-                        }
-                      >
-                        <title>
-                          {node.label} · {node.type}
-                          {node.synthetic ? " · Fictional" : ""}
-                        </title>
-                        <circle
-                          className="gc-node-hit"
-                          r={Math.max(radius + 5, 22 / view.scale)}
-                        />
-                        <circle className="gc-node-halo" r={radius + 6} />
-                        <circle className="gc-node-shape" r={radius} />
-                        <circle
-                          className="gc-node-core"
-                          r={group === "area" ? 5 : 3}
-                        />
-                        {showLabel && (
-                          <text
-                            className="gc-node-label"
-                            y={radius + 21}
-                            x={
-                              Math.max(
-                                Math.min(node.label.length, 31) * 3.05 + 4,
-                                Math.min(
-                                  width -
-                                    Math.min(node.label.length, 31) * 3.05 -
-                                    4,
-                                  point.x,
-                                ),
-                              ) - point.x
-                            }
-                            textAnchor="middle"
-                          >
-                            {label}
-                          </text>
-                        )}
-                      </g>
-                    );
-                  })}
+                {nodes.map((node) => renderNode(node))}
+                {selectedNode && renderNode(selectedNode, true)}
               </g>
             </svg>
             {selectedNode && selectedPoint && (

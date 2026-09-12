@@ -14,9 +14,20 @@ for (const width of [390, 1440]) {
       .getAttribute("aria-label");
     const node = page.getByRole("button", { name: label!, exact: true });
     await expect(node).toBeVisible();
+    const nextName = await page
+      .locator(".gc-node")
+      .nth(1)
+      .getAttribute("aria-label");
     await node.focus();
     await page.keyboard.press("Enter");
     await expect(node).toHaveAttribute("aria-pressed", "true");
+    await expect(node).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(
+      page.getByRole("button", { name: nextName!, exact: true }),
+    ).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(node).toBeFocused();
     await expect(
       page.getByRole("complementary", { name: "Selected source summary" }),
     ).toBeVisible();
