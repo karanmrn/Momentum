@@ -1,0 +1,133 @@
+.recent-updates {
+  max-width: 1120px;
+  margin: auto;
+  padding: 28px;
+  color: #183e33;
+}
+.ru-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ru-heading h1 {
+  font:
+    700 clamp(30px, 4vw, 46px) Georgia,
+    serif;
+  margin: 0;
+}
+.recent-updates h2 {
+  font:
+    700 25px Georgia,
+    serif;
+}
+.recent-updates h3 {
+  font-size: 21px;
+  line-height: 1.4;
+  margin: 8px 0;
+}
+.recent-updates p {
+  line-height: 1.6;
+}
+.recent-updates button,
+.recent-updates select {
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid #748879;
+  border-radius: 6px;
+  background: #fffdf7;
+  color: #183e33;
+}
+.recent-updates a {
+  color: #183e33;
+  text-underline-offset: 4px;
+}
+.ru-boundary {
+  border-left: 3px solid #b25b2a;
+  padding: 8px 14px;
+  margin: 24px 0;
+}
+.ru-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 40px;
+}
+.ru-layout > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ru-source {
+  border-top: 1px solid #b9c4b7;
+}
+.ru-source dt {
+  margin-top: 18px;
+  font-size: 14px;
+}
+.ru-source dd {
+  margin: 5px 0 0;
+  font-weight: 650;
+}
+.ru-source p,
+.ru-meta {
+  color: #496258;
+  font-size: 14px;
+}
+.ru-filter {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-weight: 650;
+}
+.ru-filter select {
+  min-width: 0;
+  max-width: 100%;
+}
+.ru-list {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+}
+.ru-list li {
+  border-top: 1px solid #b9c4b7;
+  padding: 20px 0;
+}
+.ru-list p {
+  margin: 8px 0;
+}
+.ru-list button {
+  margin-top: 8px;
+}
+.ru-warning {
+  border-left: 3px solid #b25b2a;
+  padding-left: 14px;
+}
+@media (max-width: 700px) {
+  .recent-updates {
+    padding: 20px 16px;
+  }
+  .ru-heading {
+    flex-wrap: wrap;
+  }
+  .ru-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .ru-source dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+  }
+  .ru-source dt {
+    margin: 0;
+  }
+  .ru-source dd {
+    margin: 0;
+  }
+  .ru-filter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .ru-filter select {
+    width: 100%;
+  }
+}

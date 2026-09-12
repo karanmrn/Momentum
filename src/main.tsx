@@ -1861,6 +1861,12 @@ function App() {
           )}
           {publicBrowse && (
             <div className="public-actions">
+              <a
+                className="button secondary"
+                href={`/?updates=1&area=${selected.id}${import.meta.env.DEV ? "&public=1" : ""}`}
+              >
+                Local updates
+              </a>
               <AreaShare
                 areaId={selected.id}
                 canonicalOrigin={import.meta.env.VITE_PUBLIC_SITE_URL}
@@ -2099,6 +2105,11 @@ function App() {
     </div>
   );
 }
+const RecentUpdates = lazy(() =>
+  import("./RecentUpdates").then((module) => ({
+    default: module.RecentUpdates,
+  })),
+);
 const Presentation = lazy(() =>
   import("./Presentation").then((module) => ({ default: module.Presentation })),
 );
@@ -2110,6 +2121,24 @@ const CamdenEvidence = lazy(() =>
 function Entry() {
   const query = new URLSearchParams(window.location.search);
   const entry = entryArea(window.location.search);
+  if (query.get("updates") === "1" && !entry.invalid) {
+    return (
+      <Suspense
+        fallback={
+          <main className="map-fallback">Loading local updates...</main>
+        }
+      >
+        <RecentUpdates
+          areaId={entry.areaId}
+          onExit={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("updates");
+            window.location.assign(url.href);
+          }}
+        />
+      </Suspense>
+    );
+  }
   if (query.get("evidence") === "camden") {
     return (
       <Suspense
