@@ -81,6 +81,13 @@ Lighting samples describe council infrastructure records, not current lighting f
 Historical publication coverage does not establish local crime totals or a risk estimate.
 Fictional community reports retain their separate labels and review workflow.
 
+Historical context includes an acquisition snapshot for each area.
+It records 36 monthly Police.uk source files per research query, covering August 2023 through July 2026.
+The query circles are not approved pilot boundaries. Crime totals remain unpublished.
+Transport, Census, and police-priority snapshots have separate source dates and geography labels.
+The interface shows the missing genuine community dataset explicitly.
+Raw acquired records remain local and are excluded from public repository history.
+
 ## Controlled pilot requirements
 
 The current schema isolates fictional sessions. It is not the production report schema.

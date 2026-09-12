@@ -303,3 +303,96 @@ test("area enrichment reaches the website with source links and uncertainty", as
     page.getByText("Urgent council support", { exact: true }),
   ).toBeVisible();
 });
+
+test("mobile map sizes correctly after list view and names help markers", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route(/tile\.openstreetmap\.org/, (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jV1kAAAAASUVORK5CYII=",
+        "base64",
+      ),
+    }),
+  );
+  await page.goto("/");
+  await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
+  await page.getByLabel("Choose pilot area").selectOption("camden_town");
+  await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
+  await page.getByRole("button", { name: "Map view", exact: true }).click();
+  const markers = page.locator(".leaflet-marker-icon[role=button]");
+  await expect(markers).toHaveCount(5);
+  await expect
+    .poll(async () =>
+      markers.evaluateAll((items) => {
+        const map = document
+          .querySelector(".leaflet-container")!
+          .getBoundingClientRect();
+        return items.every((item) => {
+          const box = item.getBoundingClientRect();
+          return (
+            box.width >= 48 &&
+            box.height >= 48 &&
+            box.x >= map.x &&
+            box.y >= map.y &&
+            box.right <= map.right &&
+            box.bottom <= map.bottom
+          );
+        });
+      }),
+    )
+    .toBe(true);
+  for (const marker of await markers.all())
+    await expect(marker).toHaveAccessibleName(/.+/);
+  await page
+    .getByRole("button", { name: /Castlehaven Community Centre/ })
+    .click();
+  await expect(page.locator(".leaflet-popup")).toContainText("unconfirmed");
+});
+
+test("dataset acquisition is visible for every area and failures never become zero", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
+  await page
+    .getByRole("tab", { name: "Historical context", exact: true })
+    .click();
+  for (const area of ["hounslow_town_centre", "camden_town", "west_croydon"]) {
+    await page.getByLabel("Choose pilot area").selectOption(area);
+    await expect(page.getByLabel("Choose pilot area")).toBeEnabled();
+    await expect(page.locator(".dataset-record")).toHaveCount(6);
+    await expect(page.locator(".dataset-coverage")).toContainText(
+      "Not collected",
+    );
+    const police = page
+      .locator(".dataset-record")
+      .filter({ hasText: "Historical police records" });
+    if ((await police.getAttribute("open")) === null)
+      await police.locator("summary").click();
+    await expect(police).toContainText("36 monthly source files");
+    await expect(police).toContainText("2026-07");
+    await expect(police).toContainText("Crime totals remain unpublished");
+  }
+  await page.route("**/api/datasets?area=hounslow_town_centre", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: { message: "Unavailable" } }),
+    }),
+  );
+  await page
+    .getByLabel("Choose pilot area")
+    .selectOption("hounslow_town_centre");
+  await expect(
+    page.getByText("Dataset coverage is unavailable.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".dataset-record")).toHaveCount(0);
+  await page.unroute("**/api/datasets?area=hounslow_town_centre");
+  await page
+    .getByRole("button", { name: "Retry coverage", exact: true })
+    .click();
+  await expect(page.locator(".dataset-record")).toHaveCount(6);
+});
